@@ -17,8 +17,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 // Home - show listings
 app.get('/', async (req, res) => {
   try {
-    // basic search / filter support via query params: location, min_price, max_price, q
-    const { location, min_price, max_price, q } = req.query;
+    // basic search / filter support via query params: location, min_price, max_price, q, type
+    const { location, min_price, max_price, q, type } = req.query;
     const where = [];
     const params = [];
     if (location) {
@@ -36,6 +36,10 @@ app.get('/', async (req, res) => {
     if (q) {
       where.push('(title LIKE ? OR description LIKE ?)');
       params.push(`%${q}%`, `%${q}%`);
+    }
+    if (type) {
+      where.push('(title LIKE ? OR description LIKE ?)');
+      params.push(`%${type}%`, `%${type}%`);
     }
     const whereSql = where.length ? 'WHERE ' + where.join(' AND ') : '';
 

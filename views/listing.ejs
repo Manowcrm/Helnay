@@ -27,6 +27,13 @@
 		<p class="text-muted"><strong>Location:</strong> <%= listing.location %></p>
 		<h3 class="text-primary">$<%= listing.price %> <small class="text-muted">/ night</small></h3>
 		<p><%= listing.description %></p>
-		<a class="btn btn-success btn-lg" href="/bookings?listing_id=<%= listing.id %>">Book Now</a>
+		<div class="d-grid gap-2 mt-4">
+			<a class="btn btn-success btn-lg" href="/bookings?listing_id=<%= listing.id %>">
+				<i class="bi bi-calendar-check"></i> Rent This Property
+			</a>
+			<a class="btn btn-outline-secondary" href="/contact">
+				<i class="bi bi-envelope"></i> Contact Owner
+			</a>
+		</div>
 	</div>
 </div>
