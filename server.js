@@ -55,6 +55,59 @@ app.get('/', async (req, res) => {
   }
 });
 
+// Category pages
+app.get('/entire-homes', async (req, res) => {
+  try {
+    const sql = `SELECT l.*, (
+      SELECT url FROM listing_images i WHERE i.listing_id = l.id LIMIT 1
+    ) as image_url FROM listings l WHERE (title LIKE ? OR description LIKE ?) ORDER BY created_at DESC`;
+    const listings = await db.all(sql, ['%home%', '%home%']);
+    res.render('entire-homes', { listings });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+app.get('/city-stays', async (req, res) => {
+  try {
+    const sql = `SELECT l.*, (
+      SELECT url FROM listing_images i WHERE i.listing_id = l.id LIMIT 1
+    ) as image_url FROM listings l WHERE location LIKE ? AND (title LIKE ? OR description LIKE ?) ORDER BY created_at DESC`;
+    const listings = await db.all(sql, ['%City%', '%apartment%', '%apartment%']);
+    res.render('city-stays', { listings });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+app.get('/beach-houses', async (req, res) => {
+  try {
+    const sql = `SELECT l.*, (
+      SELECT url FROM listing_images i WHERE i.listing_id = l.id LIMIT 1
+    ) as image_url FROM listings l WHERE location LIKE ? AND (title LIKE ? OR description LIKE ?) ORDER BY created_at DESC`;
+    const listings = await db.all(sql, ['%Seaside%', '%cottage%', '%cottage%']);
+    res.render('beach-houses', { listings });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+app.get('/mountain-retreats', async (req, res) => {
+  try {
+    const sql = `SELECT l.*, (
+      SELECT url FROM listing_images i WHERE i.listing_id = l.id LIMIT 1
+    ) as image_url FROM listings l WHERE location LIKE ? AND (title LIKE ? OR description LIKE ?) ORDER BY created_at DESC`;
+    const listings = await db.all(sql, ['%Highlands%', '%cabin%', '%cabin%']);
+    res.render('mountain-retreats', { listings });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
 app.get('/about', (req, res) => res.render('about'));
 
 app.get('/contact', (req, res) => res.render('contact', { message: null }));
@@ -124,7 +177,19 @@ app.post('/admin/backup', async (req, res) => {
   try {
     await db.init();
     const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => console.log(`Server listening on http://localhost:${PORT}`));
+    const server = app.listen(PORT, () => console.log(`Server listening on http://localhost:${PORT}`));
+    
+    // Handle server errors
+    server.on('error', (err) => {
+      console.error('Server error:', err);
+    });
+    
+    // Keep process alive
+    process.on('SIGTERM', () => {
+      console.log('SIGTERM received, closing server');
+      server.close();
+    });
+    
   } catch (err) {
     console.error('Failed to initialize DB', err);
     process.exit(1);

@@ -47,10 +47,15 @@ body { padding-bottom: 40px; font-family: 'Inter', system-ui, -apple-system, 'Se
   box-shadow: 0 2px 12px rgba(18,38,63,0.06);
   transition: all .3s ease;
   height: 100%;
+  cursor: pointer;
 }
 .quick-book-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 8px 24px rgba(18,38,63,0.12);
+}
+a.text-decoration-none:hover .quick-book-card h5,
+a.text-decoration-none:hover .quick-book-card p {
+  color: inherit;
 }
 
 /* Listing Cards */
@@ -96,9 +101,67 @@ body { padding-bottom: 40px; font-family: 'Inter', system-ui, -apple-system, 'Se
 .listing-meta { color: var(--muted); font-size: 0.95rem; }
 .footer { position: relative; bottom: 0; width: 100%; }
 
+/* Featured Rental Cards */
+.featured-rental-card {
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.featured-rental-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.featured-img-wrapper {
+  position: relative;
+  overflow: hidden;
+  height: 180px;
+}
+
+.featured-img-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.featured-rental-card:hover .featured-img-wrapper img {
+  transform: scale(1.05);
+}
+
+.badge-featured {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.featured-rental-card .card-body {
+  padding: 1rem;
+}
+
+.featured-rental-card .card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
 @media (max-width: 767px){
   .hero-banner { height: 400px; }
   .search-box-large { padding: 15px; }
   .hero-content h1 { font-size: 2rem; }
   .quick-book-card { margin-bottom: 15px; }
+  .featured-img-wrapper { height: 150px; }
 }

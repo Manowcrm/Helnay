@@ -1,0 +1,45 @@
+<div class="container my-5">
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2><i class="bi bi-building text-success"></i> City Stays</h2>
+      <p class="text-muted">Urban apartments near attractions</p>
+      <hr>
+    </div>
+  </div>
+
+  <div class="row">
+    <% if (listings.length === 0) { %>
+      <div class="col-12">
+        <div class="alert alert-info">No city apartments available at the moment.</div>
+      </div>
+    <% } else { %>
+      <% listings.forEach(function(listing){ %>
+        <div class="col-md-4 mb-4">
+          <div class="card listing-card h-100">
+            <div class="listing-img-wrapper">
+              <img src="<%= listing.image_url || 'https://via.placeholder.com/400x300' %>" class="card-img-top" alt="<%= listing.title %>">
+              <span class="badge badge-location"><i class="bi bi-geo-alt-fill"></i> <%= listing.location %></span>
+            </div>
+            <div class="card-body">
+              <h5 class="card-title"><%= listing.title %></h5>
+              <p class="card-text text-muted"><%= listing.description.substring(0, 80) %>...</p>
+              <div class="d-flex justify-content-between align-items-center mt-3">
+                <div>
+                  <strong class="text-success fs-4">$<%= listing.price %></strong>
+                  <small class="text-muted">/night</small>
+                </div>
+                <a href="/listings/<%= listing.id %>" class="btn btn-success btn-sm">View Details</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    <% } %>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-12">
+      <a href="/" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to Home</a>
+    </div>
+  </div>
+</div>

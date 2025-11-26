@@ -37,36 +37,44 @@
 <div class="container mt-5">
   <div class="row mb-4">
     <div class="col-md-3 mb-3">
-      <div class="quick-book-card text-center p-4">
-        <i class="bi bi-house-door fs-1 text-primary mb-3"></i>
-        <h5>Entire Homes</h5>
-        <p class="text-muted small">Private places with room for everyone</p>
-        <a href="/?type=home&min_price=0" class="btn btn-sm btn-outline-primary">Browse & Rent</a>
-      </div>
+      <a href="/entire-homes" class="text-decoration-none">
+        <div class="quick-book-card text-center p-4">
+          <i class="bi bi-house-door fs-1 text-primary mb-3"></i>
+          <h5>Entire Homes</h5>
+          <p class="text-muted small">Private places with room for everyone</p>
+          <button type="button" class="btn btn-sm btn-outline-primary">Browse & Rent</button>
+        </div>
+      </a>
     </div>
     <div class="col-md-3 mb-3">
-      <div class="quick-book-card text-center p-4">
-        <i class="bi bi-building fs-1 text-success mb-3"></i>
-        <h5>City Stays</h5>
-        <p class="text-muted small">Urban apartments near attractions</p>
-        <a href="/?location=City&type=apartment" class="btn btn-sm btn-outline-success">Browse & Rent</a>
-      </div>
+      <a href="/city-stays" class="text-decoration-none">
+        <div class="quick-book-card text-center p-4">
+          <i class="bi bi-building fs-1 text-success mb-3"></i>
+          <h5>City Stays</h5>
+          <p class="text-muted small">Urban apartments near attractions</p>
+          <button type="button" class="btn btn-sm btn-outline-success">Browse & Rent</button>
+        </div>
+      </a>
     </div>
     <div class="col-md-3 mb-3">
-      <div class="quick-book-card text-center p-4">
-        <i class="bi bi-water fs-1 text-info mb-3"></i>
-        <h5>Beach Houses</h5>
-        <p class="text-muted small">Seaside properties with ocean views</p>
-        <a href="/?location=Seaside&type=cottage" class="btn btn-sm btn-outline-info">Browse & Rent</a>
-      </div>
+      <a href="/beach-houses" class="text-decoration-none">
+        <div class="quick-book-card text-center p-4">
+          <i class="bi bi-water fs-1 text-info mb-3"></i>
+          <h5>Beach Houses</h5>
+          <p class="text-muted small">Seaside properties with ocean views</p>
+          <button type="button" class="btn btn-sm btn-outline-info">Browse & Rent</button>
+        </div>
+      </a>
     </div>
     <div class="col-md-3 mb-3">
-      <div class="quick-book-card text-center p-4">
-        <i class="bi bi-tree fs-1 text-warning mb-3"></i>
-        <h5>Mountain Retreats</h5>
-        <p class="text-muted small">Cabins perfect for nature lovers</p>
-        <a href="/?location=Highlands&type=cabin" class="btn btn-sm btn-outline-warning">Browse & Rent</a>
-      </div>
+      <a href="/mountain-retreats" class="text-decoration-none">
+        <div class="quick-book-card text-center p-4">
+          <i class="bi bi-tree fs-1 text-warning mb-3"></i>
+          <h5>Mountain Retreats</h5>
+          <p class="text-muted small">Cabins perfect for nature lovers</p>
+          <button type="button" class="btn btn-sm btn-outline-warning">Browse & Rent</button>
+        </div>
+      </a>
     </div>
   </div>
 </div>
@@ -106,5 +114,47 @@
       </div>
     </div>
   <% }) %>
+  </div>
+
+  <!-- Featured Rentals Section -->
+  <div class="row mt-5 pt-4 border-top">
+    <div class="col-12 mb-4">
+      <h3>More Properties Available for Rent</h3>
+      <p class="text-muted">Explore additional rental options in different locations</p>
+    </div>
+    <% 
+    const featuredRentals = [
+      { title: 'Luxury Penthouse', location: 'Manhattan', price: 450, type: 'apartment', image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80' },
+      { title: 'Lakeside Villa', location: 'Lake District', price: 320, type: 'villa', image: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80' },
+      { title: 'Desert Oasis Home', location: 'Arizona', price: 195, type: 'home', image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80' },
+      { title: 'Tropical Beach Villa', location: 'Miami Beach', price: 380, type: 'villa', image: 'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=800&q=80' },
+      { title: 'Downtown Studio', location: 'Chicago', price: 75, type: 'studio', image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80' },
+      { title: 'Mountain View Chalet', location: 'Swiss Alps', price: 280, type: 'chalet', image: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&q=80' },
+      { title: 'Historic Townhouse', location: 'Boston', price: 225, type: 'townhouse', image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80' },
+      { title: 'Waterfront Condo', location: 'Seattle', price: 165, type: 'condo', image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80' },
+      { title: 'Country Farmhouse', location: 'Vermont', price: 140, type: 'farmhouse', image: 'https://images.unsplash.com/photo-1596721853750-2f8e8c39e826?w=800&q=80' },
+      { title: 'Urban Loft Space', location: 'Brooklyn', price: 190, type: 'loft', image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80' }
+    ];
+    %>
+    <% featuredRentals.forEach(function(rental, idx){ %>
+      <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
+        <div class="card featured-rental-card h-100">
+          <div class="featured-img-wrapper">
+            <img src="<%= rental.image %>" class="card-img-top" alt="<%= rental.title %>">
+            <span class="badge badge-featured">Featured</span>
+          </div>
+          <div class="card-body">
+            <h6 class="card-title"><%= rental.title %></h6>
+            <p class="card-text text-muted small mb-2">
+              <i class="bi bi-geo-alt-fill"></i> <%= rental.location %>
+            </p>
+            <div class="d-flex justify-content-between align-items-center">
+              <span><strong class="text-primary">$<%= rental.price %></strong><small class="text-muted">/night</small></span>
+              <a href="/?location=<%= rental.location %>&type=<%= rental.type %>" class="btn btn-sm btn-outline-primary">View</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% }) %>
   </div>
 </div>
