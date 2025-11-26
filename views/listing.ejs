@@ -1,0 +1,32 @@
+<div class="row">
+	<div class="col-md-7">
+		<% if (images && images.length > 0) { %>
+			<div id="listingCarousel" class="carousel slide" data-bs-ride="carousel">
+				<div class="carousel-inner">
+					<% images.forEach(function(img, idx){ %>
+						<div class="carousel-item <%= idx === 0 ? 'active' : '' %>">
+							<img src="<%= img.url %>" class="d-block w-100" style="height:420px; object-fit:cover;" />
+						</div>
+					<% }) %>
+				</div>
+				<button class="carousel-control-prev" type="button" data-bs-target="#listingCarousel" data-bs-slide="prev">
+					<span class="carousel-control-prev-icon" aria-hidden="true"></span>
+					<span class="visually-hidden">Previous</span>
+				</button>
+				<button class="carousel-control-next" type="button" data-bs-target="#listingCarousel" data-bs-slide="next">
+					<span class="carousel-control-next-icon" aria-hidden="true"></span>
+					<span class="visually-hidden">Next</span>
+				</button>
+			</div>
+		<% } else { %>
+			<div class="border" style="height:420px; display:flex; align-items:center; justify-content:center; background:#f8f9fa;">No photos</div>
+		<% } %>
+	</div>
+	<div class="col-md-5">
+		<h1><%= listing.title %></h1>
+		<p class="text-muted"><strong>Location:</strong> <%= listing.location %></p>
+		<h3 class="text-primary">$<%= listing.price %> <small class="text-muted">/ night</small></h3>
+		<p><%= listing.description %></p>
+		<a class="btn btn-success btn-lg" href="/bookings?listing_id=<%= listing.id %>">Book Now</a>
+	</div>
+</div>

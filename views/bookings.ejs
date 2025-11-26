@@ -1,0 +1,30 @@
+<h1>Make a Booking</h1>
+<form method="POST" class="row g-3">
+  <div class="col-md-6">
+    <label class="form-label">Listing</label>
+    <select name="listing_id" class="form-select" required>
+      <% listings.forEach(function(l){ %>
+        <option value="<%= l.id %>"><%= l.title %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-md-6">
+    <label class="form-label">Your name</label>
+    <input name="name" class="form-control" required />
+  </div>
+  <div class="col-md-6">
+    <label class="form-label">Email</label>
+    <input name="email" type="email" class="form-control" required />
+  </div>
+  <div class="col-md-3">
+    <label class="form-label">Check-in</label>
+    <input name="checkin" type="date" class="form-control" required />
+  </div>
+  <div class="col-md-3">
+    <label class="form-label">Check-out</label>
+    <input name="checkout" type="date" class="form-control" required />
+  </div>
+  <div class="col-12">
+    <button class="btn btn-primary">Confirm Booking</button>
+  </div>
+</form>

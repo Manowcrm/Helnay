@@ -1,0 +1,52 @@
+<div class="hero">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <h1 class="mb-2">Find your next stay</h1>
+        <p class="text-muted">Search thousands of homes — filter by location, price and more.</p>
+      </div>
+      <div class="col-md-6">
+        <form method="GET" class="search-box">
+          <div class="row g-2">
+            <div class="col-md-5">
+              <input name="q" class="form-control" placeholder="Search title or description" value="<%= (typeof query !== 'undefined' && query.q) ? query.q : '' %>">
+            </div>
+            <div class="col-md-3">
+              <input name="location" class="form-control" placeholder="Location" value="<%= (typeof query !== 'undefined' && query.location) ? query.location : '' %>">
+            </div>
+            <div class="col-md-2">
+              <input name="min_price" class="form-control" placeholder="Min" type="number" min="0" value="<%= (typeof query !== 'undefined' && query.min_price) ? query.min_price : '' %>">
+            </div>
+            <div class="col-md-2 d-grid">
+              <button class="btn btn-primary">Search</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <% if (!listings || listings.length === 0) { %>
+    <div class="col-12"><p>No listings found.</p></div>
+  <% } %>
+  <% listings.forEach(function(l){ %>
+    <div class="col-md-4 mb-3">
+      <div class="card h-100">
+        <% if (l.image_url) { %>
+          <img src="<%= l.image_url %>" class="card-img-top" style="height:180px; object-fit:cover;" alt="">
+        <% } %>
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title"><%= l.title %></h5>
+          <p class="card-text text-muted"><%= l.location %></p>
+          <p class="card-text"><%= l.description.length > 120 ? l.description.substring(0,120) + '...' : l.description %></p>
+          <div class="mt-auto d-flex justify-content-between align-items-center">
+            <strong>$<%= l.price %></strong>
+            <a href="/listings/<%= l.id %>" class="btn btn-primary btn-sm">View</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+</div>

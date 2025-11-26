@@ -1,0 +1,27 @@
+<h1>Bookings (Admin)</h1>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Listing</th>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Check-in</th>
+      <th>Check-out</th>
+      <th>Created</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% bookings.forEach(function(b){ %>
+      <tr>
+        <td><%= b.id %></td>
+        <td><%= b.title %></td>
+        <td><%= b.name %></td>
+        <td><%= b.email %></td>
+        <td><%= b.checkin %></td>
+        <td><%= b.checkout %></td>
+        <td><%= b.created_at %></td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>

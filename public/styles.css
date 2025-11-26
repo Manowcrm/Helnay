@@ -1,0 +1,25 @@
+:root{
+	--brand:#0d6efd;
+	--muted:#6c757d;
+}
+body { padding-bottom: 40px; font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background:#f7f8fb; }
+.hero {
+	background: linear-gradient(180deg, rgba(13,110,253,0.08), rgba(247,248,250,0.6));
+	padding: 36px 0 28px;
+	border-radius: 8px;
+	margin-bottom: 24px;
+}
+.hero .search-box { background: #fff; padding: 18px; border-radius: 8px; box-shadow: 0 6px 18px rgba(18,38,63,0.06); }
+.card { min-height: 220px; border-radius: 10px; overflow: hidden; transition: transform .18s ease, box-shadow .18s ease; }
+.card:hover{ transform: translateY(-6px); box-shadow: 0 12px 30px rgba(18,38,63,0.08); }
+.card .card-img-top{ transition: transform .3s ease; }
+.card:hover .card-img-top{ transform: scale(1.03); }
+.btn-primary { background: var(--brand); border-color: var(--brand); }
+.badge-muted { background: var(--muted); color: white; }
+.listing-meta { color: var(--muted); font-size: 0.95rem; }
+.footer { position: relative; bottom: 0; width: 100%; }
+
+@media (max-width: 767px){
+	.hero { padding: 20px 0; }
+	.hero .search-box { padding: 12px; }
+}
