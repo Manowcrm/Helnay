@@ -10,6 +10,7 @@ const db = require('./db');
 const { backupDatabase } = require('./s3-backup');
 const expressLayouts = require('express-ejs-layouts');
 const { isAuthenticated, isAdmin } = require('./auth-middleware');
+const { sendBookingApprovalEmail, sendBookingDenialEmail } = require('./email-service');
 
 const app = express();
 app.set('view engine', 'ejs');
@@ -292,7 +293,19 @@ app.get('/admin/bookings', isAdmin, async (req, res) => {
 // Admin: approve booking
 app.post('/admin/bookings/:id/approve', isAdmin, async (req, res) => {
   try {
+    // Get booking and listing details
+    const booking = await db.get('SELECT b.*, l.title, l.location, l.price FROM bookings b JOIN listings l ON b.listing_id = l.id WHERE b.id = ?', [req.params.id]);
+    
+    if (!booking) {
+      return res.status(404).send('Booking not found');
+    }
+    
+    // Update booking status
     await db.run('UPDATE bookings SET status = ? WHERE id = ?', ['approved', req.params.id]);
+    
+    // Send approval email
+    await sendBookingApprovalEmail(booking, booking);
+    
     res.redirect('/admin/bookings');
   } catch (err) {
     console.error(err);
@@ -303,7 +316,19 @@ app.post('/admin/bookings/:id/approve', isAdmin, async (req, res) => {
 // Admin: deny booking
 app.post('/admin/bookings/:id/deny', isAdmin, async (req, res) => {
   try {
+    // Get booking and listing details
+    const booking = await db.get('SELECT b.*, l.title, l.location, l.price FROM bookings b JOIN listings l ON b.listing_id = l.id WHERE b.id = ?', [req.params.id]);
+    
+    if (!booking) {
+      return res.status(404).send('Booking not found');
+    }
+    
+    // Update booking status
     await db.run('UPDATE bookings SET status = ? WHERE id = ?', ['denied', req.params.id]);
+    
+    // Send denial email
+    await sendBookingDenialEmail(booking, booking);
+    
     res.redirect('/admin/bookings');
   } catch (err) {
     console.error(err);
