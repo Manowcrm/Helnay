@@ -1,0 +1,63 @@
+<div class="container mt-4">
+  <h1>Admin Dashboard</h1>
+  
+  <div class="row mt-4">
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <i class="bi bi-house-door fs-1 text-primary"></i>
+          <h5 class="card-title mt-2">Listings</h5>
+          <p class="card-text fs-3"><%= stats.listings %></p>
+          <a href="/admin/listings" class="btn btn-primary">Manage</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <i class="bi bi-calendar-check fs-1 text-success"></i>
+          <h5 class="card-title mt-2">Bookings</h5>
+          <p class="card-text fs-3"><%= stats.bookings %></p>
+          <a href="/admin/bookings" class="btn btn-success">Manage</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <i class="bi bi-people fs-1 text-info"></i>
+          <h5 class="card-title mt-2">Users</h5>
+          <p class="card-text fs-3"><%= stats.users %></p>
+          <a href="/admin/users" class="btn btn-info">Manage</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <i class="bi bi-envelope fs-1 text-warning"></i>
+          <h5 class="card-title mt-2">Messages</h5>
+          <p class="card-text fs-3"><%= stats.contacts %></p>
+          <a href="/admin/contacts" class="btn btn-warning">View</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="row mt-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5>Recent Activity</h5>
+        </div>
+        <div class="card-body">
+          <h6>Pending Bookings: <%= stats.pendingBookings %></h6>
+          <a href="/admin/bookings" class="btn btn-sm btn-primary">Review Pending</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

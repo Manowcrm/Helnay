@@ -1,0 +1,54 @@
+<div class="container mt-4">
+  <h1>User Bookings - <%= userName %></h1>
+  <a href="/admin/users" class="btn btn-secondary mb-3">
+    <i class="bi bi-arrow-left"></i> Back to Users
+  </a>
+
+  <% if (bookings.length === 0) { %>
+    <div class="alert alert-info">This user has no bookings.</div>
+  <% } else { %>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Property</th>
+          <th>Check-in</th>
+          <th>Check-out</th>
+          <th>Status</th>
+          <th>Booked On</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% bookings.forEach(function(b){ %>
+          <tr>
+            <td><%= b.id %></td>
+            <td><%= b.title %></td>
+            <td><%= b.checkin %></td>
+            <td><%= b.checkout %></td>
+            <td>
+              <% if (b.status === 'approved') { %>
+                <span class="badge bg-success">Approved</span>
+              <% } else if (b.status === 'denied') { %>
+                <span class="badge bg-danger">Denied</span>
+              <% } else { %>
+                <span class="badge bg-warning text-dark">Pending</span>
+              <% } %>
+            </td>
+            <td><%= new Date(b.created_at).toLocaleDateString() %></td>
+            <td>
+              <% if (!b.status || b.status === 'pending') { %>
+                <form method="POST" action="/admin/bookings/<%= b.id %>/approve" style="display:inline;">
+                  <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                </form>
+                <form method="POST" action="/admin/bookings/<%= b.id %>/deny" style="display:inline;">
+                  <button type="submit" class="btn btn-sm btn-danger">Deny</button>
+                </form>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</div>

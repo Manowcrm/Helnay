@@ -27,12 +27,17 @@
             <span class="badge bg-success">Approved</span>
           <% } else if (b.status === 'denied') { %>
             <span class="badge bg-danger">Denied</span>
+          <% } else if (b.status === 'cancelled') { %>
+            <span class="badge bg-secondary">Cancelled</span>
           <% } else { %>
             <span class="badge bg-warning text-dark">Pending</span>
           <% } %>
         </td>
         <td><%= b.created_at %></td>
         <td>
+          <a href="/admin/bookings/<%= b.id %>/edit" class="btn btn-sm btn-warning">
+            <i class="bi bi-pencil"></i> Edit
+          </a>
           <% if (!b.status || b.status === 'pending') { %>
             <form method="POST" action="/admin/bookings/<%= b.id %>/approve" style="display:inline;">
               <button type="submit" class="btn btn-sm btn-success">Approve</button>
@@ -40,8 +45,6 @@
             <form method="POST" action="/admin/bookings/<%= b.id %>/deny" style="display:inline;">
               <button type="submit" class="btn btn-sm btn-danger">Deny</button>
             </form>
-          <% } else { %>
-            <span class="text-muted">-</span>
           <% } %>
         </td>
       </tr>

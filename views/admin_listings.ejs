@@ -1,0 +1,54 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Manage Listings</h1>
+    <a href="/admin/listings/new" class="btn btn-success">
+      <i class="bi bi-plus-circle"></i> Add New Listing
+    </a>
+  </div>
+
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Image</th>
+        <th>Title</th>
+        <th>Location</th>
+        <th>Type</th>
+        <th>Price/Night</th>
+        <th>Bedrooms</th>
+        <th>Created</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% listings.forEach(function(l){ %>
+        <tr>
+          <td><%= l.id %></td>
+          <td>
+            <% if (l.image_url) { %>
+              <img src="<%= l.image_url %>" alt="<%= l.title %>" style="width:50px;height:50px;object-fit:cover;border-radius:4px;">
+            <% } else { %>
+              <div style="width:50px;height:50px;background:#ddd;border-radius:4px;"></div>
+            <% } %>
+          </td>
+          <td><%= l.title %></td>
+          <td><%= l.location %></td>
+          <td><%= l.type || 'N/A' %></td>
+          <td>$<%= l.price %></td>
+          <td><%= l.bedrooms %></td>
+          <td><%= new Date(l.created_at).toLocaleDateString() %></td>
+          <td>
+            <a href="/admin/listings/<%= l.id %>/edit" class="btn btn-sm btn-warning">
+              <i class="bi bi-pencil"></i> Edit
+            </a>
+            <form method="POST" action="/admin/listings/<%= l.id %>/delete" style="display:inline;">
+              <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this listing?')">
+                <i class="bi bi-trash"></i> Delete
+              </button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,49 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Manage Users</h1>
+  </div>
+
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Registered</th>
+        <th>Total Bookings</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% users.forEach(function(u){ %>
+        <tr>
+          <td><%= u.id %></td>
+          <td><%= u.name %></td>
+          <td><%= u.email %></td>
+          <td>
+            <% if (u.role === 'admin') { %>
+              <span class="badge bg-danger">Admin</span>
+            <% } else { %>
+              <span class="badge bg-secondary">User</span>
+            <% } %>
+          </td>
+          <td><%= new Date(u.created_at).toLocaleDateString() %></td>
+          <td><%= u.booking_count || 0 %></td>
+          <td>
+            <a href="/admin/users/<%= u.id %>/bookings" class="btn btn-sm btn-info">
+              <i class="bi bi-calendar"></i> View Bookings
+            </a>
+            <% if (u.role !== 'admin') { %>
+              <form method="POST" action="/admin/users/<%= u.id %>/delete" style="display:inline;">
+                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this user?')">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>

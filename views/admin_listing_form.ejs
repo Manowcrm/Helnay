@@ -1,0 +1,147 @@
+<div class="container mt-4">
+  <h1><%= listing.id ? 'Edit' : 'Add New' %> Listing</h1>
+  
+  <form method="POST" action="/admin/listings/<%= listing.id ? listing.id + '/update' : 'create' %>">
+    <div class="row">
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label for="title" class="form-label">Title *</label>
+          <input type="text" class="form-control" id="title" name="title" value="<%= listing.title || '' %>" required>
+        </div>
+      </div>
+      
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label for="location" class="form-label">Location *</label>
+          <input type="text" class="form-control" id="location" name="location" value="<%= listing.location || '' %>" required>
+        </div>
+      </div>
+    </div>
+    
+    <div class="row">
+      <div class="col-md-4">
+        <div class="mb-3">
+          <label for="price" class="form-label">Price per Night ($) *</label>
+          <input type="number" class="form-control" id="price" name="price" value="<%= listing.price || '' %>" required>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="mb-3">
+          <label for="bedrooms" class="form-label">Bedrooms *</label>
+          <input type="number" class="form-control" id="bedrooms" name="bedrooms" value="<%= listing.bedrooms || '' %>" required>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="mb-3">
+          <label for="bathrooms" class="form-label">Bathrooms *</label>
+          <input type="number" class="form-control" id="bathrooms" name="bathrooms" value="<%= listing.bathrooms || '' %>" required>
+        </div>
+      </div>
+    </div>
+    
+    <div class="row">
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label for="type" class="form-label">Property Type</label>
+          <select class="form-control" id="type" name="type">
+            <option value="">Select Type</option>
+            <option value="apartment" <%= listing.type === 'apartment' ? 'selected' : '' %>>Apartment</option>
+            <option value="house" <%= listing.type === 'house' ? 'selected' : '' %>>House</option>
+            <option value="villa" <%= listing.type === 'villa' ? 'selected' : '' %>>Villa</option>
+            <option value="cottage" <%= listing.type === 'cottage' ? 'selected' : '' %>>Cottage</option>
+            <option value="cabin" <%= listing.type === 'cabin' ? 'selected' : '' %>>Cabin</option>
+            <option value="condo" <%= listing.type === 'condo' ? 'selected' : '' %>>Condo</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label for="max_guests" class="form-label">Max Guests</label>
+          <input type="number" class="form-control" id="max_guests" name="max_guests" value="<%= listing.max_guests || '' %>">
+        </div>
+      </div>
+    </div>
+    
+    <div class="mb-3">
+      <label for="description" class="form-label">Description *</label>
+      <textarea class="form-control" id="description" name="description" rows="5" required><%= listing.description || '' %></textarea>
+    </div>
+    
+    <div class="mb-3">
+      <label class="form-label">Amenities (comma-separated)</label>
+      <input type="text" class="form-control" name="amenities" value="<%= listing.amenities || '' %>" placeholder="WiFi, Pool, Parking, Kitchen, etc.">
+    </div>
+    
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-save"></i> <%= listing.id ? 'Update' : 'Create' %> Listing
+      </button>
+      <a href="/admin/listings" class="btn btn-secondary">
+        <i class="bi bi-x-circle"></i> Cancel
+      </a>
+    </div>
+  </form>
+  
+  <% if (listing.id) { %>
+    <hr class="my-4">
+    <h5 class="mt-4">Manage Images</h5>
+      <% if (images.length === 0) { %>
+        <p class="text-muted">No images yet. Add images using the form below.</p>
+      <% } else { %>
+        <div class="row mb-3">
+          <% images.forEach(function(img){ %>
+            <div class="col-md-3 mb-3">
+              <div class="card">
+                <img src="<%= img.url %>" class="card-img-top" alt="Property image" style="height:150px;object-fit:cover;">
+                <div class="card-body p-2">
+                  <form method="POST" action="/admin/listings/<%= listing.id %>/images/<%= img.id %>/delete">
+                    <button type="submit" class="btn btn-sm btn-danger w-100" onclick="return confirm('Delete this image?')">
+                      <i class="bi bi-trash"></i> Delete
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+      
+      <div class="card">
+        <div class="card-header">
+          <h6 class="mb-0">Add New Image</h6>
+        </div>
+        <div class="card-body">
+          <form method="POST" action="/admin/listings/<%= listing.id %>/images/add">
+            <label for="new_image" class="form-label">Image URL</label>
+            <input type="text" class="form-control mb-2" id="new_image" name="new_image" placeholder="https://images.unsplash.com/photo-..." required>
+            <div class="alert alert-info small mt-2 mb-2">
+              <strong>📤 Option 1 - Upload to Image Hosting (Recommended):</strong><br>
+              • <a href="https://imgbb.com" target="_blank" class="fw-bold">ImgBB</a> - Free, no account, works worldwide<br>
+              • <a href="https://postimages.org" target="_blank">Postimages</a> - Free, simple upload<br>
+              • <a href="https://freeimage.host" target="_blank">FreeImage.host</a> - No registration needed<br>
+              <small>Upload your desktop image → Copy "Direct link" → Paste above</small><br><br>
+              
+              <strong>💻 Option 2 - Use Local Images (For Testing):</strong><br>
+              1. Copy image to: <code>C:\Manow\SCC\Helnay\public\images\listings\</code><br>
+              2. Use URL: <code>/images/listings/your-image.jpg</code><br>
+              <small class="text-warning">⚠️ Only works on your computer</small><br><br>
+              
+              <strong>📷 Option 3 - Free Stock Photos:</strong><br>
+              • <a href="https://unsplash.com" target="_blank">Unsplash</a> - High quality property photos<br>
+              • <a href="https://pixabay.com" target="_blank">Pixabay</a> - Free images & videos
+            </div>
+            <button type="submit" class="btn btn-success btn-sm">
+              <i class="bi bi-plus-circle"></i> Add Image
+            </button>
+          </form>
+        </div>
+      </div>
+    <% } else { %>
+      <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Save the listing first, then you can add images.
+      </div>
+    <% } %>
+</div>

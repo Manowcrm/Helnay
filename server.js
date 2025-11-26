@@ -10,7 +10,7 @@ const db = require('./db');
 const { backupDatabase } = require('./s3-backup');
 const expressLayouts = require('express-ejs-layouts');
 const { isAuthenticated, isAdmin } = require('./auth-middleware');
-const { sendBookingApprovalEmail, sendBookingDenialEmail } = require('./email-service');
+const { sendBookingApprovalEmail, sendBookingDenialEmail, sendBookingDateChangeEmail, sendBookingCancellationEmail, sendContactNotificationToAdmin } = require('./email-service');
 
 const app = express();
 app.set('view engine', 'ejs');
@@ -125,7 +125,7 @@ app.post('/login', async (req, res) => {
     
     // Redirect based on role
     if (user.role === 'admin') {
-      res.redirect('/admin/bookings');
+      res.redirect('/admin');
     } else {
       res.redirect('/');
     }
@@ -244,6 +244,10 @@ app.post('/contact', async (req, res) => {
   try {
     const { name, email, message } = req.body;
     await db.run('INSERT INTO contacts (name,email,message,created_at) VALUES (?,?,?,?)', [name, email, message, new Date().toISOString()]);
+    
+    // Send notification email to admin
+    await sendContactNotificationToAdmin({ name, email, message });
+    
     res.render('contact', { message: 'Thanks — your message was sent.' });
   } catch (err) {
     res.status(500).send('Server error');
@@ -272,10 +276,35 @@ app.get('/bookings', async (req, res) => {
 });
 app.post('/bookings', async (req, res) => {
   try {
-    const { listing_id, name, email, checkin, checkout } = req.body;
+    const { listing_id, name, email, checkin_date, checkin_time, checkout_date, checkout_time } = req.body;
+    const checkin = `${checkin_date} ${checkin_time}`;
+    const checkout = `${checkout_date} ${checkout_time}`;
     await db.run('INSERT INTO bookings (listing_id,name,email,checkin,checkout,created_at) VALUES (?,?,?,?,?,?)', [listing_id, name, email, checkin, checkout, new Date().toISOString()]);
     res.render('booking_confirm', { name });
   } catch (err) {
+    res.status(500).send('Server error');
+  }
+});
+
+// Log all admin requests for debugging
+app.use('/admin', (req, res, next) => {
+  console.log(`[ADMIN REQUEST] ${req.method} ${req.path} - Full URL: ${req.originalUrl}`);
+  next();
+});
+
+// Admin: dashboard (protected)
+app.get('/admin', isAdmin, async (req, res) => {
+  try {
+    const stats = {
+      listings: (await db.get('SELECT COUNT(*) as count FROM listings')).count,
+      bookings: (await db.get('SELECT COUNT(*) as count FROM bookings')).count,
+      users: (await db.get('SELECT COUNT(*) as count FROM users')).count,
+      contacts: (await db.get('SELECT COUNT(*) as count FROM contacts')).count,
+      pendingBookings: (await db.get('SELECT COUNT(*) as count FROM bookings WHERE status IS NULL OR status = "pending"')).count
+    };
+    res.render('admin_dashboard', { stats });
+  } catch (err) {
+    console.error(err);
     res.status(500).send('Server error');
   }
 });
@@ -286,6 +315,175 @@ app.get('/admin/bookings', isAdmin, async (req, res) => {
     const bookings = await db.all('SELECT b.*, l.title FROM bookings b JOIN listings l ON b.listing_id = l.id ORDER BY b.created_at DESC');
     res.render('admin_bookings', { bookings });
   } catch (err) {
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: manage listings
+app.get('/admin/listings', isAdmin, async (req, res) => {
+  try {
+    const listings = await db.all(`SELECT l.*, (
+      SELECT url FROM listing_images i WHERE i.listing_id = l.id LIMIT 1
+    ) as image_url FROM listings l ORDER BY l.created_at DESC`);
+    res.render('admin_listings', { listings });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: new listing form
+app.get('/admin/listings/new', isAdmin, (req, res) => {
+  res.render('admin_listing_form', { listing: {}, images: [] });
+});
+
+// Admin: create listing
+app.post('/admin/listings/create', isAdmin, async (req, res) => {
+  try {
+    const { title, location, price, bedrooms, bathrooms, description, type, max_guests, amenities } = req.body;
+    const result = await db.run(
+      'INSERT INTO listings (title, location, price, bedrooms, bathrooms, description, type, max_guests, amenities, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [title, location, price, bedrooms, bathrooms, description, type || null, max_guests || null, amenities || null, new Date().toISOString()]
+    );
+    res.redirect('/admin/listings');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: edit listing form
+app.get('/admin/listings/:id/edit', isAdmin, async (req, res) => {
+  try {
+    const listing = await db.get('SELECT * FROM listings WHERE id = ?', [req.params.id]);
+    if (!listing) return res.status(404).send('Listing not found');
+    const images = await db.all('SELECT * FROM listing_images WHERE listing_id = ?', [req.params.id]);
+    res.render('admin_listing_form', { listing, images });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: add image to listing
+app.post('/admin/listings/:listingId/images/add', isAdmin, async (req, res) => {
+  console.log('Add image route hit:', { listingId: req.params.listingId, url: req.body.new_image });
+  try {
+    const { new_image } = req.body;
+    if (new_image && new_image.trim()) {
+      await db.run('INSERT INTO listing_images (listing_id, url) VALUES (?, ?)', [req.params.listingId, new_image.trim()]);
+    }
+    res.redirect('/admin/listings/' + req.params.listingId + '/edit');
+  } catch (err) {
+    console.error('Error adding image:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: delete listing image (MORE SPECIFIC ROUTE - must be before /:id/update and /:id/delete)
+app.post('/admin/listings/:listingId/images/:imageId/delete', isAdmin, async (req, res) => {
+  console.log('Image delete route hit:', { listingId: req.params.listingId, imageId: req.params.imageId });
+  try {
+    await db.run('DELETE FROM listing_images WHERE id = ? AND listing_id = ?', [req.params.imageId, req.params.listingId]);
+    console.log('Image deleted, redirecting to edit page');
+    res.redirect('/admin/listings/' + req.params.listingId + '/edit');
+  } catch (err) {
+    console.error('Error deleting image:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: update listing
+app.post('/admin/listings/:id/update', isAdmin, async (req, res) => {
+  try {
+    const { title, location, price, bedrooms, bathrooms, description, type, max_guests, amenities } = req.body;
+    await db.run(
+      'UPDATE listings SET title = ?, location = ?, price = ?, bedrooms = ?, bathrooms = ?, description = ?, type = ?, max_guests = ?, amenities = ? WHERE id = ?',
+      [title, location, price, bedrooms, bathrooms, description, type || null, max_guests || null, amenities || null, req.params.id]
+    );
+    res.redirect('/admin/listings');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: delete listing
+app.post('/admin/listings/:id/delete', isAdmin, async (req, res) => {
+  console.log('Listing delete route hit:', { id: req.params.id, fullPath: req.path });
+  try {
+    await db.run('DELETE FROM listing_images WHERE listing_id = ?', [req.params.id]);
+    await db.run('DELETE FROM listings WHERE id = ?', [req.params.id]);
+    res.redirect('/admin/listings');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: manage users
+app.get('/admin/users', isAdmin, async (req, res) => {
+  try {
+    const users = await db.all(`
+      SELECT u.*, COUNT(b.id) as booking_count 
+      FROM users u 
+      LEFT JOIN bookings b ON b.email = u.email 
+      GROUP BY u.id 
+      ORDER BY u.created_at DESC
+    `);
+    res.render('admin_users', { users });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: view user bookings
+app.get('/admin/users/:id/bookings', isAdmin, async (req, res) => {
+  try {
+    const user = await db.get('SELECT * FROM users WHERE id = ?', [req.params.id]);
+    if (!user) return res.status(404).send('User not found');
+    
+    const bookings = await db.all(
+      'SELECT b.*, l.title FROM bookings b JOIN listings l ON b.listing_id = l.id WHERE b.email = ? ORDER BY b.created_at DESC',
+      [user.email]
+    );
+    res.render('admin_user_bookings', { bookings, userName: user.name });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: delete user
+app.post('/admin/users/:id/delete', isAdmin, async (req, res) => {
+  try {
+    await db.run('DELETE FROM users WHERE id = ? AND role != "admin"', [req.params.id]);
+    res.redirect('/admin/users');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: view contacts
+app.get('/admin/contacts', isAdmin, async (req, res) => {
+  try {
+    const contacts = await db.all('SELECT * FROM contacts ORDER BY created_at DESC');
+    res.render('admin_contacts', { contacts });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: delete contact
+app.post('/admin/contacts/:id/delete', isAdmin, async (req, res) => {
+  try {
+    await db.run('DELETE FROM contacts WHERE id = ?', [req.params.id]);
+    res.redirect('/admin/contacts');
+  } catch (err) {
+    console.error(err);
     res.status(500).send('Server error');
   }
 });
@@ -329,6 +527,80 @@ app.post('/admin/bookings/:id/deny', isAdmin, async (req, res) => {
     // Send denial email
     await sendBookingDenialEmail(booking, booking);
     
+    res.redirect('/admin/bookings');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: edit booking form
+app.get('/admin/bookings/:id/edit', isAdmin, async (req, res) => {
+  try {
+    const booking = await db.get('SELECT * FROM bookings WHERE id = ?', [req.params.id]);
+    if (!booking) return res.status(404).send('Booking not found');
+    
+    const listing = await db.get('SELECT * FROM listings WHERE id = ?', [booking.listing_id]);
+    res.render('admin_booking_edit', { booking, listing });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: update booking
+app.post('/admin/bookings/:id/update', isAdmin, async (req, res) => {
+  try {
+    const { checkin_date, checkin_time, checkout_date, checkout_time, status } = req.body;
+    const checkin = `${checkin_date} ${checkin_time}`;
+    const checkout = `${checkout_date} ${checkout_time}`;
+    
+    // Get original booking data before update
+    const originalBooking = await db.get('SELECT * FROM bookings WHERE id = ?', [req.params.id]);
+    const listing = await db.get('SELECT * FROM listings WHERE id = ?', [originalBooking.listing_id]);
+    
+    // Update booking
+    await db.run(
+      'UPDATE bookings SET checkin = ?, checkout = ?, status = ? WHERE id = ?',
+      [checkin, checkout, status, req.params.id]
+    );
+    
+    // Check if status changed to cancelled
+    const statusChanged = originalBooking.status !== status;
+    if (statusChanged && status === 'cancelled') {
+      // Send cancellation email
+      const updatedBooking = await db.get('SELECT * FROM bookings WHERE id = ?', [req.params.id]);
+      await sendBookingCancellationEmail(updatedBooking, listing);
+    } else {
+      // Check if dates changed
+      const datesChanged = originalBooking.checkin !== checkin || originalBooking.checkout !== checkout;
+      
+      // Send email notification if dates changed
+      if (datesChanged) {
+        const updatedBooking = await db.get('SELECT * FROM bookings WHERE id = ?', [req.params.id]);
+        await sendBookingDateChangeEmail(updatedBooking, listing, originalBooking.checkin, originalBooking.checkout);
+      }
+    }
+    
+    res.redirect('/admin/bookings');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: delete booking
+app.post('/admin/bookings/:id/delete', isAdmin, async (req, res) => {
+  try {
+    // Get booking and listing details before deletion
+    const booking = await db.get('SELECT * FROM bookings WHERE id = ?', [req.params.id]);
+    const listing = await db.get('SELECT * FROM listings WHERE id = ?', [booking.listing_id]);
+    
+    // Send cancellation email
+    await sendBookingCancellationEmail(booking, listing);
+    
+    // Delete booking
+    await db.run('DELETE FROM bookings WHERE id = ?', [req.params.id]);
     res.redirect('/admin/bookings');
   } catch (err) {
     console.error(err);
