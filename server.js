@@ -2,9 +2,14 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
+const session = require('express-session');
+const SqliteStore = require('better-sqlite3-session-store')(session);
+const BetterSqlite3 = require('better-sqlite3');
+const bcrypt = require('bcryptjs');
 const db = require('./db');
 const { backupDatabase } = require('./s3-backup');
 const expressLayouts = require('express-ejs-layouts');
+const { isAuthenticated, isAdmin } = require('./auth-middleware');
 
 const app = express();
 app.set('view engine', 'ejs');
@@ -13,6 +18,129 @@ app.use(expressLayouts);
 app.set('layout', 'layout');
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: false }));
+
+// Session configuration with persistent store
+const sessionDb = new BetterSqlite3(path.join(__dirname, 'data', 'sessions.db'));
+app.use(session({
+  store: new SqliteStore({
+    client: sessionDb,
+    expired: {
+      clear: true,
+      intervalMs: 900000 // 15 minutes
+    }
+  }),
+  secret: process.env.SESSION_SECRET || 'your-secret-key-change-this-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: false, // Set to true if using HTTPS
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+// Make user info available to all views
+app.use((req, res, next) => {
+  res.locals.user = req.session.userId ? {
+    id: req.session.userId,
+    name: req.session.userName,
+    email: req.session.userEmail,
+    role: req.session.role
+  } : null;
+  next();
+});
+
+// ====== AUTHENTICATION ROUTES ======
+
+// Register page
+app.get('/register', (req, res) => {
+  res.render('register', { message: null, error: null });
+});
+
+app.post('/register', async (req, res) => {
+  try {
+    const { name, email, password, confirmPassword } = req.body;
+    
+    if (!name || !email || !password) {
+      return res.render('register', { message: null, error: 'All fields are required' });
+    }
+    
+    if (password !== confirmPassword) {
+      return res.render('register', { message: null, error: 'Passwords do not match' });
+    }
+    
+    // Check if user already exists
+    const existingUser = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+    if (existingUser) {
+      return res.render('register', { message: null, error: 'Email already registered' });
+    }
+    
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Create user
+    await db.run(
+      'INSERT INTO users (name, email, password, role, created_at) VALUES (?, ?, ?, ?, ?)',
+      [name, email, hashedPassword, 'user', new Date().toISOString()]
+    );
+    
+    res.render('register', { message: 'Registration successful! Please login.', error: null });
+  } catch (err) {
+    console.error(err);
+    res.render('register', { message: null, error: 'Registration failed' });
+  }
+});
+
+// Login page
+app.get('/login', (req, res) => {
+  res.render('login', { message: null, error: null });
+});
+
+app.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.render('login', { message: null, error: 'Email and password are required' });
+    }
+    
+    // Find user
+    const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+    if (!user) {
+      return res.render('login', { message: null, error: 'Invalid email or password' });
+    }
+    
+    // Check password
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.render('login', { message: null, error: 'Invalid email or password' });
+    }
+    
+    // Set session
+    req.session.userId = user.id;
+    req.session.userName = user.name;
+    req.session.userEmail = user.email;
+    req.session.role = user.role;
+    
+    // Redirect based on role
+    if (user.role === 'admin') {
+      res.redirect('/admin/bookings');
+    } else {
+      res.redirect('/');
+    }
+  } catch (err) {
+    console.error(err);
+    res.render('login', { message: null, error: 'Login failed' });
+  }
+});
+
+// Logout
+app.get('/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/');
+});
+
+// ====== PUBLIC ROUTES ======
 
 // Home - show listings
 app.get('/', async (req, res) => {
@@ -151,8 +279,8 @@ app.post('/bookings', async (req, res) => {
   }
 });
 
-// Admin: view bookings
-app.get('/admin/bookings', async (req, res) => {
+// Admin: view bookings (protected)
+app.get('/admin/bookings', isAdmin, async (req, res) => {
   try {
     const bookings = await db.all('SELECT b.*, l.title FROM bookings b JOIN listings l ON b.listing_id = l.id ORDER BY b.created_at DESC');
     res.render('admin_bookings', { bookings });
@@ -161,8 +289,30 @@ app.get('/admin/bookings', async (req, res) => {
   }
 });
 
-// Admin: trigger S3 database backup
-app.post('/admin/backup', async (req, res) => {
+// Admin: approve booking
+app.post('/admin/bookings/:id/approve', isAdmin, async (req, res) => {
+  try {
+    await db.run('UPDATE bookings SET status = ? WHERE id = ?', ['approved', req.params.id]);
+    res.redirect('/admin/bookings');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: deny booking
+app.post('/admin/bookings/:id/deny', isAdmin, async (req, res) => {
+  try {
+    await db.run('UPDATE bookings SET status = ? WHERE id = ?', ['denied', req.params.id]);
+    res.redirect('/admin/bookings');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: trigger S3 database backup (protected)
+app.post('/admin/backup', isAdmin, async (req, res) => {
   try {
     const s3Url = await backupDatabase();
     res.json({ success: true, url: s3Url });

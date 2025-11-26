@@ -51,6 +51,7 @@ async function init() {
     email TEXT,
     checkin TEXT,
     checkout TEXT,
+    status TEXT DEFAULT 'pending',
     created_at TEXT
   )`);
 
@@ -66,6 +67,15 @@ async function init() {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     listing_id INTEGER,
     url TEXT
+  )`);
+
+  await run(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    role TEXT DEFAULT 'user',
+    created_at TEXT
   )`);
 
   // seed sample listings if none exist
