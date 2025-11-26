@@ -18,20 +18,123 @@
   </div>
   <div class="col-md-3">
     <label class="form-label">Check-in Date</label>
-    <input name="checkin_date" type="date" class="form-control" required />
+    <input name="checkin_date" type="date" class="form-control" id="checkin_date" required />
   </div>
   <div class="col-md-3">
     <label class="form-label">Check-in Time</label>
-    <input name="checkin_time" type="time" class="form-control" value="15:00" required />
+    <input name="checkin_time" type="time" class="form-control" id="checkin_time" value="15:00" required />
   </div>
   <div class="col-md-3">
     <label class="form-label">Check-out Date</label>
-    <input name="checkout_date" type="date" class="form-control" required />
+    <input name="checkout_date" type="date" class="form-control" id="checkout_date" required />
   </div>
   <div class="col-md-3">
     <label class="form-label">Check-out Time</label>
-    <input name="checkout_time" type="time" class="form-control" value="11:00" required />
+    <input name="checkout_time" type="time" class="form-control" id="checkout_time" value="11:00" required />
   </div>
+  
+  <script>
+    // Set minimum dates and times for booking
+    const checkinDateInput = document.getElementById('checkin_date');
+    const checkinTimeInput = document.getElementById('checkin_time');
+    const checkoutDateInput = document.getElementById('checkout_date');
+    const checkoutTimeInput = document.getElementById('checkout_time');
+    
+    // Get current date and time
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    const currentTime = now.toTimeString().slice(0, 5);
+    
+    // Set minimum check-in date to today
+    checkinDateInput.min = today;
+    
+    // Validate check-in date and time
+    checkinDateInput.addEventListener('change', function() {
+      const selectedDate = this.value;
+      
+      // If today is selected, check-in time must be in the future
+      if (selectedDate === today) {
+        checkinTimeInput.min = currentTime;
+        
+        // If current time value is in the past, reset to current time
+        if (checkinTimeInput.value < currentTime) {
+          checkinTimeInput.value = currentTime;
+        }
+      } else {
+        // For future dates, allow any time
+        checkinTimeInput.removeAttribute('min');
+      }
+      
+      // Set minimum checkout date to same as check-in date
+      checkoutDateInput.min = selectedDate;
+      
+      // If checkout date is before check-in, update it
+      if (checkoutDateInput.value && checkoutDateInput.value < selectedDate) {
+        checkoutDateInput.value = selectedDate;
+      }
+    });
+    
+    // Validate check-in time when changed
+    checkinTimeInput.addEventListener('change', function() {
+      const selectedDate = checkinDateInput.value;
+      
+      // If today and time is in the past, reset to current time
+      if (selectedDate === today && this.value < currentTime) {
+        alert('Check-in time cannot be in the past. Please select a future time.');
+        this.value = currentTime;
+      }
+    });
+    
+    // Validate checkout date
+    checkoutDateInput.addEventListener('change', function() {
+      const checkinDate = checkinDateInput.value;
+      const checkoutDate = this.value;
+      
+      // Checkout must be same day or after check-in
+      if (checkoutDate < checkinDate) {
+        alert('Check-out date cannot be before check-in date.');
+        this.value = checkinDate;
+      }
+      
+      // If checkout is same day as check-in, validate time
+      if (checkinDate && checkoutDate === checkinDate) {
+        const checkinTime = checkinTimeInput.value;
+        checkoutTimeInput.min = checkinTime;
+        
+        if (checkoutTimeInput.value <= checkinTime) {
+          alert('Check-out time must be after check-in time on the same day.');
+          // Set checkout time to 2 hours after check-in
+          const [hours, minutes] = checkinTime.split(':');
+          const newHours = (parseInt(hours) + 2) % 24;
+          checkoutTimeInput.value = `${newHours.toString().padStart(2, '0')}:${minutes}`;
+        }
+      } else {
+        // Different days, remove time restriction
+        checkoutTimeInput.removeAttribute('min');
+      }
+    });
+    
+    // Validate checkout time
+    checkoutTimeInput.addEventListener('change', function() {
+      const checkinDate = checkinDateInput.value;
+      const checkoutDate = checkoutDateInput.value;
+      
+      // If same day, checkout time must be after check-in time
+      if (checkinDate && checkoutDate && checkinDate === checkoutDate) {
+        const checkinTime = checkinTimeInput.value;
+        if (this.value <= checkinTime) {
+          alert('Check-out time must be after check-in time on the same day.');
+          // Set to 2 hours after check-in
+          const [hours, minutes] = checkinTime.split(':');
+          const newHours = (parseInt(hours) + 2) % 24;
+          this.value = `${newHours.toString().padStart(2, '0')}:${minutes}`;
+        }
+      }
+    });
+    
+    // Initialize: trigger check-in date validation
+    checkinDateInput.dispatchEvent(new Event('change'));
+  </script>
   <div class="col-12">
     <button class="btn btn-primary">Confirm Booking</button>
   </div>

@@ -32,11 +32,8 @@ body { padding-bottom: 40px; font-family: 'Inter', system-ui, -apple-system, 'Se
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.2);
 }
-.search-box-large .input-group-text {
-  border: none;
-}
-.search-box-large .form-control {
-  border-left: none;
+.search-box-large .form-control,
+.search-box-large .form-select {
   font-size: 0.95rem;
 }
 

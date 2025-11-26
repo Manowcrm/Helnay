@@ -4,19 +4,23 @@
       <div class="hero-content text-center text-white">
         <h1 class="display-4 fw-bold mb-3">Find Your Perfect Stay</h1>
         <p class="lead mb-4">Discover amazing homes and experiences around the world</p>
-        <form method="GET" class="search-box-large mx-auto">
+        <form method="GET" action="/" class="search-box-large mx-auto">
           <div class="row g-2">
-            <div class="col-md-4">
-              <div class="input-group">
-                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-                <input name="q" class="form-control" placeholder="Search destination or property" value="<%= (typeof query !== 'undefined' && query.q) ? query.q : '' %>">
-              </div>
-            </div>
             <div class="col-md-3">
-              <div class="input-group">
-                <span class="input-group-text bg-white"><i class="bi bi-geo-alt"></i></span>
-                <input name="location" class="form-control" placeholder="Location" value="<%= (typeof query !== 'undefined' && query.location) ? query.location : '' %>">
-              </div>
+              <input name="q" class="form-control" placeholder="Search destination or property" value="<%= (typeof query !== 'undefined' && query.q) ? query.q : '' %>">
+            </div>
+            <div class="col-md-2">
+              <select name="type" class="form-select">
+                <option value="">Category</option>
+                <option value="home" <%= (typeof query !== 'undefined' && query.type === 'home') ? 'selected' : '' %>>Homes</option>
+                <option value="apartment" <%= (typeof query !== 'undefined' && query.type === 'apartment') ? 'selected' : '' %>>Apartments</option>
+                <option value="cottage" <%= (typeof query !== 'undefined' && query.type === 'cottage') ? 'selected' : '' %>>Cottages</option>
+                <option value="cabin" <%= (typeof query !== 'undefined' && query.type === 'cabin') ? 'selected' : '' %>>Cabins</option>
+                <option value="villa" <%= (typeof query !== 'undefined' && query.type === 'villa') ? 'selected' : '' %>>Villas</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <input name="location" class="form-control" placeholder="Location" value="<%= (typeof query !== 'undefined' && query.location) ? query.location : '' %>">
             </div>
             <div class="col-md-2">
               <input name="min_price" class="form-control" placeholder="Min $" type="number" min="0" value="<%= (typeof query !== 'undefined' && query.min_price) ? query.min_price : '' %>">
@@ -25,7 +29,7 @@
               <input name="max_price" class="form-control" placeholder="Max $" type="number" min="0" value="<%= (typeof query !== 'undefined' && query.max_price) ? query.max_price : '' %>">
             </div>
             <div class="col-md-1 d-grid">
-              <button class="btn btn-warning btn-lg"><i class="bi bi-search"></i></button>
+              <button type="submit" class="btn btn-warning"><i class="bi bi-search"></i></button>
             </div>
           </div>
         </form>
