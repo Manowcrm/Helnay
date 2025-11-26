@@ -1,7 +1,9 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const db = require('./db');
+const { backupDatabase } = require('./s3-backup');
 const expressLayouts = require('express-ejs-layouts');
 
 const app = express();
@@ -99,6 +101,17 @@ app.get('/admin/bookings', async (req, res) => {
     res.render('admin_bookings', { bookings });
   } catch (err) {
     res.status(500).send('Server error');
+  }
+});
+
+// Admin: trigger S3 database backup
+app.post('/admin/backup', async (req, res) => {
+  try {
+    const s3Url = await backupDatabase();
+    res.json({ success: true, url: s3Url });
+  } catch (err) {
+    console.error('Backup failed:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
