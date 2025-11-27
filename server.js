@@ -288,9 +288,31 @@ app.get('/listings/:id', async (req, res) => {
     if (!listing) return res.status(404).send('Listing not found');
     console.log(`📄 [LISTING PAGE] Showing listing ${id}: "${listing.title}" at $${listing.price}/night`);
     const images = await db.all('SELECT url FROM listing_images WHERE listing_id = ?', [id]);
+    
+    // Prevent browser caching
+    res.set({
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
+    
     res.render('listing', { listing, images });
   } catch (err) {
     res.status(500).send('Server error');
+  }
+});
+
+// Debug route to check database prices
+app.get('/api/debug/listings', async (req, res) => {
+  try {
+    const listings = await db.all('SELECT id, title, price, location FROM listings ORDER BY id');
+    res.json({
+      message: 'Current prices in database',
+      timestamp: new Date().toISOString(),
+      listings: listings
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
