@@ -133,7 +133,10 @@ async function init() {
   // seed sample listings if none exist
   const rows = await all('SELECT COUNT(1) as cnt FROM listings');
   const cnt = rows && rows[0] ? rows[0].cnt : 0;
+  console.log(`📊 [DB INIT] Listing count: ${cnt}`);
+  
   if (cnt === 0) {
+    console.log('🌱 [DB INIT] No listings found - seeding database with sample data');
     // Entire Homes
     await run('INSERT INTO listings (title,description,price,location,created_at) VALUES (?,?,?,?,?)', ['Spacious Family Home', 'Beautiful 4-bedroom home perfect for families. Private yard, full kitchen, and room for everyone to spread out.', 180.0, 'Suburbs', new Date().toISOString()]);
     await run('INSERT INTO listings (title,description,price,location,created_at) VALUES (?,?,?,?,?)', ['Modern Villa with Pool', 'Luxury home with private pool, 5 bedrooms, modern amenities. Ideal for large groups and special occasions.', 350.0, 'Countryside', new Date().toISOString()]);
@@ -174,6 +177,9 @@ async function init() {
         await run('INSERT INTO listing_images (listing_id,url) VALUES (?,?)', [i, imageUrls[(i+2) % 11]]);
       }
     }
+    console.log('✅ [DB INIT] Seeded 11 listings with images');
+  } else {
+    console.log(`✅ [DB INIT] Database already has ${cnt} listings - skipping seed`);
   }
   
   // Create default admin user if none exists
