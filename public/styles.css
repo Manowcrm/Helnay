@@ -189,58 +189,19 @@ a.text-decoration-none:hover .quick-book-card p {
 
 @media (max-width: 767px){
   .hero-banner { 
-    height: auto; 
-    min-height: 500px;
-    padding: 30px 0;
+    height: 400px; 
   }
   .search-box-large { 
     padding: 15px; 
-    margin: 0 10px;
-  }
-  .search-box-large .row {
-    gap: 10px !important;
-  }
-  .search-box-large .col-md-3,
-  .search-box-large .col-md-2,
-  .search-box-large .col-md-1 {
-    width: 100%;
-    padding: 0;
-  }
-  .search-box-large .form-control,
-  .search-box-large .form-select {
-    font-size: 16px;
-    padding: 12px;
-  }
-  .search-box-large .btn {
-    padding: 12px;
-    font-size: 16px;
   }
   .hero-content h1 { 
-    font-size: 1.75rem;
-    margin-bottom: 1rem;
-  }
-  .hero-content .lead {
-    font-size: 1rem;
-    margin-bottom: 1.5rem;
+    font-size: 2rem; 
   }
   .quick-book-card { 
     margin-bottom: 15px; 
   }
   .featured-img-wrapper { 
     height: 150px; 
-  }
-  .listing-card {
-    margin-bottom: 20px;
-  }
-  .listing-img-wrapper {
-    height: 200px;
-  }
-  .container {
-    padding-left: 15px;
-    padding-right: 15px;
-  }
-  .navbar-brand {
-    font-size: 1.25rem;
   }
   
   /* Navbar mobile improvements */
