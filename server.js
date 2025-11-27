@@ -561,7 +561,7 @@ app.get('/admin', isAdmin, async (req, res) => {
     const contactsResult = await db.get('SELECT COUNT(*) as count FROM contacts');
     console.log('  Contacts count:', contactsResult);
     
-    const pendingResult = await db.get('SELECT COUNT(*) as count FROM bookings WHERE status IS NULL OR status = "pending"');
+    const pendingResult = await db.get("SELECT COUNT(*) as count FROM bookings WHERE status IS NULL OR status = 'pending'");
     console.log('  Pending bookings count:', pendingResult);
     
     const stats = {
