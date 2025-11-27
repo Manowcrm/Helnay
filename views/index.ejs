@@ -6,10 +6,10 @@
         <p class="lead mb-4">Discover amazing homes and experiences around the world</p>
         <form method="GET" action="/" class="search-box-large mx-auto">
           <div class="row g-2">
-            <div class="col-md-3">
+            <div class="col-12 col-md-3">
               <input name="q" class="form-control" placeholder="Search destination or property" value="<%= (typeof query !== 'undefined' && query.q) ? query.q : '' %>">
             </div>
-            <div class="col-md-2">
+            <div class="col-6 col-md-2">
               <select name="type" class="form-select">
                 <option value="">Category</option>
                 <option value="home" <%= (typeof query !== 'undefined' && query.type === 'home') ? 'selected' : '' %>>Homes</option>
@@ -19,17 +19,17 @@
                 <option value="villa" <%= (typeof query !== 'undefined' && query.type === 'villa') ? 'selected' : '' %>>Villas</option>
               </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-6 col-md-2">
               <input name="location" class="form-control" placeholder="Location" value="<%= (typeof query !== 'undefined' && query.location) ? query.location : '' %>">
             </div>
-            <div class="col-md-2">
+            <div class="col-6 col-md-2">
               <input name="min_price" class="form-control" placeholder="Min $" type="number" min="0" value="<%= (typeof query !== 'undefined' && query.min_price) ? query.min_price : '' %>">
             </div>
-            <div class="col-md-2">
+            <div class="col-6 col-md-2">
               <input name="max_price" class="form-control" placeholder="Max $" type="number" min="0" value="<%= (typeof query !== 'undefined' && query.max_price) ? query.max_price : '' %>">
             </div>
-            <div class="col-md-1 d-grid">
-              <button type="submit" class="btn btn-warning"><i class="bi bi-search"></i></button>
+            <div class="col-12 col-md-1 d-grid">
+              <button type="submit" class="btn btn-warning"><i class="bi bi-search"></i> Search</button>
             </div>
           </div>
         </form>
@@ -40,43 +40,43 @@
 
 <div class="container mt-5">
   <div class="row mb-4">
-    <div class="col-md-3 mb-3">
+    <div class="col-6 col-md-3 mb-3">
       <a href="/entire-homes" class="text-decoration-none">
-        <div class="quick-book-card text-center p-4">
-          <i class="bi bi-house-door fs-1 text-primary mb-3"></i>
-          <h5>Entire Homes</h5>
-          <p class="text-muted small">Private places with room for everyone</p>
-          <button type="button" class="btn btn-sm btn-outline-primary">Browse & Rent</button>
+        <div class="quick-book-card text-center p-3 p-md-4">
+          <i class="bi bi-house-door fs-1 text-primary mb-2 mb-md-3"></i>
+          <h6 class="mb-1">Entire Homes</h6>
+          <p class="text-muted small d-none d-md-block">Private places with room for everyone</p>
+          <button type="button" class="btn btn-sm btn-outline-primary">Browse</button>
         </div>
       </a>
     </div>
-    <div class="col-md-3 mb-3">
+    <div class="col-6 col-md-3 mb-3">
       <a href="/city-stays" class="text-decoration-none">
-        <div class="quick-book-card text-center p-4">
-          <i class="bi bi-building fs-1 text-success mb-3"></i>
-          <h5>City Stays</h5>
-          <p class="text-muted small">Urban apartments near attractions</p>
-          <button type="button" class="btn btn-sm btn-outline-success">Browse & Rent</button>
+        <div class="quick-book-card text-center p-3 p-md-4">
+          <i class="bi bi-building fs-1 text-success mb-2 mb-md-3"></i>
+          <h6 class="mb-1">City Stays</h6>
+          <p class="text-muted small d-none d-md-block">Urban apartments near attractions</p>
+          <button type="button" class="btn btn-sm btn-outline-success">Browse</button>
         </div>
       </a>
     </div>
-    <div class="col-md-3 mb-3">
+    <div class="col-6 col-md-3 mb-3">
       <a href="/beach-houses" class="text-decoration-none">
-        <div class="quick-book-card text-center p-4">
-          <i class="bi bi-water fs-1 text-info mb-3"></i>
-          <h5>Beach Houses</h5>
-          <p class="text-muted small">Seaside properties with ocean views</p>
-          <button type="button" class="btn btn-sm btn-outline-info">Browse & Rent</button>
+        <div class="quick-book-card text-center p-3 p-md-4">
+          <i class="bi bi-water fs-1 text-info mb-2 mb-md-3"></i>
+          <h6 class="mb-1">Beach Houses</h6>
+          <p class="text-muted small d-none d-md-block">Seaside properties with ocean views</p>
+          <button type="button" class="btn btn-sm btn-outline-info">Browse</button>
         </div>
       </a>
     </div>
-    <div class="col-md-3 mb-3">
+    <div class="col-6 col-md-3 mb-3">
       <a href="/mountain-retreats" class="text-decoration-none">
-        <div class="quick-book-card text-center p-4">
-          <i class="bi bi-tree fs-1 text-warning mb-3"></i>
-          <h5>Mountain Retreats</h5>
-          <p class="text-muted small">Cabins perfect for nature lovers</p>
-          <button type="button" class="btn btn-sm btn-outline-warning">Browse & Rent</button>
+        <div class="quick-book-card text-center p-3 p-md-4">
+          <i class="bi bi-tree fs-1 text-warning mb-2 mb-md-3"></i>
+          <h6 class="mb-1">Mountain Retreats</h6>
+          <p class="text-muted small d-none d-md-block">Cabins perfect for nature lovers</p>
+          <button type="button" class="btn btn-sm btn-outline-warning">Browse</button>
         </div>
       </a>
     </div>
