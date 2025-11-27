@@ -189,26 +189,27 @@ async function sendBookingCancellationEmail(booking, listing) {
       email: getSenderEmail(),
       name: 'Helnay Rentals'
     },
-    subject: '❌ Your Booking Has Been Cancelled',
+    subject: 'Booking Update - Reservation Status Changed',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #dc3545;">Booking Cancelled</h2>
+        <h2 style="color: #0d6efd;">Booking Status Update</h2>
         <p>Dear ${booking.name},</p>
-        <p>We're writing to inform you that your booking has been cancelled.</p>
+        <p>This is to inform you that your booking reservation has been updated and is no longer active.</p>
         
-        <div style="background-color: #f8d7da; padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #dc3545;">
-          <h3 style="margin-top: 0; color: #721c24;">Cancelled Booking Details</h3>
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #0d6efd;">
+          <h3 style="margin-top: 0;">Previous Booking Details</h3>
           <p><strong>Property:</strong> ${listing.title}</p>
           <p><strong>Location:</strong> ${listing.location}</p>
-          <p><strong>Check-in:</strong> ${booking.checkin}</p>
-          <p><strong>Check-out:</strong> ${booking.checkout}</p>
-          <p><strong>Price:</strong> $${listing.price}/night</p>
+          <p><strong>Check-in Date:</strong> ${booking.checkin}</p>
+          <p><strong>Check-out Date:</strong> ${booking.checkout}</p>
+          <p><strong>Nightly Rate:</strong> $${listing.price}</p>
+          <p style="margin-top: 15px; padding: 10px; background: #fff; border-radius: 3px;"><strong>Status:</strong> <span style="color: #6c757d;">No longer active</span></p>
         </div>
         
-        <p>If this cancellation was made by you, no further action is needed. If you did not request this cancellation or have any concerns, please contact us immediately.</p>
+        <p>If you have any questions about this change or need assistance with a new booking, our support team is here to help.</p>
         
-        <div style="background-color: #d1ecf1; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #0dcaf0;">
-          <p style="margin: 0;"><strong>💡 Still interested in booking?</strong> We have many other beautiful properties available. Feel free to browse our website or contact us for personalized recommendations.</p>
+        <div style="background-color: #e7f3ff; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #0d6efd;">
+          <p style="margin: 0;"><strong>Need accommodation?</strong> We have many beautiful properties available. Visit our website to explore options or contact our team for personalized recommendations.</p>
         </div>
         
         <p>We hope to serve you in the future!</p>
@@ -219,11 +220,15 @@ async function sendBookingCancellationEmail(booking, listing) {
   };
 
   try {
-    await sgMail.send(msg);
+    const response = await sgMail.send(msg);
     console.log(`✓ Cancellation email sent to ${booking.email} via SendGrid`);
+    console.log('SendGrid response:', JSON.stringify(response[0].statusCode));
     return true;
   } catch (error) {
     console.error('Error sending cancellation email:', error);
+    if (error.response) {
+      console.error('SendGrid error details:', JSON.stringify(error.response.body));
+    }
     return false;
   }
 }
