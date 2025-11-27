@@ -128,12 +128,12 @@ async function init() {
   // Create default admin user if none exists
   const adminCheck = await get('SELECT * FROM users WHERE role = ?', ['admin']);
   if (!adminCheck) {
-    const hashedPassword = await bcrypt.hash('admin123', 10);
+    const hashedPassword = await bcrypt.hash('Hln@y2024$ecureAdm!n', 10);
     await run(
       'INSERT INTO users (name, email, password, role, created_at) VALUES (?, ?, ?, ?, ?)',
-      ['Admin', 'admin@helnay.com', hashedPassword, 'admin', new Date().toISOString()]
+      ['System Administrator', 'sysadmin.portal@helnay.com', hashedPassword, 'admin', new Date().toISOString()]
     );
-    console.log('✓ Default admin user created: admin@helnay.com / admin123');
+    console.log('✓ Default admin user created with secure credentials');
   }
 }
 
