@@ -125,12 +125,20 @@ app.post('/login', async (req, res) => {
     req.session.userEmail = user.email;
     req.session.role = user.role;
     
-    // Redirect based on role
-    if (user.role === 'admin') {
-      res.redirect('/admin');
-    } else {
-      res.redirect('/');
-    }
+    // Save session before redirect
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.render('login', { message: null, error: 'Login failed' });
+      }
+      
+      // Redirect based on role
+      if (user.role === 'admin') {
+        res.redirect('/admin');
+      } else {
+        res.redirect('/');
+      }
+    });
   } catch (err) {
     console.error(err);
     res.render('login', { message: null, error: 'Login failed' });
