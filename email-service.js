@@ -7,7 +7,7 @@ if (!isEmailConfigured) {
   console.warn('⚠️ Email not configured. SMTP_USER and SMTP_PASS environment variables are required.');
 }
 
-// Create transporter
+// Create transporter with timeout settings
 const transporter = isEmailConfigured ? nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: parseInt(process.env.SMTP_PORT) || 587,
@@ -18,8 +18,18 @@ const transporter = isEmailConfigured ? nodemailer.createTransport({
   },
   tls: {
     rejectUnauthorized: false
-  }
+  },
+  connectionTimeout: 10000, // 10 seconds
+  greetingTimeout: 10000,
+  socketTimeout: 15000
 }) : null;
+
+// Note: Render.com free tier may block SMTP ports (25, 465, 587)
+// If emails fail, consider using SendGrid, Mailgun, or AWS SES which use HTTP APIs
+if (isEmailConfigured) {
+  console.log('✓ Email transporter configured for:', process.env.SMTP_HOST);
+  console.log('⚠️ Note: Some hosting platforms block SMTP. If emails fail, consider using SendGrid or similar services.');
+}
 
 // Send booking approval email
 async function sendBookingApprovalEmail(booking, listing) {
@@ -60,13 +70,10 @@ async function sendBookingApprovalEmail(booking, listing) {
     console.log(`✓ Approval email sent to ${booking.email}`, info.messageId);
     return true;
   } catch (error) {
-    console.error('Error sending approval email:', error.message);
-    console.error('SMTP Config:', {
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT,
-      user: process.env.SMTP_USER ? '***configured***' : 'NOT SET',
-      pass: process.env.SMTP_PASS ? '***configured***' : 'NOT SET'
-    });
+    console.warn(`⚠️ Email failed (booking still approved): ${error.message}`);
+    if (error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED') {
+      console.warn('💡 Tip: Your hosting platform may block SMTP. Consider using SendGrid, Mailgun, or AWS SES.');
+    }
     return false;
   }
 }
