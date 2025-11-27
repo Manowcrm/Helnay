@@ -547,17 +547,36 @@ app.use('/admin', (req, res, next) => {
 // Admin: dashboard (protected)
 app.get('/admin', isAdmin, async (req, res) => {
   try {
+    console.log('📊 [ADMIN DASHBOARD] Loading dashboard...');
+    
+    const listingsResult = await db.get('SELECT COUNT(*) as count FROM listings');
+    console.log('  Listings count:', listingsResult);
+    
+    const bookingsResult = await db.get('SELECT COUNT(*) as count FROM bookings');
+    console.log('  Bookings count:', bookingsResult);
+    
+    const usersResult = await db.get('SELECT COUNT(*) as count FROM users');
+    console.log('  Users count:', usersResult);
+    
+    const contactsResult = await db.get('SELECT COUNT(*) as count FROM contacts');
+    console.log('  Contacts count:', contactsResult);
+    
+    const pendingResult = await db.get('SELECT COUNT(*) as count FROM bookings WHERE status IS NULL OR status = "pending"');
+    console.log('  Pending bookings count:', pendingResult);
+    
     const stats = {
-      listings: (await db.get('SELECT COUNT(*) as count FROM listings')).count,
-      bookings: (await db.get('SELECT COUNT(*) as count FROM bookings')).count,
-      users: (await db.get('SELECT COUNT(*) as count FROM users')).count,
-      contacts: (await db.get('SELECT COUNT(*) as count FROM contacts')).count,
-      pendingBookings: (await db.get('SELECT COUNT(*) as count FROM bookings WHERE status IS NULL OR status = "pending"')).count
+      listings: listingsResult?.count || 0,
+      bookings: bookingsResult?.count || 0,
+      users: usersResult?.count || 0,
+      contacts: contactsResult?.count || 0,
+      pendingBookings: pendingResult?.count || 0
     };
+    
+    console.log('✅ [ADMIN DASHBOARD] Stats:', stats);
     res.render('admin_dashboard', { stats });
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
+    console.error('❌ [ADMIN DASHBOARD] Error:', err.message, err);
+    res.status(500).send('Server error: ' + err.message);
   }
 });
 
