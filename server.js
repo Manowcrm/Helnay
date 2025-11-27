@@ -132,6 +132,12 @@ app.post('/login', async (req, res) => {
         return res.render('login', { message: null, error: 'Login failed' });
       }
       
+      console.log('[LOGIN] Session saved successfully:', {
+        userId: req.session.userId,
+        role: req.session.role,
+        sessionID: req.sessionID
+      });
+      
       // Redirect based on role
       if (user.role === 'admin') {
         res.redirect('/admin');
