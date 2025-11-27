@@ -294,6 +294,99 @@ Helnay Rentals Team`,
   }
 }
 
+// Send welcome email to new users
+async function sendWelcomeEmail(user) {
+  if (!isEmailConfigured) {
+    console.warn('⚠️ Email not sent - SendGrid API key not configured');
+    return false;
+  }
+
+  const msg = {
+    to: user.email,
+    from: {
+      email: getSenderEmail(),
+      name: 'Helnay Rentals'
+    },
+    subject: '🎉 Welcome to Helnay Rentals!',
+    text: `Dear ${user.name},
+
+Welcome to Helnay Rentals!
+
+Thank you for creating an account with us. We're excited to help you find your perfect vacation rental.
+
+What You Can Do Now:
+- Browse our collection of beautiful properties
+- Book your dream vacation home
+- Manage your bookings from your account
+- Save your favorite listings
+
+Getting Started:
+Visit our website at https://helnay.onrender.com to explore available properties. From cozy city apartments to beachfront cottages and mountain retreats, we have something for everyone.
+
+Need Help?
+If you have any questions or need assistance, our support team is always ready to help. Simply use the contact form on our website.
+
+Happy travels!
+
+Best regards,
+Helnay Rentals Team`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); padding: 40px 20px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 28px;">Welcome to Helnay! 🎉</h1>
+        </div>
+        
+        <div style="padding: 30px 20px;">
+          <p style="font-size: 16px;">Dear ${user.name},</p>
+          <p style="font-size: 16px;">Thank you for creating an account with <strong>Helnay Rentals</strong>. We're excited to help you find your perfect vacation rental!</p>
+          
+          <div style="background-color: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #0d6efd;">
+            <h3 style="margin-top: 0; color: #0d6efd;">What You Can Do Now</h3>
+            <ul style="line-height: 1.8; color: #495057;">
+              <li>Browse our collection of beautiful properties</li>
+              <li>Book your dream vacation home</li>
+              <li>Manage your bookings from your account</li>
+              <li>Save your favorite listings</li>
+            </ul>
+          </div>
+          
+          <div style="background-color: #e7f3ff; padding: 20px; border-radius: 8px; margin: 25px 0;">
+            <h3 style="margin-top: 0; color: #0a58ca;">Getting Started</h3>
+            <p style="margin-bottom: 15px; color: #495057;">Visit our website to explore available properties. From cozy city apartments to beachfront cottages and mountain retreats, we have something for everyone.</p>
+            <a href="https://helnay.onrender.com" style="display: inline-block; background-color: #0d6efd; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 10px;">Explore Properties</a>
+          </div>
+          
+          <div style="background-color: #fff3cd; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #ffc107;">
+            <h3 style="margin-top: 0; color: #997404;">Need Help?</h3>
+            <p style="margin: 0; color: #856404;">If you have any questions or need assistance, our support team is always ready to help. Simply use the contact form on our website.</p>
+          </div>
+          
+          <p style="font-size: 16px; margin-top: 30px;">Happy travels!</p>
+          <p style="margin-top: 20px;">Best regards,<br><strong>Helnay Rentals Team</strong></p>
+        </div>
+        
+        <hr style="border: none; border-top: 1px solid #dee2e6; margin: 30px 20px;">
+        <p style="font-size: 12px; color: #6c757d; text-align: center; padding: 0 20px;">
+          Helnay Rentals | <a href="https://helnay.onrender.com" style="color: #0d6efd;">Visit Website</a><br>
+          You received this email because you created an account at Helnay Rentals.
+        </p>
+      </div>
+    `
+  };
+
+  try {
+    await sgMail.send(msg);
+    console.log(`✓ Welcome email sent to ${user.email} via SendGrid`);
+    return true;
+  } catch (error) {
+    console.warn(`⚠️ Welcome email failed (registration still successful): ${error.message}`);
+    if (error.response) {
+      console.warn('SendGrid error details:', error.response.body);
+    }
+    return false;
+  }
+}
+
 // Send contact form notification to admin
 async function sendContactNotificationToAdmin(contactData) {
   if (!isEmailConfigured) {
@@ -352,5 +445,6 @@ module.exports = {
   sendBookingDenialEmail,
   sendBookingDateChangeEmail,
   sendBookingCancellationEmail,
-  sendContactNotificationToAdmin
+  sendContactNotificationToAdmin,
+  sendWelcomeEmail
 };

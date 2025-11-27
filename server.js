@@ -10,7 +10,7 @@ const db = require('./db');
 const { backupDatabase } = require('./s3-backup');
 const expressLayouts = require('express-ejs-layouts');
 const { isAuthenticated, isAdmin } = require('./auth-middleware');
-const { sendBookingApprovalEmail, sendBookingDenialEmail, sendBookingDateChangeEmail, sendBookingCancellationEmail, sendContactNotificationToAdmin } = require('./email-service');
+const { sendBookingApprovalEmail, sendBookingDenialEmail, sendBookingDateChangeEmail, sendBookingCancellationEmail, sendContactNotificationToAdmin, sendWelcomeEmail } = require('./email-service');
 
 const app = express();
 
@@ -91,7 +91,12 @@ app.post('/register', async (req, res) => {
       [name, email, hashedPassword, 'user', new Date().toISOString()]
     );
     
-    res.render('register', { message: 'Registration successful! Please login.', error: null });
+    // Send welcome email (non-blocking - registration succeeds even if email fails)
+    sendWelcomeEmail({ name, email }).catch(err => {
+      console.warn('Welcome email failed but registration succeeded:', err.message);
+    });
+    
+    res.render('register', { message: 'Registration successful! Please check your email for a welcome message, then login.', error: null });
   } catch (err) {
     console.error(err);
     res.render('register', { message: null, error: 'Registration failed' });
