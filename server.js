@@ -431,13 +431,16 @@ app.get('/payment/:bookingId', async (req, res) => {
       return res.redirect(`/payment/success?booking_id=${bookingId}`);
     }
     
-    // Calculate nights
+    // Calculate nights and total from CURRENT listing price
     const checkinDate = new Date(booking.checkin);
     const checkoutDate = new Date(booking.checkout);
     const nights = Math.ceil((checkoutDate - checkinDate) / (1000 * 60 * 60 * 24));
+    const totalAmount = nights * booking.price; // Use current price from listing, not stored total_amount
+    
+    console.log(`💳 [PAYMENT PAGE] Booking ${bookingId}: ${nights} nights × $${booking.price} = $${totalAmount}`);
     
     res.render('payment', {
-      booking,
+      booking: { ...booking, total_amount: totalAmount }, // Override stored amount with current calculation
       nights,
       stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY || ''
     });
@@ -453,7 +456,7 @@ app.post('/create-payment-intent', async (req, res) => {
     const { bookingId } = req.body;
     
     const booking = await db.get(
-      'SELECT b.*, l.title FROM bookings b JOIN listings l ON b.listing_id = l.id WHERE b.id = ?',
+      'SELECT b.*, l.title, l.price FROM bookings b JOIN listings l ON b.listing_id = l.id WHERE b.id = ?',
       [bookingId]
     );
     
@@ -465,9 +468,17 @@ app.post('/create-payment-intent', async (req, res) => {
       return res.status(400).json({ error: 'Booking already paid' });
     }
     
+    // Recalculate total from CURRENT listing price
+    const checkinDate = new Date(booking.checkin);
+    const checkoutDate = new Date(booking.checkout);
+    const nights = Math.ceil((checkoutDate - checkinDate) / (1000 * 60 * 60 * 24));
+    const totalAmount = nights * booking.price;
+    
+    console.log(`💳 [PAYMENT INTENT] Booking ${bookingId}: ${nights} nights × $${booking.price} = $${totalAmount}`);
+    
     // Create Stripe PaymentIntent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(booking.total_amount * 100), // Convert to cents
+      amount: Math.round(totalAmount * 100), // Convert to cents, using CURRENT price
       currency: 'usd',
       metadata: {
         booking_id: bookingId,
