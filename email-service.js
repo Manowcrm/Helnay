@@ -29,6 +29,22 @@ async function sendBookingApprovalEmail(booking, listing) {
       name: 'Helnay Rentals'
     },
     subject: '✅ Your Booking has been Approved!',
+    text: `Dear ${booking.name},
+
+Great news! Your booking has been approved.
+
+Booking Details:
+Property: ${listing.title}
+Location: ${listing.location}
+Check-in: ${booking.checkin}
+Check-out: ${booking.checkout}
+Price: $${listing.price}/night
+
+We look forward to hosting you!
+If you have any questions, please don't hesitate to contact us.
+
+Best regards,
+Helnay Rentals Team`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #28a745;">Booking Approved!</h2>
@@ -79,6 +95,25 @@ async function sendBookingDenialEmail(booking, listing) {
       name: 'Helnay Rentals'
     },
     subject: 'Booking Status Update',
+    text: `Dear ${booking.name},
+
+We regret to inform you that your booking request could not be approved at this time.
+
+Booking Details:
+Property: ${listing.title}
+Location: ${listing.location}
+Check-in: ${booking.checkin}
+Check-out: ${booking.checkout}
+
+This may be due to:
+- The property is already booked for these dates
+- The dates are not available
+- Other scheduling conflicts
+
+Please feel free to browse our other available properties or contact us to find an alternative.
+
+Best regards,
+Helnay Rentals Team`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #dc3545;">Booking Not Approved</h2>
@@ -190,6 +225,26 @@ async function sendBookingCancellationEmail(booking, listing) {
       name: 'Helnay Rentals'
     },
     subject: 'Booking Update - Reservation Status Changed',
+    text: `Dear ${booking.name},
+
+This is to inform you that your booking reservation has been updated and is no longer active.
+
+Previous Booking Details:
+Property: ${listing.title}
+Location: ${listing.location}
+Check-in Date: ${booking.checkin}
+Check-out Date: ${booking.checkout}
+Nightly Rate: $${listing.price}
+Status: No longer active
+
+If you have any questions about this change or need assistance with a new booking, our support team is here to help.
+
+Need accommodation? We have many beautiful properties available. Visit our website to explore options or contact our team for personalized recommendations.
+
+We hope to serve you in the future!
+
+Best regards,
+Helnay Rentals Team`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #0d6efd;">Booking Status Update</h2>
