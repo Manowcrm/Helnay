@@ -1,6 +1,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
+const bcrypt = require('bcryptjs');
 
 const dbFile = path.join(__dirname, 'data', 'helnay.db');
 const dataDir = path.dirname(dbFile);
@@ -122,6 +123,17 @@ async function init() {
         await run('INSERT INTO listing_images (listing_id,url) VALUES (?,?)', [i, imageUrls[(i+2) % 11]]);
       }
     }
+  }
+  
+  // Create default admin user if none exists
+  const adminCheck = await get('SELECT * FROM users WHERE role = ?', ['admin']);
+  if (!adminCheck) {
+    const hashedPassword = await bcrypt.hash('admin123', 10);
+    await run(
+      'INSERT INTO users (name, email, password, role, created_at) VALUES (?, ?, ?, ?, ?)',
+      ['Admin', 'admin@helnay.com', hashedPassword, 'admin', new Date().toISOString()]
+    );
+    console.log('✓ Default admin user created: admin@helnay.com / admin123');
   }
 }
 
