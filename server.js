@@ -11,6 +11,7 @@ const { backupDatabase } = require('./s3-backup');
 const expressLayouts = require('express-ejs-layouts');
 const { isAuthenticated, isAdmin } = require('./auth-middleware');
 const { sendBookingApprovalEmail, sendBookingDenialEmail, sendBookingDateChangeEmail, sendBookingCancellationEmail, sendContactNotificationToAdmin, sendWelcomeEmail } = require('./email-service');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use(expressLayouts);
 app.set('layout', 'layout');
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.json()); // For Stripe webhook and API calls
 
 // Session configuration with persistent store
 const sessionDb = new BetterSqlite3(path.join(__dirname, 'data', 'sessions.db'));
@@ -304,11 +306,158 @@ app.post('/bookings', async (req, res) => {
     const { listing_id, name, email, checkin_date, checkin_time, checkout_date, checkout_time } = req.body;
     const checkin = `${checkin_date} ${checkin_time}`;
     const checkout = `${checkout_date} ${checkout_time}`;
-    await db.run('INSERT INTO bookings (listing_id,name,email,checkin,checkout,created_at) VALUES (?,?,?,?,?,?)', [listing_id, name, email, checkin, checkout, new Date().toISOString()]);
-    res.render('booking_confirm', { name });
+    
+    // Get listing details for payment calculation
+    const listing = await db.get('SELECT * FROM listings WHERE id = ?', [listing_id]);
+    if (!listing) {
+      return res.status(404).send('Listing not found');
+    }
+    
+    // Calculate number of nights
+    const checkinDate = new Date(checkin_date);
+    const checkoutDate = new Date(checkout_date);
+    const nights = Math.ceil((checkoutDate - checkinDate) / (1000 * 60 * 60 * 24));
+    const totalAmount = nights * listing.price;
+    
+    // Create booking with payment_status = 'unpaid'
+    const result = await db.run(
+      'INSERT INTO bookings (listing_id,name,email,checkin,checkout,payment_status,total_amount,created_at) VALUES (?,?,?,?,?,?,?,?)',
+      [listing_id, name, email, checkin, checkout, 'unpaid', totalAmount, new Date().toISOString()]
+    );
+    
+    // Redirect to payment page
+    res.redirect(`/payment/${result.lastID}`);
   } catch (err) {
+    console.error('Booking error:', err);
     res.status(500).send('Server error');
   }
+});
+
+// Payment page
+app.get('/payment/:bookingId', async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const booking = await db.get(
+      'SELECT b.*, l.title, l.price, l.location FROM bookings b JOIN listings l ON b.listing_id = l.id WHERE b.id = ?',
+      [bookingId]
+    );
+    
+    if (!booking) {
+      return res.status(404).send('Booking not found');
+    }
+    
+    if (booking.payment_status === 'paid') {
+      return res.redirect(`/payment/success?booking_id=${bookingId}`);
+    }
+    
+    // Calculate nights
+    const checkinDate = new Date(booking.checkin);
+    const checkoutDate = new Date(booking.checkout);
+    const nights = Math.ceil((checkoutDate - checkinDate) / (1000 * 60 * 60 * 24));
+    
+    res.render('payment', {
+      booking,
+      nights,
+      stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY || ''
+    });
+  } catch (err) {
+    console.error('Payment page error:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Create Stripe Payment Intent
+app.post('/create-payment-intent', async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+    
+    const booking = await db.get(
+      'SELECT b.*, l.title FROM bookings b JOIN listings l ON b.listing_id = l.id WHERE b.id = ?',
+      [bookingId]
+    );
+    
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+    
+    if (booking.payment_status === 'paid') {
+      return res.status(400).json({ error: 'Booking already paid' });
+    }
+    
+    // Create Stripe PaymentIntent
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(booking.total_amount * 100), // Convert to cents
+      currency: 'usd',
+      metadata: {
+        booking_id: bookingId,
+        listing_title: booking.title,
+        customer_email: booking.email,
+        customer_name: booking.name
+      },
+      description: `Booking for ${booking.title}`,
+      receipt_email: booking.email
+    });
+    
+    // Save payment_intent_id to booking
+    await db.run(
+      'UPDATE bookings SET payment_intent_id = ? WHERE id = ?',
+      [paymentIntent.id, bookingId]
+    );
+    
+    res.json({ clientSecret: paymentIntent.client_secret });
+  } catch (err) {
+    console.error('Payment intent error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Payment success page
+app.get('/payment/success', async (req, res) => {
+  try {
+    const { booking_id } = req.query;
+    const booking = await db.get(
+      'SELECT b.*, l.title, l.location FROM bookings b JOIN listings l ON b.listing_id = l.id WHERE b.id = ?',
+      [booking_id]
+    );
+    
+    res.render('payment_success', { booking });
+  } catch (err) {
+    console.error('Payment success page error:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Stripe webhook to confirm payment
+app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+  
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+  
+  // Handle the event
+  if (event.type === 'payment_intent.succeeded') {
+    const paymentIntent = event.data.object;
+    const bookingId = paymentIntent.metadata.booking_id;
+    
+    // Update booking payment status
+    await db.run(
+      'UPDATE bookings SET payment_status = ? WHERE id = ?',
+      ['paid', bookingId]
+    );
+    
+    console.log(`✓ Payment confirmed for booking ${bookingId}`);
+  }
+  
+  res.json({ received: true });
 });
 
 // Log all admin requests for debugging

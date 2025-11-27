@@ -8,6 +8,8 @@
       <th>Email</th>
       <th>Check-in</th>
       <th>Check-out</th>
+      <th>Amount</th>
+      <th>Payment</th>
       <th>Status</th>
       <th>Created</th>
       <th>Actions</th>
@@ -22,6 +24,20 @@
         <td><%= b.email %></td>
         <td><%= b.checkin %></td>
         <td><%= b.checkout %></td>
+        <td>
+          <% if (b.total_amount) { %>
+            $<%= b.total_amount.toFixed(2) %>
+          <% } else { %>
+            <span class="text-muted">N/A</span>
+          <% } %>
+        </td>
+        <td>
+          <% if (b.payment_status === 'paid') { %>
+            <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Paid</span>
+          <% } else { %>
+            <span class="badge bg-warning text-dark"><i class="bi bi-clock-fill"></i> Unpaid</span>
+          <% } %>
+        </td>
         <td>
           <% if (b.status === 'approved') { %>
             <span class="badge bg-success">Approved</span>

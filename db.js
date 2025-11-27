@@ -53,8 +53,22 @@ async function init() {
     checkin TEXT,
     checkout TEXT,
     status TEXT DEFAULT 'pending',
+    payment_status TEXT DEFAULT 'unpaid',
+    payment_intent_id TEXT,
+    total_amount REAL,
     created_at TEXT
   )`);
+
+  // Add payment columns to existing bookings table if they don't exist
+  try {
+    await run(`ALTER TABLE bookings ADD COLUMN payment_status TEXT DEFAULT 'unpaid'`);
+  } catch (e) { /* column may already exist */ }
+  try {
+    await run(`ALTER TABLE bookings ADD COLUMN payment_intent_id TEXT`);
+  } catch (e) { /* column may already exist */ }
+  try {
+    await run(`ALTER TABLE bookings ADD COLUMN total_amount REAL`);
+  } catch (e) { /* column may already exist */ }
 
   await run(`CREATE TABLE IF NOT EXISTS contacts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
