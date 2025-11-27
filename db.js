@@ -60,15 +60,28 @@ async function init() {
   )`);
 
   // Add payment columns to existing bookings table if they don't exist
+  // Check each column individually and add only if missing
   try {
-    await run(`ALTER TABLE bookings ADD COLUMN payment_status TEXT DEFAULT 'unpaid'`);
-  } catch (e) { /* column may already exist */ }
-  try {
-    await run(`ALTER TABLE bookings ADD COLUMN payment_intent_id TEXT`);
-  } catch (e) { /* column may already exist */ }
-  try {
-    await run(`ALTER TABLE bookings ADD COLUMN total_amount REAL`);
-  } catch (e) { /* column may already exist */ }
+    const tableInfo = await all(`PRAGMA table_info(bookings)`);
+    const columnNames = tableInfo.map(col => col.name);
+    
+    if (!columnNames.includes('payment_status')) {
+      await run(`ALTER TABLE bookings ADD COLUMN payment_status TEXT DEFAULT 'unpaid'`);
+      console.log('✓ Added payment_status column to bookings table');
+    }
+    
+    if (!columnNames.includes('payment_intent_id')) {
+      await run(`ALTER TABLE bookings ADD COLUMN payment_intent_id TEXT`);
+      console.log('✓ Added payment_intent_id column to bookings table');
+    }
+    
+    if (!columnNames.includes('total_amount')) {
+      await run(`ALTER TABLE bookings ADD COLUMN total_amount REAL`);
+      console.log('✓ Added total_amount column to bookings table');
+    }
+  } catch (e) {
+    console.error('Migration error:', e.message);
+  }
 
   await run(`CREATE TABLE IF NOT EXISTS contacts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
