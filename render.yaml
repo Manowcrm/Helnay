@@ -22,7 +22,3 @@ services:
         sync: false
       - key: ADMIN_EMAIL
         sync: false
-    disk:
-      name: helnay-data
-      mountPath: /opt/render/project/src/data
-      sizeGB: 1
