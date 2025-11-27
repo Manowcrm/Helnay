@@ -44,7 +44,7 @@ app.use(session({
     client: sessionDb,
     expired: {
       clear: true,
-      intervalMs: 900000 // 15 minutes
+      intervalMs: 24 * 60 * 60 * 1000 // Check once per day for expired sessions
     }
   }),
   secret: process.env.SESSION_SECRET || 'your-secret-key-change-this-in-production',
@@ -53,10 +53,10 @@ app.use(session({
   cookie: { 
     secure: process.env.NODE_ENV === 'production', // true on HTTPS (Render), false locally
     httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days - users stay logged in for a month
     sameSite: 'lax'
   },
-  rolling: true // Extend session on each request
+  rolling: true // Extend session on each request - resets the 30 day timer
 }));
 
 // Make user info available to all views
