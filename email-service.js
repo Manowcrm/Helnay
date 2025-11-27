@@ -270,6 +270,12 @@ Helnay Rentals Team`,
         <p>We hope to serve you in the future!</p>
         
         <p style="margin-top: 30px;">Best regards,<br>Helnay Rentals Team</p>
+        
+        <hr style="border: none; border-top: 1px solid #dee2e6; margin: 30px 0;">
+        <p style="font-size: 12px; color: #6c757d; text-align: center;">
+          Helnay Rentals | <a href="https://helnay.onrender.com" style="color: #0d6efd;">Visit Website</a><br>
+          This is a transactional email regarding your booking.
+        </p>
       </div>
     `
   };
