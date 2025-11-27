@@ -35,17 +35,19 @@
         </td>
         <td><%= b.created_at %></td>
         <td>
-          <a href="/admin/bookings/<%= b.id %>/edit" class="btn btn-sm btn-warning">
-            <i class="bi bi-pencil"></i> Edit
-          </a>
-          <% if (!b.status || b.status === 'pending') { %>
-            <form method="POST" action="/admin/bookings/<%= b.id %>/approve" style="display:inline;">
-              <button type="submit" class="btn btn-sm btn-success">Approve</button>
-            </form>
-            <form method="POST" action="/admin/bookings/<%= b.id %>/deny" style="display:inline;">
-              <button type="submit" class="btn btn-sm btn-danger">Deny</button>
-            </form>
-          <% } %>
+          <div class="d-flex gap-1">
+            <a href="/admin/bookings/<%= b.id %>/edit" class="btn btn-sm btn-warning">
+              <i class="bi bi-pencil"></i> Edit
+            </a>
+            <% if (!b.status || b.status === 'pending') { %>
+              <form method="POST" action="/admin/bookings/<%= b.id %>/approve" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-success">Approve</button>
+              </form>
+              <form method="POST" action="/admin/bookings/<%= b.id %>/deny" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-danger">Deny</button>
+              </form>
+            <% } %>
+          </div>
         </td>
       </tr>
     <% }) %>
