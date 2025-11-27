@@ -13,6 +13,10 @@ const { isAuthenticated, isAdmin } = require('./auth-middleware');
 const { sendBookingApprovalEmail, sendBookingDenialEmail, sendBookingDateChangeEmail, sendBookingCancellationEmail, sendContactNotificationToAdmin } = require('./email-service');
 
 const app = express();
+
+// Trust proxy - required for secure cookies to work behind Render's proxy
+app.set('trust proxy', 1);
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(expressLayouts);
