@@ -10,8 +10,14 @@ services:
         value: production
       - key: PORT
         value: 3000
+      - key: DATABASE_PATH
+        value: /opt/render/project/.data
       - key: SESSION_SECRET
         generateValue: true
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT
@@ -22,3 +28,7 @@ services:
         sync: false
       - key: ADMIN_EMAIL
         sync: false
+    disk:
+      name: helnay-data
+      mountPath: /opt/render/project/.data
+      sizeGB: 1

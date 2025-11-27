@@ -3,11 +3,24 @@ const path = require('path');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 
-const dbFile = path.join(__dirname, 'data', 'helnay.db');
-const dataDir = path.dirname(dbFile);
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+// Use persistent disk path on Render, or local data folder in development
+const dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'data');
+const dbFile = path.join(dbPath, 'helnay.db');
 
-const db = new sqlite3.Database(dbFile);
+console.log('📁 Database location:', dbFile);
+
+if (!fs.existsSync(dbPath)) {
+  console.log('📂 Creating database directory:', dbPath);
+  fs.mkdirSync(dbPath, { recursive: true });
+}
+
+const db = new sqlite3.Database(dbFile, (err) => {
+  if (err) {
+    console.error('❌ Database connection error:', err);
+  } else {
+    console.log('✅ Connected to database at:', dbFile);
+  }
+});
 
 function run(sql, params = []) {
   return new Promise((resolve, reject) => {
