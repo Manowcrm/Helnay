@@ -286,6 +286,7 @@ app.get('/listings/:id', async (req, res) => {
     const id = req.params.id;
     const listing = await db.get('SELECT * FROM listings WHERE id = ?', [id]);
     if (!listing) return res.status(404).send('Listing not found');
+    console.log(`📄 [LISTING PAGE] Showing listing ${id}: "${listing.title}" at $${listing.price}/night`);
     const images = await db.all('SELECT url FROM listing_images WHERE listing_id = ?', [id]);
     res.render('listing', { listing, images });
   } catch (err) {
@@ -313,11 +314,16 @@ app.post('/bookings', async (req, res) => {
       return res.status(404).send('Listing not found');
     }
     
+    console.log(`💰 [BOOKING] Creating booking for listing ${listing_id}: "${listing.title}"`);
+    console.log(`💰 [BOOKING] Price from database: $${listing.price}/night`);
+    
     // Calculate number of nights
     const checkinDate = new Date(checkin_date);
     const checkoutDate = new Date(checkout_date);
     const nights = Math.ceil((checkoutDate - checkinDate) / (1000 * 60 * 60 * 24));
     const totalAmount = nights * listing.price;
+    
+    console.log(`💰 [BOOKING] Calculation: ${nights} nights × $${listing.price} = $${totalAmount}`);
     
     // Create booking with payment_status = 'unpaid'
     const result = await db.run(
@@ -573,15 +579,19 @@ app.post('/admin/listings/:listingId/images/:imageId/delete', isAdmin, async (re
 app.post('/admin/listings/:id/update', isAdmin, async (req, res) => {
   try {
     const { title, location, price, description } = req.body;
-    console.log('Updating listing:', { id: req.params.id, title, location, price, description });
+    console.log('🔧 [ADMIN UPDATE] Updating listing:', { id: req.params.id, title, location, price, description });
     await db.run(
       'UPDATE listings SET title = ?, location = ?, price = ?, description = ? WHERE id = ?',
       [title, location, price, description, req.params.id]
     );
-    console.log('Listing updated successfully');
+    
+    // Verify the update worked
+    const updated = await db.get('SELECT * FROM listings WHERE id = ?', [req.params.id]);
+    console.log('✅ [ADMIN UPDATE] Database updated. New price in DB:', updated.price);
+    
     res.redirect('/admin/listings');
   } catch (err) {
-    console.error('Error updating listing:', err.message, err);
+    console.error('❌ [ADMIN UPDATE] Error updating listing:', err.message, err);
     res.status(500).send('Server error: ' + err.message);
   }
 });
