@@ -403,8 +403,11 @@ app.post('/bookings', async (req, res) => {
       [listing_id, name, email, checkin, checkout, 'unpaid', totalAmount, new Date().toISOString()]
     );
     
+    const bookingId = result.lastInsertRowid;
+    console.log(`✅ [BOOKING] Created booking ID: ${bookingId}`);
+    
     // Redirect to payment page
-    res.redirect(`/payment/${result.lastID}`);
+    res.redirect(`/payment/${bookingId}`);
   } catch (err) {
     console.error('Booking error:', err);
     res.status(500).send('Server error');
