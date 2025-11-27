@@ -1,4 +1,4 @@
-const sqlite3 = require('sqlite3').verbose();
+const BetterSqlite3 = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
@@ -9,41 +9,52 @@ const dbFile = path.join(dbPath, 'helnay.db');
 
 console.log('📁 Database location:', dbFile);
 
+// Ensure directory exists BEFORE opening database
 if (!fs.existsSync(dbPath)) {
   console.log('📂 Creating database directory:', dbPath);
   fs.mkdirSync(dbPath, { recursive: true });
 }
 
-const db = new sqlite3.Database(dbFile, (err) => {
-  if (err) {
-    console.error('❌ Database connection error:', err);
-  } else {
-    console.log('✅ Connected to database at:', dbFile);
-  }
-});
+// Verify directory was created successfully
+if (!fs.existsSync(dbPath)) {
+  throw new Error(`Failed to create database directory: ${dbPath}`);
+}
+
+console.log('✅ Database directory confirmed:', dbPath);
+
+const db = new BetterSqlite3(dbFile);
+console.log('✅ Connected to database at:', dbFile);
 
 function run(sql, params = []) {
   return new Promise((resolve, reject) => {
-    db.run(sql, params, function (err) {
-      if (err) reject(err);
-      else resolve(this);
-    });
+    try {
+      const result = db.prepare(sql).run(params);
+      resolve(result);
+    } catch (err) {
+      reject(err);
+    }
   });
 }
+
 function get(sql, params = []) {
   return new Promise((resolve, reject) => {
-    db.get(sql, params, (err, row) => {
-      if (err) reject(err);
-      else resolve(row);
-    });
+    try {
+      const result = db.prepare(sql).get(params);
+      resolve(result);
+    } catch (err) {
+      reject(err);
+    }
   });
 }
+
 function all(sql, params = []) {
   return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
+    try {
+      const result = db.prepare(sql).all(params);
+      resolve(result);
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 

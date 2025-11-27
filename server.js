@@ -27,7 +27,18 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.json()); // For Stripe webhook and API calls
 
 // Session configuration with persistent store
-const sessionDb = new BetterSqlite3(path.join(__dirname, 'data', 'sessions.db'));
+const fs = require('fs');
+const sessionDbPath = process.env.DATABASE_PATH || path.join(__dirname, 'data');
+const sessionDbFile = path.join(sessionDbPath, 'sessions.db');
+
+// Ensure directory exists for session database too
+if (!fs.existsSync(sessionDbPath)) {
+  fs.mkdirSync(sessionDbPath, { recursive: true });
+}
+
+const sessionDb = new BetterSqlite3(sessionDbFile);
+console.log('✅ Session database at:', sessionDbFile);
+
 app.use(session({
   store: new SqliteStore({
     client: sessionDb,
