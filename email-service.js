@@ -1,46 +1,33 @@
-const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 
-// Check if email is configured
-const isEmailConfigured = process.env.SMTP_USER && process.env.SMTP_PASS;
+// Check if SendGrid is configured
+const isEmailConfigured = !!process.env.SENDGRID_API_KEY;
 
 if (!isEmailConfigured) {
-  console.warn('⚠️ Email not configured. SMTP_USER and SMTP_PASS environment variables are required.');
+  console.warn('⚠️ Email not configured. SENDGRID_API_KEY environment variable is required.');
+} else {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  console.log('✓ SendGrid email service configured');
 }
 
-// Create transporter with timeout settings
-const transporter = isEmailConfigured ? nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.SMTP_PORT) || 587,
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
-  },
-  tls: {
-    rejectUnauthorized: false
-  },
-  connectionTimeout: 10000, // 10 seconds
-  greetingTimeout: 10000,
-  socketTimeout: 15000
-}) : null;
-
-// Note: Render.com free tier may block SMTP ports (25, 465, 587)
-// If emails fail, consider using SendGrid, Mailgun, or AWS SES which use HTTP APIs
-if (isEmailConfigured) {
-  console.log('✓ Email transporter configured for:', process.env.SMTP_HOST);
-  console.log('⚠️ Note: Some hosting platforms block SMTP. If emails fail, consider using SendGrid or similar services.');
-}
+// Get sender email - use ADMIN_EMAIL if set, otherwise use a default
+const getSenderEmail = () => {
+  return process.env.ADMIN_EMAIL || 'noreply@helnay.com';
+};
 
 // Send booking approval email
 async function sendBookingApprovalEmail(booking, listing) {
-  if (!isEmailConfigured || !transporter) {
-    console.warn('⚠️ Email not sent - SMTP not configured');
+  if (!isEmailConfigured) {
+    console.warn('⚠️ Email not sent - SendGrid API key not configured');
     return false;
   }
 
-  const mailOptions = {
-    from: `"Helnay Rentals" <${process.env.SMTP_USER}>`,
+  const msg = {
     to: booking.email,
+    from: {
+      email: getSenderEmail(),
+      name: 'Helnay Rentals'
+    },
     subject: '✅ Your Booking has been Approved!',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -66,13 +53,13 @@ async function sendBookingApprovalEmail(booking, listing) {
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✓ Approval email sent to ${booking.email}`, info.messageId);
+    await sgMail.send(msg);
+    console.log(`✓ Approval email sent to ${booking.email} via SendGrid`);
     return true;
   } catch (error) {
     console.warn(`⚠️ Email failed (booking still approved): ${error.message}`);
-    if (error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED') {
-      console.warn('💡 Tip: Your hosting platform may block SMTP. Consider using SendGrid, Mailgun, or AWS SES.');
+    if (error.response) {
+      console.warn('SendGrid error details:', error.response.body);
     }
     return false;
   }
@@ -80,14 +67,17 @@ async function sendBookingApprovalEmail(booking, listing) {
 
 // Send booking denial email
 async function sendBookingDenialEmail(booking, listing) {
-  if (!isEmailConfigured || !transporter) {
-    console.warn('⚠️ Email not sent - SMTP not configured');
+  if (!isEmailConfigured) {
+    console.warn('⚠️ Email not sent - SendGrid API key not configured');
     return false;
   }
 
-  const mailOptions = {
-    from: `"Helnay Rentals" <${process.env.SMTP_USER}>`,
+  const msg = {
     to: booking.email,
+    from: {
+      email: getSenderEmail(),
+      name: 'Helnay Rentals'
+    },
     subject: 'Booking Status Update',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -118,8 +108,8 @@ async function sendBookingDenialEmail(booking, listing) {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
-    console.log(`✓ Denial email sent to ${booking.email}`);
+    await sgMail.send(msg);
+    console.log(`✓ Denial email sent to ${booking.email} via SendGrid`);
     return true;
   } catch (error) {
     console.error('Error sending denial email:', error);
@@ -129,14 +119,17 @@ async function sendBookingDenialEmail(booking, listing) {
 
 // Send booking date change notification
 async function sendBookingDateChangeEmail(booking, listing, oldCheckin, oldCheckout) {
-  if (!isEmailConfigured || !transporter) {
-    console.warn('⚠️ Email not sent - SMTP not configured');
+  if (!isEmailConfigured) {
+    console.warn('⚠️ Email not sent - SendGrid API key not configured');
     return false;
   }
 
-  const mailOptions = {
-    from: `"Helnay Rentals" <${process.env.SMTP_USER}>`,
+  const msg = {
     to: booking.email,
+    from: {
+      email: getSenderEmail(),
+      name: 'Helnay Rentals'
+    },
     subject: '📅 Your Booking Dates Have Been Updated',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -174,8 +167,8 @@ async function sendBookingDateChangeEmail(booking, listing, oldCheckin, oldCheck
   };
 
   try {
-    await transporter.sendMail(mailOptions);
-    console.log(`✓ Date change email sent to ${booking.email}`);
+    await sgMail.send(msg);
+    console.log(`✓ Date change email sent to ${booking.email} via SendGrid`);
     return true;
   } catch (error) {
     console.error('Error sending date change email:', error);
@@ -185,14 +178,17 @@ async function sendBookingDateChangeEmail(booking, listing, oldCheckin, oldCheck
 
 // Send booking cancellation notification
 async function sendBookingCancellationEmail(booking, listing) {
-  if (!isEmailConfigured || !transporter) {
-    console.warn('⚠️ Email not sent - SMTP not configured');
+  if (!isEmailConfigured) {
+    console.warn('⚠️ Email not sent - SendGrid API key not configured');
     return false;
   }
 
-  const mailOptions = {
-    from: `"Helnay Rentals" <${process.env.SMTP_USER}>`,
+  const msg = {
     to: booking.email,
+    from: {
+      email: getSenderEmail(),
+      name: 'Helnay Rentals'
+    },
     subject: '❌ Your Booking Has Been Cancelled',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -223,8 +219,8 @@ async function sendBookingCancellationEmail(booking, listing) {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
-    console.log(`✓ Cancellation email sent to ${booking.email}`);
+    await sgMail.send(msg);
+    console.log(`✓ Cancellation email sent to ${booking.email} via SendGrid`);
     return true;
   } catch (error) {
     console.error('Error sending cancellation email:', error);
@@ -234,16 +230,19 @@ async function sendBookingCancellationEmail(booking, listing) {
 
 // Send contact form notification to admin
 async function sendContactNotificationToAdmin(contactData) {
-  if (!isEmailConfigured || !transporter) {
-    console.warn('⚠️ Email not sent - SMTP not configured');
+  if (!isEmailConfigured) {
+    console.warn('⚠️ Email not sent - SendGrid API key not configured');
     return false;
   }
 
-  const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+  const adminEmail = process.env.ADMIN_EMAIL || getSenderEmail();
   
-  const mailOptions = {
-    from: `"Helnay Contact Form" <${process.env.SMTP_USER}>`,
+  const msg = {
     to: adminEmail,
+    from: {
+      email: getSenderEmail(),
+      name: 'Helnay Contact Form'
+    },
     replyTo: contactData.email,
     subject: `📬 New Contact Form Submission from ${contactData.name}`,
     html: `
@@ -273,8 +272,8 @@ async function sendContactNotificationToAdmin(contactData) {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
-    console.log(`✓ Contact notification sent to admin (${adminEmail})`);
+    await sgMail.send(msg);
+    console.log(`✓ Contact notification sent to admin (${adminEmail}) via SendGrid`);
     return true;
   } catch (error) {
     console.error('Error sending admin notification:', error);

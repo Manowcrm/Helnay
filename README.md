@@ -22,14 +22,15 @@ https://helnay.onrender.com
 
 ## Email Notifications
 
-**Important:** Render.com's free tier blocks outbound SMTP connections (ports 25, 465, 587), so email notifications may fail with timeout errors. Bookings will still be approved/denied successfully, but users won't receive email confirmations.
+Email notifications are powered by **SendGrid** (100 emails/day on free tier). Users receive emails for:
+- ✅ Booking approvals
+- ❌ Booking denials
+- 📅 Booking date changes
+- 🚫 Booking cancellations
+- 📬 Contact form submissions (to admin)
 
-**Solutions for production:**
-1. **SendGrid** (Free tier: 100 emails/day) - Recommended
-2. **Mailgun** (Free tier: 5,000 emails/month)
-3. **AWS SES** (Pay as you go, very cheap)
-
-These services use HTTP APIs instead of SMTP, so they work on all hosting platforms.
+**Configuration:**
+Set the `SENDGRID_API_KEY` environment variable with your SendGrid API key.
 
 ## Tech Stack
 
@@ -37,7 +38,7 @@ These services use HTTP APIs instead of SMTP, so they work on all hosting platfo
 - SQLite (database)
 - EJS (templating)
 - Bootstrap 5
-- Nodemailer (email)
+- SendGrid (email)
 
 ## Local Development
 
