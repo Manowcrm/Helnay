@@ -18,61 +18,14 @@
       </div>
     </div>
     
-    <div class="row">
-      <div class="col-md-4">
-        <div class="mb-3">
-          <label for="price" class="form-label">Price per Night ($) *</label>
-          <input type="number" class="form-control" id="price" name="price" value="<%= listing.price || '' %>" required>
-        </div>
-      </div>
-      
-      <div class="col-md-4">
-        <div class="mb-3">
-          <label for="bedrooms" class="form-label">Bedrooms *</label>
-          <input type="number" class="form-control" id="bedrooms" name="bedrooms" value="<%= listing.bedrooms || '' %>" required>
-        </div>
-      </div>
-      
-      <div class="col-md-4">
-        <div class="mb-3">
-          <label for="bathrooms" class="form-label">Bathrooms *</label>
-          <input type="number" class="form-control" id="bathrooms" name="bathrooms" value="<%= listing.bathrooms || '' %>" required>
-        </div>
-      </div>
-    </div>
-    
-    <div class="row">
-      <div class="col-md-6">
-        <div class="mb-3">
-          <label for="type" class="form-label">Property Type</label>
-          <select class="form-control" id="type" name="type">
-            <option value="">Select Type</option>
-            <option value="apartment" <%= listing.type === 'apartment' ? 'selected' : '' %>>Apartment</option>
-            <option value="house" <%= listing.type === 'house' ? 'selected' : '' %>>House</option>
-            <option value="villa" <%= listing.type === 'villa' ? 'selected' : '' %>>Villa</option>
-            <option value="cottage" <%= listing.type === 'cottage' ? 'selected' : '' %>>Cottage</option>
-            <option value="cabin" <%= listing.type === 'cabin' ? 'selected' : '' %>>Cabin</option>
-            <option value="condo" <%= listing.type === 'condo' ? 'selected' : '' %>>Condo</option>
-          </select>
-        </div>
-      </div>
-      
-      <div class="col-md-6">
-        <div class="mb-3">
-          <label for="max_guests" class="form-label">Max Guests</label>
-          <input type="number" class="form-control" id="max_guests" name="max_guests" value="<%= listing.max_guests || '' %>">
-        </div>
-      </div>
+    <div class="mb-3">
+      <label for="price" class="form-label">Price per Night ($) *</label>
+      <input type="number" step="0.01" class="form-control" id="price" name="price" value="<%= listing.price || '' %>" required>
     </div>
     
     <div class="mb-3">
       <label for="description" class="form-label">Description *</label>
       <textarea class="form-control" id="description" name="description" rows="5" required><%= listing.description || '' %></textarea>
-    </div>
-    
-    <div class="mb-3">
-      <label class="form-label">Amenities (comma-separated)</label>
-      <input type="text" class="form-control" name="amenities" value="<%= listing.amenities || '' %>" placeholder="WiFi, Pool, Parking, Kitchen, etc.">
     </div>
     
     <div class="d-flex gap-2">

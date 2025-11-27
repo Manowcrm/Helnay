@@ -340,15 +340,17 @@ app.get('/admin/listings/new', isAdmin, (req, res) => {
 // Admin: create listing
 app.post('/admin/listings/create', isAdmin, async (req, res) => {
   try {
-    const { title, location, price, bedrooms, bathrooms, description, type, max_guests, amenities } = req.body;
+    const { title, location, price, description } = req.body;
+    console.log('Creating new listing:', { title, location, price, description });
     const result = await db.run(
-      'INSERT INTO listings (title, location, price, bedrooms, bathrooms, description, type, max_guests, amenities, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [title, location, price, bedrooms, bathrooms, description, type || null, max_guests || null, amenities || null, new Date().toISOString()]
+      'INSERT INTO listings (title, location, price, description, created_at) VALUES (?, ?, ?, ?, ?)',
+      [title, location, price, description, new Date().toISOString()]
     );
+    console.log('Listing created successfully with ID:', result.lastID);
     res.redirect('/admin/listings');
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
+    console.error('Error creating listing:', err.message, err);
+    res.status(500).send('Server error: ' + err.message);
   }
 });
 
@@ -396,15 +398,17 @@ app.post('/admin/listings/:listingId/images/:imageId/delete', isAdmin, async (re
 // Admin: update listing
 app.post('/admin/listings/:id/update', isAdmin, async (req, res) => {
   try {
-    const { title, location, price, bedrooms, bathrooms, description, type, max_guests, amenities } = req.body;
+    const { title, location, price, description } = req.body;
+    console.log('Updating listing:', { id: req.params.id, title, location, price, description });
     await db.run(
-      'UPDATE listings SET title = ?, location = ?, price = ?, bedrooms = ?, bathrooms = ?, description = ?, type = ?, max_guests = ?, amenities = ? WHERE id = ?',
-      [title, location, price, bedrooms, bathrooms, description, type || null, max_guests || null, amenities || null, req.params.id]
+      'UPDATE listings SET title = ?, location = ?, price = ?, description = ? WHERE id = ?',
+      [title, location, price, description, req.params.id]
     );
+    console.log('Listing updated successfully');
     res.redirect('/admin/listings');
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
+    console.error('Error updating listing:', err.message, err);
+    res.status(500).send('Server error: ' + err.message);
   }
 });
 
