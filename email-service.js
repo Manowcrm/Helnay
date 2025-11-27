@@ -1,18 +1,33 @@
 const nodemailer = require('nodemailer');
 
+// Check if email is configured
+const isEmailConfigured = process.env.SMTP_USER && process.env.SMTP_PASS;
+
+if (!isEmailConfigured) {
+  console.warn('⚠️ Email not configured. SMTP_USER and SMTP_PASS environment variables are required.');
+}
+
 // Create transporter
-const transporter = nodemailer.createTransport({
+const transporter = isEmailConfigured ? nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: process.env.SMTP_PORT || 587,
+  port: parseInt(process.env.SMTP_PORT) || 587,
   secure: false, // true for 465, false for other ports
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
+  },
+  tls: {
+    rejectUnauthorized: false
   }
-});
+}) : null;
 
 // Send booking approval email
 async function sendBookingApprovalEmail(booking, listing) {
+  if (!isEmailConfigured || !transporter) {
+    console.warn('⚠️ Email not sent - SMTP not configured');
+    return false;
+  }
+
   const mailOptions = {
     from: `"Helnay Rentals" <${process.env.SMTP_USER}>`,
     to: booking.email,
@@ -41,17 +56,28 @@ async function sendBookingApprovalEmail(booking, listing) {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
-    console.log(`✓ Approval email sent to ${booking.email}`);
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✓ Approval email sent to ${booking.email}`, info.messageId);
     return true;
   } catch (error) {
-    console.error('Error sending approval email:', error);
+    console.error('Error sending approval email:', error.message);
+    console.error('SMTP Config:', {
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      user: process.env.SMTP_USER ? '***configured***' : 'NOT SET',
+      pass: process.env.SMTP_PASS ? '***configured***' : 'NOT SET'
+    });
     return false;
   }
 }
 
 // Send booking denial email
 async function sendBookingDenialEmail(booking, listing) {
+  if (!isEmailConfigured || !transporter) {
+    console.warn('⚠️ Email not sent - SMTP not configured');
+    return false;
+  }
+
   const mailOptions = {
     from: `"Helnay Rentals" <${process.env.SMTP_USER}>`,
     to: booking.email,
@@ -96,6 +122,11 @@ async function sendBookingDenialEmail(booking, listing) {
 
 // Send booking date change notification
 async function sendBookingDateChangeEmail(booking, listing, oldCheckin, oldCheckout) {
+  if (!isEmailConfigured || !transporter) {
+    console.warn('⚠️ Email not sent - SMTP not configured');
+    return false;
+  }
+
   const mailOptions = {
     from: `"Helnay Rentals" <${process.env.SMTP_USER}>`,
     to: booking.email,
@@ -147,6 +178,11 @@ async function sendBookingDateChangeEmail(booking, listing, oldCheckin, oldCheck
 
 // Send booking cancellation notification
 async function sendBookingCancellationEmail(booking, listing) {
+  if (!isEmailConfigured || !transporter) {
+    console.warn('⚠️ Email not sent - SMTP not configured');
+    return false;
+  }
+
   const mailOptions = {
     from: `"Helnay Rentals" <${process.env.SMTP_USER}>`,
     to: booking.email,
@@ -191,6 +227,11 @@ async function sendBookingCancellationEmail(booking, listing) {
 
 // Send contact form notification to admin
 async function sendContactNotificationToAdmin(contactData) {
+  if (!isEmailConfigured || !transporter) {
+    console.warn('⚠️ Email not sent - SMTP not configured');
+    return false;
+  }
+
   const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
   
   const mailOptions = {

@@ -384,12 +384,12 @@ app.post('/admin/listings/:listingId/images/add', isAdmin, async (req, res) => {
 app.post('/admin/listings/:listingId/images/:imageId/delete', isAdmin, async (req, res) => {
   console.log('Image delete route hit:', { listingId: req.params.listingId, imageId: req.params.imageId });
   try {
-    await db.run('DELETE FROM listing_images WHERE id = ? AND listing_id = ?', [req.params.imageId, req.params.listingId]);
-    console.log('Image deleted, redirecting to edit page');
+    const result = await db.run('DELETE FROM listing_images WHERE id = ? AND listing_id = ?', [req.params.imageId, req.params.listingId]);
+    console.log('Image deleted successfully:', result);
     res.redirect('/admin/listings/' + req.params.listingId + '/edit');
   } catch (err) {
-    console.error('Error deleting image:', err);
-    res.status(500).send('Server error');
+    console.error('Error deleting image:', err.message, err);
+    res.redirect('/admin/listings/' + req.params.listingId + '/edit?error=delete_failed');
   }
 });
 
@@ -495,19 +495,32 @@ app.post('/admin/bookings/:id/approve', isAdmin, async (req, res) => {
     const booking = await db.get('SELECT b.*, l.title, l.location, l.price FROM bookings b JOIN listings l ON b.listing_id = l.id WHERE b.id = ?', [req.params.id]);
     
     if (!booking) {
+      console.error('Booking not found:', req.params.id);
       return res.status(404).send('Booking not found');
     }
     
+    console.log('Approving booking:', booking);
+    
     // Update booking status
     await db.run('UPDATE bookings SET status = ? WHERE id = ?', ['approved', req.params.id]);
+    console.log('Booking status updated to approved');
     
-    // Send approval email
-    await sendBookingApprovalEmail(booking, booking);
+    // Send approval email (don't let email failure stop the approval)
+    try {
+      const emailSent = await sendBookingApprovalEmail(booking, booking);
+      if (emailSent) {
+        console.log('Approval email sent successfully');
+      } else {
+        console.warn('Approval email failed but booking still approved');
+      }
+    } catch (emailErr) {
+      console.error('Email error (booking still approved):', emailErr.message);
+    }
     
     res.redirect('/admin/bookings');
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
+    console.error('Error approving booking:', err.message, err);
+    res.status(500).send('Server error: ' + err.message);
   }
 });
 
@@ -518,6 +531,7 @@ app.post('/admin/bookings/:id/deny', isAdmin, async (req, res) => {
     const booking = await db.get('SELECT b.*, l.title, l.location, l.price FROM bookings b JOIN listings l ON b.listing_id = l.id WHERE b.id = ?', [req.params.id]);
     
     if (!booking) {
+      console.error('Booking not found:', req.params.id);
       return res.status(404).send('Booking not found');
     }
     
