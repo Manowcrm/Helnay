@@ -695,10 +695,15 @@ app.post('/admin/listings/:id/update', isAdmin, async (req, res) => {
       formData: req.body 
     });
     
+    // Convert price to number to ensure proper storage
+    const priceNumber = parseFloat(price);
+    
+    console.log('🔧 [ADMIN UPDATE] Parsed price:', { original: price, parsed: priceNumber, type: typeof priceNumber });
+    
     // Perform update
     const result = await db.run(
       'UPDATE listings SET title = ?, location = ?, price = ?, description = ? WHERE id = ?',
-      [title, location, price, description, listingId]
+      [title, location, priceNumber, description, listingId]
     );
     
     console.log('📝 [ADMIN UPDATE] UPDATE result:', { 
@@ -706,18 +711,33 @@ app.post('/admin/listings/:id/update', isAdmin, async (req, res) => {
       listingId: listingId
     });
     
-    // Verify the update worked
-    const afterUpdate = await db.get('SELECT * FROM listings WHERE id = ?', [listingId]);
-    console.log('✅ [ADMIN UPDATE] AFTER:', { 
+    // Wait a moment for database to commit (better-sqlite3 is sync, but just to be safe)
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Verify the update worked TWICE to ensure persistence
+    const afterUpdate1 = await db.get('SELECT * FROM listings WHERE id = ?', [listingId]);
+    console.log('✅ [ADMIN UPDATE] AFTER (immediate check):', { 
       id: listingId,
-      price: afterUpdate.price,
-      title: afterUpdate.title,
-      location: afterUpdate.location,
-      updateSuccessful: afterUpdate.price == price
+      price: afterUpdate1.price,
+      title: afterUpdate1.title,
+      location: afterUpdate1.location,
+      updateSuccessful: afterUpdate1.price == priceNumber
+    });
+    
+    // Second verification after delay
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const afterUpdate2 = await db.get('SELECT * FROM listings WHERE id = ?', [listingId]);
+    console.log('✅ [ADMIN UPDATE] AFTER (delayed check):', { 
+      price: afterUpdate2.price,
+      stillCorrect: afterUpdate2.price == priceNumber
     });
     
     if (result.changes === 0) {
       console.warn('⚠️ [ADMIN UPDATE] No rows were updated! Listing may not exist.');
+    }
+    
+    if (afterUpdate2.price != priceNumber) {
+      console.error('❌ [ADMIN UPDATE] PRICE MISMATCH! Expected:', priceNumber, 'Got:', afterUpdate2.price);
     }
     
     res.redirect('/admin/listings');
