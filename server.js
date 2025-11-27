@@ -316,6 +316,45 @@ app.get('/api/debug/listings', async (req, res) => {
   }
 });
 
+// Admin API: Force update listing price (for troubleshooting)
+app.post('/api/admin/listings/:id/update-price', isAdmin, async (req, res) => {
+  try {
+    const { price } = req.body;
+    const listingId = req.params.id;
+    
+    console.log('🔧 [API UPDATE] Received request to update listing:', { listingId, newPrice: price });
+    
+    // Check if listing exists
+    const listing = await db.get('SELECT * FROM listings WHERE id = ?', [listingId]);
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found', listingId });
+    }
+    
+    console.log('📋 [API UPDATE] Current listing:', { id: listing.id, price: listing.price, title: listing.title });
+    
+    // Update the price
+    const result = await db.run('UPDATE listings SET price = ? WHERE id = ?', [price, listingId]);
+    
+    console.log('📝 [API UPDATE] Update result:', { changes: result.changes });
+    
+    // Verify
+    const updated = await db.get('SELECT * FROM listings WHERE id = ?', [listingId]);
+    
+    console.log('✅ [API UPDATE] After update:', { id: updated.id, price: updated.price });
+    
+    res.json({
+      success: true,
+      message: 'Price updated successfully',
+      before: listing.price,
+      after: updated.price,
+      changes: result.changes
+    });
+  } catch (err) {
+    console.error('❌ [API UPDATE] Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/bookings', async (req, res) => {
   try {
     const listings = await db.all('SELECT id,title FROM listings');
@@ -601,15 +640,41 @@ app.post('/admin/listings/:listingId/images/:imageId/delete', isAdmin, async (re
 app.post('/admin/listings/:id/update', isAdmin, async (req, res) => {
   try {
     const { title, location, price, description } = req.body;
-    console.log('🔧 [ADMIN UPDATE] Updating listing:', { id: req.params.id, title, location, price, description });
-    await db.run(
+    const listingId = req.params.id;
+    
+    // Log before update
+    const beforeUpdate = await db.get('SELECT * FROM listings WHERE id = ?', [listingId]);
+    console.log('🔧 [ADMIN UPDATE] BEFORE:', { 
+      id: listingId, 
+      oldPrice: beforeUpdate?.price,
+      newPrice: price,
+      formData: req.body 
+    });
+    
+    // Perform update
+    const result = await db.run(
       'UPDATE listings SET title = ?, location = ?, price = ?, description = ? WHERE id = ?',
-      [title, location, price, description, req.params.id]
+      [title, location, price, description, listingId]
     );
     
+    console.log('📝 [ADMIN UPDATE] UPDATE result:', { 
+      changes: result.changes,
+      listingId: listingId
+    });
+    
     // Verify the update worked
-    const updated = await db.get('SELECT * FROM listings WHERE id = ?', [req.params.id]);
-    console.log('✅ [ADMIN UPDATE] Database updated. New price in DB:', updated.price);
+    const afterUpdate = await db.get('SELECT * FROM listings WHERE id = ?', [listingId]);
+    console.log('✅ [ADMIN UPDATE] AFTER:', { 
+      id: listingId,
+      price: afterUpdate.price,
+      title: afterUpdate.title,
+      location: afterUpdate.location,
+      updateSuccessful: afterUpdate.price == price
+    });
+    
+    if (result.changes === 0) {
+      console.warn('⚠️ [ADMIN UPDATE] No rows were updated! Listing may not exist.');
+    }
     
     res.redirect('/admin/listings');
   } catch (err) {
