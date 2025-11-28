@@ -6,30 +6,17 @@
         <p class="lead mb-4">Discover amazing homes and experiences around the world</p>
         <form method="GET" action="/" class="search-box-large mx-auto">
           <div class="row g-2">
-            <div class="col-md-3">
+            <div class="col-md-5">
               <input name="q" class="form-control" placeholder="Search destination or property" value="<%= (typeof query !== 'undefined' && query.q) ? query.q : '' %>">
             </div>
-            <div class="col-md-2">
-              <select name="type" class="form-select">
-                <option value="">Category</option>
-                <option value="home" <%= (typeof query !== 'undefined' && query.type === 'home') ? 'selected' : '' %>>Homes</option>
-                <option value="apartment" <%= (typeof query !== 'undefined' && query.type === 'apartment') ? 'selected' : '' %>>Apartments</option>
-                <option value="cottage" <%= (typeof query !== 'undefined' && query.type === 'cottage') ? 'selected' : '' %>>Cottages</option>
-                <option value="cabin" <%= (typeof query !== 'undefined' && query.type === 'cabin') ? 'selected' : '' %>>Cabins</option>
-                <option value="villa" <%= (typeof query !== 'undefined' && query.type === 'villa') ? 'selected' : '' %>>Villas</option>
-              </select>
-            </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
               <input name="location" class="form-control" placeholder="Location" value="<%= (typeof query !== 'undefined' && query.location) ? query.location : '' %>">
             </div>
             <div class="col-md-2">
-              <input name="min_price" class="form-control" placeholder="Min $" type="number" min="0" value="<%= (typeof query !== 'undefined' && query.min_price) ? query.min_price : '' %>">
+              <input name="min_price" class="form-control" placeholder="Min Price" type="number" min="0" value="<%= (typeof query !== 'undefined' && query.min_price) ? query.min_price : '' %>">
             </div>
-            <div class="col-md-2">
-              <input name="max_price" class="form-control" placeholder="Max $" type="number" min="0" value="<%= (typeof query !== 'undefined' && query.max_price) ? query.max_price : '' %>">
-            </div>
-            <div class="col-md-1 d-grid">
-              <button type="submit" class="btn btn-warning"><i class="bi bi-search"></i></button>
+            <div class="col-md-2 d-grid">
+              <button type="submit" class="btn btn-warning"><i class="bi bi-search"></i> Search</button>
             </div>
           </div>
         </form>
@@ -38,54 +25,163 @@
   </div>
 </div>
 
-<div class="container mt-5">
-  <div class="row mb-4">
-    <div class="col-md-3 mb-3">
-      <a href="/entire-homes" class="text-decoration-none">
-        <div class="quick-book-card text-center p-4">
-          <i class="bi bi-house-door fs-1 text-primary mb-3"></i>
-          <h5 class="mb-3">Entire Homes</h5>
-          <p class="text-muted small">Private places with room for everyone</p>
-          <button type="button" class="btn btn-sm btn-outline-primary">Browse & Rent</button>
-        </div>
-      </a>
-    </div>
-    <div class="col-md-3 mb-3">
-      <a href="/city-stays" class="text-decoration-none">
-        <div class="quick-book-card text-center p-4">
-          <i class="bi bi-building fs-1 text-success mb-3"></i>
-          <h5 class="mb-3">City Stays</h5>
-          <p class="text-muted small">Urban apartments near attractions</p>
-          <button type="button" class="btn btn-sm btn-outline-success">Browse & Rent</button>
-        </div>
-      </a>
-    </div>
-    <div class="col-md-3 mb-3">
-      <a href="/beach-houses" class="text-decoration-none">
-        <div class="quick-book-card text-center p-4">
-          <i class="bi bi-water fs-1 text-info mb-3"></i>
-          <h5 class="mb-3">Beach Houses</h5>
-          <p class="text-muted small">Seaside properties with ocean views</p>
-          <button type="button" class="btn btn-sm btn-outline-info">Browse & Rent</button>
-        </div>
-      </a>
-    </div>
-    <div class="col-md-3 mb-3">
-      <a href="/mountain-retreats" class="text-decoration-none">
-        <div class="quick-book-card text-center p-4">
-          <i class="bi bi-tree fs-1 text-warning mb-3"></i>
-          <h5 class="mb-3">Mountain Retreats</h5>
-          <p class="text-muted small">Cabins perfect for nature lovers</p>
-          <button type="button" class="btn btn-sm btn-outline-warning">Browse & Rent</button>
-        </div>
-      </a>
-    </div>
-  </div>
-</div>
-
-<div class="container">
-  <h2 class="mb-4">Available Properties</h2>
+<div class="container mt-4">
   <div class="row">
+    <!-- Sidebar Filters -->
+    <div class="col-lg-3 mb-4">
+      <div class="sidebar-filters">
+        <!-- Booking Options -->
+        <div class="filter-section">
+          <h6 class="filter-title">Booking Options</h6>
+          <div class="filter-options">
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="instant">
+              <span>Instant Booking</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Services -->
+        <div class="filter-section">
+          <h6 class="filter-title">Services</h6>
+          <div class="filter-options">
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="pool">
+              <span><i class="bi bi-water"></i> Pool</span>
+            </label>
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="wifi">
+              <span><i class="bi bi-wifi"></i> WiFi</span>
+            </label>
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="balcony">
+              <span><i class="bi bi-building"></i> Balcony/Patio</span>
+            </label>
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="ac">
+              <span><i class="bi bi-snow"></i> Air Conditioning</span>
+            </label>
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="garden">
+              <span><i class="bi bi-flower1"></i> Garden</span>
+            </label>
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="tv">
+              <span><i class="bi bi-tv"></i> TV</span>
+            </label>
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="parking">
+              <span><i class="bi bi-car-front"></i> Parking</span>
+            </label>
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="kitchen">
+              <span><i class="bi bi-cup-hot"></i> Kitchen</span>
+            </label>
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="washer">
+              <span><i class="bi bi-recycle"></i> Washing Machine</span>
+            </label>
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="microwave">
+              <span><i class="bi bi-lightning"></i> Microwave</span>
+            </label>
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="dishwasher">
+              <span><i class="bi bi-droplet"></i> Dishwasher</span>
+            </label>
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="hottub">
+              <span><i class="bi bi-tsunami"></i> Hot Tub</span>
+            </label>
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="sauna">
+              <span><i class="bi bi-fire"></i> Sauna</span>
+            </label>
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="fireplace">
+              <span><i class="bi bi-fire"></i> Fireplace</span>
+            </label>
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="cot">
+              <span><i class="bi bi-moon"></i> Cot</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Accommodation Type -->
+        <div class="filter-section">
+          <h6 class="filter-title">Accommodation Type</h6>
+          <div class="filter-options">
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="pet-friendly">
+              <span><i class="bi bi-heart"></i> Pet-friendly</span>
+            </label>
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="no-smoking">
+              <span><i class="bi bi-slash-circle"></i> No Smoking</span>
+            </label>
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="no-pets">
+              <span><i class="bi bi-x-circle"></i> No Pets</span>
+            </label>
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="wheelchair">
+              <span><i class="bi bi-person-wheelchair"></i> Wheelchair Access</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Activities -->
+        <div class="filter-section">
+          <h6 class="filter-title">Activities</h6>
+          <div class="filter-options">
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="fishing">
+              <span><i class="bi bi-life-preserver"></i> Fishing</span>
+            </label>
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="grill">
+              <span><i class="bi bi-fire"></i> Grill</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Quick Categories -->
+        <div class="filter-section">
+          <h6 class="filter-title">Browse by Category</h6>
+          <div class="category-links">
+            <a href="/entire-homes" class="category-link">
+              <i class="bi bi-house-door"></i> Entire Homes
+            </a>
+            <a href="/city-stays" class="category-link">
+              <i class="bi bi-building"></i> City Stays
+            </a>
+            <a href="/beach-houses" class="category-link">
+              <i class="bi bi-water"></i> Beach Houses
+            </a>
+            <a href="/mountain-retreats" class="category-link">
+              <i class="bi bi-tree"></i> Mountain Retreats
+            </a>
+          </div>
+        </div>
+
+        <!-- Price Range -->
+        <div class="filter-section">
+          <h6 class="filter-title">Price Range</h6>
+          <div class="price-inputs">
+            <input type="number" class="form-control form-control-sm mb-2" placeholder="Min $" id="priceMin">
+            <input type="number" class="form-control form-control-sm" placeholder="Max $" id="priceMax">
+            <button class="btn btn-sm btn-primary w-100 mt-2" onclick="applyPriceFilter()">Apply</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-lg-9">
+
+      <h2 class="mb-4">Available Properties <span class="badge bg-secondary listings-count"><%= listings.length %></span></h2>
+      <div class="row" id="listingsContainer">
   <% if (!listings || listings.length === 0) { %>
     <div class="col-12"><p>No listings found.</p></div>
   <% } %>
@@ -118,9 +214,9 @@
       </div>
     </div>
   <% }) %>
-  </div>
+      </div>
 
-  <!-- Featured Rentals Section -->
+      <!-- Featured Rentals Section -->
   <div class="row mt-5 pt-4 border-top">
     <div class="col-12 mb-4">
       <h3>More Properties Available for Rent</h3>
@@ -160,5 +256,93 @@
         </div>
       </div>
     <% }) %>
+      </div>
+    </div>
   </div>
 </div>
+
+<script>
+// Filter functionality
+const filterInputs = document.querySelectorAll('.filter-input');
+const listingsContainer = document.getElementById('listingsContainer');
+const allListings = Array.from(listingsContainer.children);
+
+filterInputs.forEach(input => {
+  input.addEventListener('change', applyFilters);
+});
+
+function applyFilters() {
+  const activeFilters = Array.from(document.querySelectorAll('.filter-input:checked')).map(cb => cb.dataset.filter);
+  
+  allListings.forEach(listing => {
+    const listingText = listing.textContent.toLowerCase();
+    const description = listing.querySelector('.card-text')?.textContent.toLowerCase() || '';
+    const title = listing.querySelector('.card-title')?.textContent.toLowerCase() || '';
+    
+    if (activeFilters.length === 0) {
+      listing.style.display = 'block';
+      return;
+    }
+    
+    const matches = activeFilters.every(filter => {
+      switch(filter) {
+        case 'pool': return description.includes('pool') || title.includes('pool');
+        case 'wifi': return description.includes('wifi') || description.includes('wi-fi');
+        case 'balcony': return description.includes('balcony') || description.includes('patio') || description.includes('terrace');
+        case 'ac': return description.includes('air condition') || description.includes('ac ');
+        case 'garden': return description.includes('garden') || title.includes('garden');
+        case 'tv': return description.includes('tv') || description.includes('television');
+        case 'parking': return description.includes('parking') || description.includes('garage');
+        case 'kitchen': return description.includes('kitchen');
+        case 'washer': return description.includes('washing') || description.includes('laundry');
+        case 'microwave': return description.includes('microwave');
+        case 'dishwasher': return description.includes('dishwasher');
+        case 'hottub': return description.includes('hot tub') || description.includes('jacuzzi');
+        case 'sauna': return description.includes('sauna');
+        case 'fireplace': return description.includes('fireplace');
+        case 'cot': return description.includes('cot') || description.includes('crib');
+        case 'pet-friendly': return description.includes('pet') && description.includes('friend');
+        case 'no-smoking': return description.includes('no smoking') || description.includes('non-smoking');
+        case 'no-pets': return description.includes('no pet');
+        case 'wheelchair': return description.includes('wheelchair') || description.includes('accessible');
+        case 'fishing': return description.includes('fishing');
+        case 'grill': return description.includes('grill') || description.includes('bbq') || description.includes('barbecue');
+        case 'instant': return true; // All properties available for instant booking
+        default: return true;
+      }
+    });
+    
+    listing.style.display = matches ? 'block' : 'none';
+  });
+  
+  updateListingsCount();
+}
+
+function applyPriceFilter() {
+  const minPrice = parseFloat(document.getElementById('priceMin').value) || 0;
+  const maxPrice = parseFloat(document.getElementById('priceMax').value) || Infinity;
+  
+  allListings.forEach(listing => {
+    const priceText = listing.querySelector('.text-primary')?.textContent || '';
+    const price = parseFloat(priceText.replace(/[^0-9.]/g, ''));
+    
+    if (price >= minPrice && price <= maxPrice) {
+      if (listing.style.display !== 'none') {
+        listing.style.display = 'block';
+      }
+    } else {
+      listing.style.display = 'none';
+    }
+  });
+  
+  updateListingsCount();
+}
+
+function updateListingsCount() {
+  const visibleCount = allListings.filter(l => l.style.display !== 'none').length;
+  const countBadge = document.querySelector('.listings-count');
+  if (countBadge) {
+    countBadge.textContent = visibleCount;
+  }
+}
+</script>
