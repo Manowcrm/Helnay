@@ -267,6 +267,11 @@ const filterInputs = document.querySelectorAll('.filter-input');
 const listingsContainer = document.getElementById('listingsContainer');
 const allListings = Array.from(listingsContainer.children);
 
+// Store original display state
+allListings.forEach(listing => {
+  listing.dataset.originalDisplay = listing.style.display || 'block';
+});
+
 filterInputs.forEach(input => {
   input.addEventListener('change', applyFilters);
 });
@@ -274,68 +279,66 @@ filterInputs.forEach(input => {
 function applyFilters() {
   const activeFilters = Array.from(document.querySelectorAll('.filter-input:checked')).map(cb => cb.dataset.filter);
   
+  // Get price filters
+  const minPrice = parseFloat(document.getElementById('priceMin')?.value) || 0;
+  const maxPrice = parseFloat(document.getElementById('priceMax')?.value) || Infinity;
+  
   allListings.forEach(listing => {
     const listingText = listing.textContent.toLowerCase();
     const description = listing.querySelector('.card-text')?.textContent.toLowerCase() || '';
     const title = listing.querySelector('.card-title')?.textContent.toLowerCase() || '';
+    const fullText = title + ' ' + description;
     
+    // Check price
+    const priceText = listing.querySelector('.text-primary')?.textContent || '';
+    const price = parseFloat(priceText.replace(/[^0-9.]/g, ''));
+    const priceMatch = price >= minPrice && price <= maxPrice;
+    
+    // If no filters selected, show all (that match price)
     if (activeFilters.length === 0) {
-      listing.style.display = 'block';
+      listing.style.display = priceMatch ? '' : 'none';
       return;
     }
     
+    // Check if listing matches ALL selected filters (AND logic)
     const matches = activeFilters.every(filter => {
       switch(filter) {
-        case 'pool': return description.includes('pool') || title.includes('pool');
-        case 'wifi': return description.includes('wifi') || description.includes('wi-fi');
-        case 'balcony': return description.includes('balcony') || description.includes('patio') || description.includes('terrace');
-        case 'ac': return description.includes('air condition') || description.includes('ac ');
-        case 'garden': return description.includes('garden') || title.includes('garden');
-        case 'tv': return description.includes('tv') || description.includes('television');
-        case 'parking': return description.includes('parking') || description.includes('garage');
-        case 'kitchen': return description.includes('kitchen');
-        case 'washer': return description.includes('washing') || description.includes('laundry');
-        case 'microwave': return description.includes('microwave');
-        case 'dishwasher': return description.includes('dishwasher');
-        case 'hottub': return description.includes('hot tub') || description.includes('jacuzzi');
-        case 'sauna': return description.includes('sauna');
-        case 'fireplace': return description.includes('fireplace');
-        case 'cot': return description.includes('cot') || description.includes('crib');
-        case 'pet-friendly': return description.includes('pet') && description.includes('friend');
-        case 'no-smoking': return description.includes('no smoking') || description.includes('non-smoking');
-        case 'no-pets': return description.includes('no pet');
-        case 'wheelchair': return description.includes('wheelchair') || description.includes('accessible');
-        case 'fishing': return description.includes('fishing');
-        case 'grill': return description.includes('grill') || description.includes('bbq') || description.includes('barbecue');
+        case 'pool': return fullText.includes('pool');
+        case 'wifi': return fullText.includes('wifi') || fullText.includes('wi-fi') || fullText.includes('internet');
+        case 'balcony': return fullText.includes('balcony') || fullText.includes('patio') || fullText.includes('terrace') || fullText.includes('deck');
+        case 'ac': return fullText.includes('air condition') || fullText.includes('ac ') || fullText.includes('cooling');
+        case 'garden': return fullText.includes('garden') || fullText.includes('yard');
+        case 'tv': return fullText.includes('tv') || fullText.includes('television') || fullText.includes('smart tv');
+        case 'parking': return fullText.includes('parking') || fullText.includes('garage');
+        case 'kitchen': return fullText.includes('kitchen') || fullText.includes('full kitchen');
+        case 'washer': return fullText.includes('washing') || fullText.includes('laundry') || fullText.includes('washer');
+        case 'microwave': return fullText.includes('microwave');
+        case 'dishwasher': return fullText.includes('dishwasher');
+        case 'hottub': return fullText.includes('hot tub') || fullText.includes('jacuzzi') || fullText.includes('spa');
+        case 'sauna': return fullText.includes('sauna');
+        case 'fireplace': return fullText.includes('fireplace') || fullText.includes('wood stove');
+        case 'cot': return fullText.includes('cot') || fullText.includes('crib') || fullText.includes('baby bed');
+        case 'pet-friendly': return (fullText.includes('pet') && fullText.includes('friend')) || fullText.includes('pet-friend') || fullText.includes('pets welcome');
+        case 'no-smoking': return fullText.includes('no smoking') || fullText.includes('non-smoking') || fullText.includes('smoke-free');
+        case 'no-pets': return fullText.includes('no pet');
+        case 'wheelchair': return fullText.includes('wheelchair') || fullText.includes('accessible') || fullText.includes('disability');
+        case 'fishing': return fullText.includes('fishing') || fullText.includes('fish');
+        case 'grill': return fullText.includes('grill') || fullText.includes('bbq') || fullText.includes('barbecue');
         case 'instant': return true; // All properties available for instant booking
         default: return true;
       }
     });
     
-    listing.style.display = matches ? 'block' : 'none';
+    // Show only if matches ALL filters AND price range
+    listing.style.display = (matches && priceMatch) ? '' : 'none';
   });
   
   updateListingsCount();
 }
 
 function applyPriceFilter() {
-  const minPrice = parseFloat(document.getElementById('priceMin').value) || 0;
-  const maxPrice = parseFloat(document.getElementById('priceMax').value) || Infinity;
-  
-  allListings.forEach(listing => {
-    const priceText = listing.querySelector('.text-primary')?.textContent || '';
-    const price = parseFloat(priceText.replace(/[^0-9.]/g, ''));
-    
-    if (price >= minPrice && price <= maxPrice) {
-      if (listing.style.display !== 'none') {
-        listing.style.display = 'block';
-      }
-    } else {
-      listing.style.display = 'none';
-    }
-  });
-  
-  updateListingsCount();
+  // Just trigger the main filter function which now handles price
+  applyFilters();
 }
 
 function updateListingsCount() {
