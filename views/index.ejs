@@ -186,7 +186,7 @@
     <div class="col-12"><p>No listings found.</p></div>
   <% } %>
   <% listings.forEach(function(l){ %>
-    <div class="col-md-4 mb-4">
+    <div class="col-md-4 mb-4" data-amenities="<%= l.description.toLowerCase() %>">
       <div class="card listing-card h-100">
         <% if (l.image_url) { %>
           <div class="listing-img-wrapper">
@@ -284,10 +284,10 @@ function applyFilters() {
   const maxPrice = parseFloat(document.getElementById('priceMax')?.value) || Infinity;
   
   allListings.forEach(listing => {
-    const listingText = listing.textContent.toLowerCase();
-    const description = listing.querySelector('.card-text')?.textContent.toLowerCase() || '';
+    // Get FULL description from data attribute (not truncated)
+    const amenities = listing.dataset.amenities || '';
     const title = listing.querySelector('.card-title')?.textContent.toLowerCase() || '';
-    const fullText = title + ' ' + description;
+    const fullText = (title + ' ' + amenities).toLowerCase();
     
     // Check price
     const priceText = listing.querySelector('.text-primary')?.textContent || '';
@@ -303,29 +303,52 @@ function applyFilters() {
     // Check if listing matches ALL selected filters (AND logic)
     const matches = activeFilters.every(filter => {
       switch(filter) {
-        case 'pool': return fullText.includes('pool');
-        case 'wifi': return fullText.includes('wifi') || fullText.includes('wi-fi') || fullText.includes('internet');
-        case 'balcony': return fullText.includes('balcony') || fullText.includes('patio') || fullText.includes('terrace') || fullText.includes('deck');
-        case 'ac': return fullText.includes('air condition') || fullText.includes('ac ') || fullText.includes('cooling');
-        case 'garden': return fullText.includes('garden') || fullText.includes('yard');
-        case 'tv': return fullText.includes('tv') || fullText.includes('television') || fullText.includes('smart tv');
-        case 'parking': return fullText.includes('parking') || fullText.includes('garage');
-        case 'kitchen': return fullText.includes('kitchen') || fullText.includes('full kitchen');
-        case 'washer': return fullText.includes('washing') || fullText.includes('laundry') || fullText.includes('washer');
-        case 'microwave': return fullText.includes('microwave');
-        case 'dishwasher': return fullText.includes('dishwasher');
-        case 'hottub': return fullText.includes('hot tub') || fullText.includes('jacuzzi') || fullText.includes('spa');
-        case 'sauna': return fullText.includes('sauna');
-        case 'fireplace': return fullText.includes('fireplace') || fullText.includes('wood stove');
-        case 'cot': return fullText.includes('cot') || fullText.includes('crib') || fullText.includes('baby bed');
-        case 'pet-friendly': return (fullText.includes('pet') && fullText.includes('friend')) || fullText.includes('pet-friend') || fullText.includes('pets welcome');
-        case 'no-smoking': return fullText.includes('no smoking') || fullText.includes('non-smoking') || fullText.includes('smoke-free');
-        case 'no-pets': return fullText.includes('no pet');
-        case 'wheelchair': return fullText.includes('wheelchair') || fullText.includes('accessible') || fullText.includes('disability');
-        case 'fishing': return fullText.includes('fishing') || fullText.includes('fish');
-        case 'grill': return fullText.includes('grill') || fullText.includes('bbq') || fullText.includes('barbecue');
-        case 'instant': return true; // All properties available for instant booking
-        default: return true;
+        case 'pool': 
+          return fullText.includes('pool');
+        case 'wifi': 
+          return fullText.includes('wifi') || fullText.includes('wi-fi');
+        case 'balcony': 
+          return fullText.includes('balcony') || fullText.includes('patio') || fullText.includes('terrace') || fullText.includes('deck');
+        case 'ac': 
+          return fullText.includes('air conditioning') || fullText.includes('air condition');
+        case 'garden': 
+          return fullText.includes('garden') || fullText.includes('yard');
+        case 'tv': 
+          return fullText.includes(' tv,') || fullText.includes(' tv ') || fullText.includes('television') || fullText.includes('smart tv');
+        case 'parking': 
+          return fullText.includes('parking') || fullText.includes('garage');
+        case 'kitchen': 
+          return fullText.includes('kitchen');
+        case 'washer': 
+          return fullText.includes('washing machine') || fullText.includes('washing') || fullText.includes('laundry');
+        case 'microwave': 
+          return fullText.includes('microwave');
+        case 'dishwasher': 
+          return fullText.includes('dishwasher');
+        case 'hottub': 
+          return fullText.includes('hot tub') || fullText.includes('jacuzzi');
+        case 'sauna': 
+          return fullText.includes('sauna');
+        case 'fireplace': 
+          return fullText.includes('fireplace');
+        case 'cot': 
+          return fullText.includes('cot') || fullText.includes('crib');
+        case 'pet-friendly': 
+          return fullText.includes('pet-friend');
+        case 'no-smoking': 
+          return fullText.includes('no smoking') || fullText.includes('smoke-free');
+        case 'no-pets': 
+          return fullText.includes('no pet');
+        case 'wheelchair': 
+          return fullText.includes('wheelchair accessible') || fullText.includes('wheelchair access');
+        case 'fishing': 
+          return fullText.includes('fishing');
+        case 'grill': 
+          return fullText.includes('bbq grill') || fullText.includes('grill') || fullText.includes('bbq');
+        case 'instant': 
+          return true;
+        default: 
+          return true;
       }
     });
     
