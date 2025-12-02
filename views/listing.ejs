@@ -149,6 +149,10 @@
 		const carouselElement = document.querySelector('#listingCarousel');
 		const thumbnails = document.querySelectorAll('.thumbnail-img');
 		
+		console.log('Carousel element:', carouselElement);
+		console.log('Number of thumbnails:', thumbnails.length);
+		console.log('Bootstrap available:', typeof bootstrap !== 'undefined');
+		
 		// Initialize Bootstrap carousel
 		if (carouselElement && typeof bootstrap !== 'undefined') {
 			const carousel = new bootstrap.Carousel(carouselElement, {
@@ -156,10 +160,13 @@
 				wrap: true
 			});
 			
+			console.log('Carousel initialized:', carousel);
+			
 			// Handle thumbnail clicks
-			thumbnails.forEach(function(thumb) {
+			thumbnails.forEach(function(thumb, idx) {
 				thumb.addEventListener('click', function() {
 					const slideIndex = parseInt(this.getAttribute('data-bs-slide-to'));
+					console.log('Thumbnail clicked, going to slide:', slideIndex);
 					carousel.to(slideIndex);
 					
 					// Update active thumbnail
@@ -170,6 +177,7 @@
 			
 			// Update active thumbnail when carousel slides
 			carouselElement.addEventListener('slid.bs.carousel', function(e) {
+				console.log('Carousel slid to index:', e.to);
 				const activeIndex = e.to;
 				thumbnails.forEach((thumb, idx) => {
 					if (idx === activeIndex) {
@@ -178,6 +186,17 @@
 						thumb.classList.remove('active');
 					}
 				});
+			});
+			
+			// Test the arrow buttons
+			const prevButton = carouselElement.querySelector('.carousel-control-prev');
+			const nextButton = carouselElement.querySelector('.carousel-control-next');
+			console.log('Prev button:', prevButton);
+			console.log('Next button:', nextButton);
+		} else {
+			console.error('Carousel initialization failed!', {
+				carouselElement: !!carouselElement,
+				bootstrapAvailable: typeof bootstrap !== 'undefined'
 			});
 		}
 	});
