@@ -114,6 +114,19 @@ a.text-decoration-none:hover .quick-book-card p {
 }
 
 /* Listing Cards */
+.listings-wrapper {
+  position: relative;
+}
+
+.listings-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.listing-item {
+  margin-bottom: 24px;
+}
+
 .listing-card { 
   border: none;
   border-radius: 12px; 
@@ -641,8 +654,36 @@ a:hover .listing-card .card-title {
     font-size: 2.5rem;
   }
   
+  /* Horizontal scrolling for property listings */
+  .listings-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+    margin: 0 -15px;
+    padding: 0 15px;
+  }
+  
+  .listings-wrapper::-webkit-scrollbar {
+    display: none; /* Chrome/Safari/Opera */
+  }
+  
+  .listings-grid {
+    flex-wrap: nowrap;
+    gap: 15px;
+  }
+  
+  .listing-item {
+    flex: 0 0 85%;
+    max-width: 85%;
+    scroll-snap-align: start;
+    margin-bottom: 0;
+  }
+  
   .listing-card {
-    margin-bottom: 20px;
+    margin-bottom: 0;
+    height: 100%;
   }
   
   .listing-img-wrapper {

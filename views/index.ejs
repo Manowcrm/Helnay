@@ -96,12 +96,13 @@
     <div class="col-lg-9">
 
       <h2 class="mb-4">Available Properties <span class="badge bg-secondary listings-count"><%= listings.length %></span></h2>
-      <div class="row" id="listingsContainer">
+      <div class="listings-wrapper">
+        <div class="row listings-grid" id="listingsContainer">
   <% if (!listings || listings.length === 0) { %>
     <div class="col-12"><p>No listings found.</p></div>
   <% } %>
   <% listings.forEach(function(l){ %>
-    <div class="col-md-4 mb-4" data-amenities="<%= (l.serviceKeys || l.description).toLowerCase() %>">
+    <div class="col-md-4 listing-item" data-amenities="<%= (l.serviceKeys || l.description).toLowerCase() %>">
       <a href="/listings/<%= l.id %>" class="text-decoration-none">
         <div class="card listing-card h-100">
           <% if (l.image_url) { %>
@@ -131,6 +132,7 @@
       </a>
     </div>
   <% }) %>
+        </div>
       </div>
 
       <!-- Featured Rentals Section -->
