@@ -146,20 +146,30 @@
 <!-- Thumbnail Gallery Interactive Script -->
 <script>
 	document.addEventListener('DOMContentLoaded', function() {
+		const carouselElement = document.querySelector('#listingCarousel');
 		const thumbnails = document.querySelectorAll('.thumbnail-img');
-		const carousel = document.querySelector('#listingCarousel');
 		
-		// Handle thumbnail clicks
-		thumbnails.forEach(function(thumb) {
-			thumb.addEventListener('click', function() {
-				thumbnails.forEach(t => t.classList.remove('active'));
-				this.classList.add('active');
+		// Initialize Bootstrap carousel
+		if (carouselElement && typeof bootstrap !== 'undefined') {
+			const carousel = new bootstrap.Carousel(carouselElement, {
+				interval: false, // Don't auto-advance
+				wrap: true
 			});
-		});
-		
-		// Update active thumbnail when carousel slides
-		if (carousel) {
-			carousel.addEventListener('slid.bs.carousel', function(e) {
+			
+			// Handle thumbnail clicks
+			thumbnails.forEach(function(thumb) {
+				thumb.addEventListener('click', function() {
+					const slideIndex = parseInt(this.getAttribute('data-bs-slide-to'));
+					carousel.to(slideIndex);
+					
+					// Update active thumbnail
+					thumbnails.forEach(t => t.classList.remove('active'));
+					this.classList.add('active');
+				});
+			});
+			
+			// Update active thumbnail when carousel slides
+			carouselElement.addEventListener('slid.bs.carousel', function(e) {
 				const activeIndex = e.to;
 				thumbnails.forEach((thumb, idx) => {
 					if (idx === activeIndex) {
