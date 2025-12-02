@@ -438,7 +438,7 @@ app.post('/bookings', async (req, res) => {
     
     console.log(`💰 [BOOKING] Calculation: ${nights} nights × $${listing.price} = $${totalAmount}`);
     
-    // Create booking with payment_status = 'unpaid'
+    // Create booking with payment_status = 'unpaid' and current price snapshot
     const result = await db.run(
       'INSERT INTO bookings (listing_id,name,email,checkin,checkout,payment_status,total_amount,created_at) VALUES (?,?,?,?,?,?,?,?)',
       [listing_id, name, email, checkin, checkout, 'unpaid', totalAmount, new Date().toISOString()]
@@ -446,6 +446,7 @@ app.post('/bookings', async (req, res) => {
     
     const bookingId = result.lastInsertRowid;
     console.log(`✅ [BOOKING] Created booking ID: ${bookingId}`);
+    console.log(`✅ [BOOKING] Stored snapshot: $${listing.price}/night, Total: $${totalAmount}`);
     
     // Redirect to payment page
     res.redirect(`/payment/${bookingId}`);
@@ -478,7 +479,13 @@ app.get('/payment/:bookingId', async (req, res) => {
     const nights = Math.ceil((checkoutDate - checkinDate) / (1000 * 60 * 60 * 24));
     const totalAmount = nights * booking.price; // Use current price from listing, not stored total_amount
     
-    console.log(`💳 [PAYMENT PAGE] Booking ${bookingId}: ${nights} nights × $${booking.price} = $${totalAmount}`);
+    console.log(`💳 [PAYMENT PAGE] ========================================`);
+    console.log(`💳 [PAYMENT PAGE] Booking ID: ${bookingId}`);
+    console.log(`💳 [PAYMENT PAGE] Stored total_amount in DB: $${booking.total_amount}`);
+    console.log(`💳 [PAYMENT PAGE] Current listing price: $${booking.price}/night`);
+    console.log(`💳 [PAYMENT PAGE] Calculation: ${nights} nights × $${booking.price} = $${totalAmount}`);
+    console.log(`💳 [PAYMENT PAGE] Sending to template: $${totalAmount} (CURRENT PRICE)`);
+    console.log(`💳 [PAYMENT PAGE] ========================================`);
     
     // Prevent browser caching
     res.set({
@@ -522,9 +529,15 @@ app.post('/create-payment-intent', async (req, res) => {
     const nights = Math.ceil((checkoutDate - checkinDate) / (1000 * 60 * 60 * 24));
     const totalAmount = nights * booking.price;
     
-    console.log(`💳 [PAYMENT INTENT] Booking ${bookingId}: ${nights} nights × $${booking.price} = $${totalAmount}`);
+    console.log(`💳 [STRIPE PAYMENT INTENT] ========================================`);
+    console.log(`💳 [STRIPE] Booking ID: ${bookingId}`);
+    console.log(`💳 [STRIPE] Stored total in DB: $${booking.total_amount}`);
+    console.log(`💳 [STRIPE] Current listing price: $${booking.price}/night`);
+    console.log(`💳 [STRIPE] Recalculation: ${nights} nights × $${booking.price} = $${totalAmount}`);
+    console.log(`💳 [STRIPE] Creating PaymentIntent for: $${totalAmount} (${Math.round(totalAmount * 100)} cents)`);
+    console.log(`💳 [STRIPE] ========================================`);
     
-    // Create Stripe PaymentIntent
+    // Create Stripe PaymentIntent with CURRENT PRICE
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(totalAmount * 100), // Convert to cents, using CURRENT price
       currency: 'usd',
@@ -532,9 +545,12 @@ app.post('/create-payment-intent', async (req, res) => {
         booking_id: bookingId,
         listing_title: booking.title,
         customer_email: booking.email,
-        customer_name: booking.name
+        customer_name: booking.name,
+        nights: nights.toString(),
+        price_per_night: booking.price.toString(),
+        total_amount: totalAmount.toString()
       },
-      description: `Booking for ${booking.title}`,
+      description: `${booking.title} - ${nights} night${nights > 1 ? 's' : ''} @ $${booking.price}/night`,
       receipt_email: booking.email
     });
     
