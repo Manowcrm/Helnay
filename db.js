@@ -130,6 +130,63 @@ async function init() {
     created_at TEXT
   )`);
 
+  await run(`CREATE TABLE IF NOT EXISTS filter_services (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    category TEXT NOT NULL,
+    name TEXT NOT NULL,
+    icon TEXT NOT NULL,
+    filter_key TEXT NOT NULL,
+    display_order INTEGER DEFAULT 0,
+    is_active INTEGER DEFAULT 1,
+    created_at TEXT
+  )`);
+
+  await run(`CREATE TABLE IF NOT EXISTS listing_services (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    listing_id INTEGER NOT NULL,
+    service_id INTEGER NOT NULL,
+    FOREIGN KEY (listing_id) REFERENCES listings(id),
+    FOREIGN KEY (service_id) REFERENCES filter_services(id),
+    UNIQUE(listing_id, service_id)
+  )`);
+
+  // Seed default filter services if none exist
+  const filterRows = await all('SELECT COUNT(1) as cnt FROM filter_services');
+  const filterCnt = filterRows && filterRows[0] ? filterRows[0].cnt : 0;
+  
+  if (filterCnt === 0) {
+    console.log('🌱 [DB INIT] Seeding default filter services');
+    
+    // Services category
+    await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Services', 'Pool', 'water', 'pool', 1, new Date().toISOString()]);
+    await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Services', 'WiFi', 'wifi', 'wifi', 2, new Date().toISOString()]);
+    await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Services', 'Balcony', 'building', 'balcony', 3, new Date().toISOString()]);
+    await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Services', 'Air Conditioning', 'snow', 'air-conditioning', 4, new Date().toISOString()]);
+    await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Services', 'Garden', 'flower1', 'garden', 5, new Date().toISOString()]);
+    await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Services', 'TV', 'tv', 'tv', 6, new Date().toISOString()]);
+    await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Services', 'Parking', 'car-front', 'parking', 7, new Date().toISOString()]);
+    await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Services', 'Kitchen', 'cup-hot', 'kitchen', 8, new Date().toISOString()]);
+    await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Services', 'Washing Machine', 'recycle', 'washing', 9, new Date().toISOString()]);
+    await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Services', 'Microwave', 'lightning', 'microwave', 10, new Date().toISOString()]);
+    await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Services', 'Dishwasher', 'droplet', 'dishwasher', 11, new Date().toISOString()]);
+    await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Services', 'Hot Tub', 'tsunami', 'hot-tub', 12, new Date().toISOString()]);
+    await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Services', 'Sauna', 'fire', 'sauna', 13, new Date().toISOString()]);
+    await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Services', 'Fireplace', 'fire', 'fireplace', 14, new Date().toISOString()]);
+    await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Services', 'Cot', 'moon', 'cot', 15, new Date().toISOString()]);
+    
+    // Accommodation Type category
+    await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Accommodation Type', 'Pet-Friendly', 'heart', 'pet-friendly', 1, new Date().toISOString()]);
+    await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Accommodation Type', 'No Smoking', 'slash-circle', 'no-smoking', 2, new Date().toISOString()]);
+    await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Accommodation Type', 'No Pets', 'x-circle', 'no-pets', 3, new Date().toISOString()]);
+    await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Accommodation Type', 'Wheelchair Access', 'person-wheelchair', 'wheelchair', 4, new Date().toISOString()]);
+    
+    // Activities category
+    await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Activities', 'Fishing', 'life-preserver', 'fishing', 1, new Date().toISOString()]);
+    await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Activities', 'Grill', 'fire', 'grill', 2, new Date().toISOString()]);
+    
+    console.log('✅ [DB INIT] Seeded 21 default filter services');
+  }
+
   // seed sample listings if none exist
   const rows = await all('SELECT COUNT(1) as cnt FROM listings');
   const cnt = rows && rows[0] ? rows[0].cnt : 0;

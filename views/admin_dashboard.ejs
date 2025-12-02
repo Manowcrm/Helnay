@@ -48,7 +48,7 @@
   </div>
   
   <div class="row mt-4">
-    <div class="col-md-12">
+    <div class="col-md-6">
       <div class="card">
         <div class="card-header">
           <h5>Recent Activity</h5>
@@ -56,6 +56,20 @@
         <div class="card-body">
           <h6>Pending Bookings: <%= stats.pendingBookings %></h6>
           <a href="/admin/bookings" class="btn btn-sm btn-primary">Review Pending</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+          <h5 class="mb-0"><i class="bi bi-sliders"></i> Filter Management</h5>
+        </div>
+        <div class="card-body">
+          <p class="mb-3">Customize homepage sidebar filter options</p>
+          <a href="/admin/filters" class="btn btn-primary">
+            <i class="bi bi-gear"></i> Manage Filters
+          </a>
         </div>
       </div>
     </div>

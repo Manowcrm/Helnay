@@ -215,7 +215,18 @@ app.get('/', async (req, res) => {
       SELECT url FROM listing_images i WHERE i.listing_id = l.id LIMIT 1
     ) as image_url FROM listings l ${whereSql} ORDER BY created_at DESC`;
     const listings = await db.all(sql, params);
-    res.render('index', { listings, query: req.query });
+    
+    // Get active filter services grouped by category
+    const filterServices = await db.all('SELECT * FROM filter_services WHERE is_active = 1 ORDER BY category, display_order, name');
+    const filtersByCategory = filterServices.reduce((acc, filter) => {
+      if (!acc[filter.category]) {
+        acc[filter.category] = [];
+      }
+      acc[filter.category].push(filter);
+      return acc;
+    }, {});
+    
+    res.render('index', { listings, query: req.query, filtersByCategory });
   } catch (err) {
     console.error(err);
     res.status(500).send('Server error');
@@ -618,20 +629,48 @@ app.get('/admin/listings', isAdmin, async (req, res) => {
 });
 
 // Admin: new listing form
-app.get('/admin/listings/new', isAdmin, (req, res) => {
-  res.render('admin_listing_form', { listing: {}, images: [] });
+app.get('/admin/listings/new', isAdmin, async (req, res) => {
+  try {
+    const filterServices = await db.all('SELECT * FROM filter_services ORDER BY category, display_order, name');
+    const filtersByCategory = filterServices.reduce((acc, filter) => {
+      if (!acc[filter.category]) {
+        acc[filter.category] = [];
+      }
+      acc[filter.category].push(filter);
+      return acc;
+    }, {});
+    
+    res.render('admin_listing_form', { listing: {}, images: [], filtersByCategory, selectedServices: [] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
 });
 
 // Admin: create listing
 app.post('/admin/listings/create', isAdmin, async (req, res) => {
   try {
-    const { title, location, price, description } = req.body;
+    const { title, location, price, description, services } = req.body;
     console.log('Creating new listing:', { title, location, price, description });
     const result = await db.run(
       'INSERT INTO listings (title, location, price, description, created_at) VALUES (?, ?, ?, ?, ?)',
       [title, location, price, description, new Date().toISOString()]
     );
-    console.log('Listing created successfully with ID:', result.lastID);
+    const listingId = result.lastID;
+    console.log('Listing created successfully with ID:', listingId);
+    
+    // Save selected services
+    if (services) {
+      const serviceIds = Array.isArray(services) ? services : [services];
+      for (const serviceId of serviceIds) {
+        await db.run(
+          'INSERT OR IGNORE INTO listing_services (listing_id, service_id) VALUES (?, ?)',
+          [listingId, serviceId]
+        );
+      }
+      console.log(`Saved ${serviceIds.length} services for listing ${listingId}`);
+    }
+    
     res.redirect('/admin/listings');
   } catch (err) {
     console.error('Error creating listing:', err.message, err);
@@ -645,7 +684,22 @@ app.get('/admin/listings/:id/edit', isAdmin, async (req, res) => {
     const listing = await db.get('SELECT * FROM listings WHERE id = ?', [req.params.id]);
     if (!listing) return res.status(404).send('Listing not found');
     const images = await db.all('SELECT * FROM listing_images WHERE listing_id = ?', [req.params.id]);
-    res.render('admin_listing_form', { listing, images });
+    
+    // Load all filter services grouped by category
+    const filterServices = await db.all('SELECT * FROM filter_services ORDER BY category, display_order, name');
+    const filtersByCategory = filterServices.reduce((acc, filter) => {
+      if (!acc[filter.category]) {
+        acc[filter.category] = [];
+      }
+      acc[filter.category].push(filter);
+      return acc;
+    }, {});
+    
+    // Load selected services for this listing
+    const selectedServicesRows = await db.all('SELECT service_id FROM listing_services WHERE listing_id = ?', [req.params.id]);
+    const selectedServices = selectedServicesRows.map(row => row.service_id);
+    
+    res.render('admin_listing_form', { listing, images, filtersByCategory, selectedServices });
   } catch (err) {
     console.error(err);
     res.status(500).send('Server error');
@@ -683,7 +737,7 @@ app.post('/admin/listings/:listingId/images/:imageId/delete', isAdmin, async (re
 // Admin: update listing
 app.post('/admin/listings/:id/update', isAdmin, async (req, res) => {
   try {
-    const { title, location, price, description } = req.body;
+    const { title, location, price, description, services } = req.body;
     const listingId = req.params.id;
     
     // Log before update
@@ -710,6 +764,21 @@ app.post('/admin/listings/:id/update', isAdmin, async (req, res) => {
       changes: result.changes,
       listingId: listingId
     });
+    
+    // Update services - delete old ones and insert new ones
+    await db.run('DELETE FROM listing_services WHERE listing_id = ?', [listingId]);
+    if (services) {
+      const serviceIds = Array.isArray(services) ? services : [services];
+      for (const serviceId of serviceIds) {
+        await db.run(
+          'INSERT OR IGNORE INTO listing_services (listing_id, service_id) VALUES (?, ?)',
+          [listingId, serviceId]
+        );
+      }
+      console.log(`✅ [ADMIN UPDATE] Updated ${serviceIds.length} services for listing ${listingId}`);
+    } else {
+      console.log('✅ [ADMIN UPDATE] Removed all services for listing ${listingId}');
+    }
     
     // Wait a moment for database to commit (better-sqlite3 is sync, but just to be safe)
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -969,6 +1038,83 @@ app.post('/admin/backup', isAdmin, async (req, res) => {
   } catch (err) {
     console.error('Backup failed:', err);
     res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin: manage filter services
+app.get('/admin/filters', isAdmin, async (req, res) => {
+  try {
+    const filters = await db.all('SELECT * FROM filter_services ORDER BY category, display_order, name');
+    
+    // Group filters by category
+    const filtersByCategory = filters.reduce((acc, filter) => {
+      if (!acc[filter.category]) {
+        acc[filter.category] = [];
+      }
+      acc[filter.category].push(filter);
+      return acc;
+    }, {});
+    
+    res.render('admin_filters', { filters, filtersByCategory });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: add new filter
+app.post('/admin/filters/create', isAdmin, async (req, res) => {
+  try {
+    const { category, name, icon, filter_key, display_order } = req.body;
+    await db.run(
+      'INSERT INTO filter_services (category, name, icon, filter_key, display_order, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [category, name, icon, filter_key, display_order || 0, 1, new Date().toISOString()]
+    );
+    res.redirect('/admin/filters');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: update filter
+app.post('/admin/filters/:id/update', isAdmin, async (req, res) => {
+  try {
+    const { category, name, icon, filter_key, display_order, is_active } = req.body;
+    await db.run(
+      'UPDATE filter_services SET category = ?, name = ?, icon = ?, filter_key = ?, display_order = ?, is_active = ? WHERE id = ?',
+      [category, name, icon, filter_key, display_order || 0, is_active === 'on' ? 1 : 0, req.params.id]
+    );
+    res.redirect('/admin/filters');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: toggle filter active status
+app.post('/admin/filters/:id/toggle', isAdmin, async (req, res) => {
+  try {
+    const filter = await db.get('SELECT * FROM filter_services WHERE id = ?', [req.params.id]);
+    await db.run(
+      'UPDATE filter_services SET is_active = ? WHERE id = ?',
+      [filter.is_active ? 0 : 1, req.params.id]
+    );
+    res.redirect('/admin/filters');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: delete filter
+app.post('/admin/filters/:id/delete', isAdmin, async (req, res) => {
+  try {
+    await db.run('DELETE FROM filter_services WHERE id = ?', [req.params.id]);
+    res.redirect('/admin/filters');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
   }
 });
 

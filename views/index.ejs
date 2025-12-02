@@ -41,89 +41,25 @@
           </div>
         </div>
 
-        <!-- Services -->
+        <!-- Dynamic Filter Sections from Database -->
+        <% Object.keys(filtersByCategory).forEach(function(category) { %>
         <div class="filter-section">
-          <h6 class="filter-title">Services</h6>
+          <h6 class="filter-title"><%= category %></h6>
           <div class="filter-options">
-            <button class="filter-button" data-filter="pool">
-              <i class="bi bi-water"></i> Pool
+            <% filtersByCategory[category].forEach(function(filter) { %>
+            <button class="filter-button" data-filter="<%= filter.filter_key %>">
+              <i class="bi bi-<%= filter.icon %>"></i> <%= filter.name %>
             </button>
-            <button class="filter-button" data-filter="wifi">
-              <i class="bi bi-wifi"></i> WiFi
-            </button>
-            <button class="filter-button" data-filter="balcony">
-              <i class="bi bi-building"></i> Balcony/Patio
-            </button>
-            <button class="filter-button" data-filter="ac">
-              <i class="bi bi-snow"></i> Air Conditioning
-            </button>
-            <button class="filter-button" data-filter="garden">
-              <i class="bi bi-flower1"></i> Garden
-            </button>
-            <button class="filter-button" data-filter="tv">
-              <i class="bi bi-tv"></i> TV
-            </button>
-            <button class="filter-button" data-filter="parking">
-              <i class="bi bi-car-front"></i> Parking
-            </button>
-            <button class="filter-button" data-filter="kitchen">
-              <i class="bi bi-cup-hot"></i> Kitchen
-            </button>
-            <button class="filter-button" data-filter="washer">
-              <i class="bi bi-recycle"></i> Washing Machine
-            </button>
-            <button class="filter-button" data-filter="microwave">
-              <i class="bi bi-lightning"></i> Microwave
-            </button>
-            <button class="filter-button" data-filter="dishwasher">
-              <i class="bi bi-droplet"></i> Dishwasher
-            </button>
-            <button class="filter-button" data-filter="hottub">
-              <i class="bi bi-tsunami"></i> Hot Tub
-            </button>
-            <button class="filter-button" data-filter="sauna">
-              <i class="bi bi-fire"></i> Sauna
-            </button>
-            <button class="filter-button" data-filter="fireplace">
-              <i class="bi bi-fire"></i> Fireplace
-            </button>
-            <button class="filter-button" data-filter="cot">
-              <i class="bi bi-moon"></i> Cot
-            </button>
+            <% }); %>
           </div>
         </div>
-
-        <!-- Accommodation Type -->
-        <div class="filter-section">
-          <h6 class="filter-title">Accommodation Type</h6>
-          <div class="filter-options">
-            <button class="filter-button" data-filter="pet-friendly">
-              <i class="bi bi-heart"></i> Pet-friendly
-            </button>
-            <button class="filter-button" data-filter="no-smoking">
-              <i class="bi bi-slash-circle"></i> No Smoking
-            </button>
-            <button class="filter-button" data-filter="no-pets">
-              <i class="bi bi-x-circle"></i> No Pets
-            </button>
-            <button class="filter-button" data-filter="wheelchair">
-              <i class="bi bi-person-wheelchair"></i> Wheelchair Access
-            </button>
-          </div>
+        <% }); %>
+        
+        <% if (Object.keys(filtersByCategory).length === 0) { %>
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle"></i> No filters available. Admin can add filters from the admin panel.
         </div>
-
-        <!-- Activities -->
-        <div class="filter-section">
-          <h6 class="filter-title">Activities</h6>
-          <div class="filter-options">
-            <button class="filter-button" data-filter="fishing">
-              <i class="bi bi-life-preserver"></i> Fishing
-            </button>
-            <button class="filter-button" data-filter="grill">
-              <i class="bi bi-fire"></i> Grill
-            </button>
-          </div>
-        </div>
+        <% } %>
 
         <!-- Quick Categories -->
         <div class="filter-section">
