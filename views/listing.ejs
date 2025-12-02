@@ -1,34 +1,121 @@
-<div class="row">
-	<div class="col-md-7">
+<!-- Back Button -->
+<div class="mb-3">
+	<a href="/" class="btn btn-outline-secondary">
+		<i class="bi bi-arrow-left"></i> Back to Listings
+	</a>
+</div>
+
+<div class="row g-4">
+	<!-- Image Gallery -->
+	<div class="col-lg-8">
 		<% if (images && images.length > 0) { %>
-			<div id="listingCarousel" class="carousel slide" data-bs-ride="carousel">
-				<div class="carousel-inner">
-					<% images.forEach(function(img, idx){ %>
-						<div class="carousel-item <%= idx === 0 ? 'active' : '' %>">
-							<img src="<%= img.url %>" class="d-block w-100" style="height:420px; object-fit:cover;" />
-						</div>
-					<% }) %>
+			<div class="listing-gallery">
+				<!-- Main Image -->
+				<div id="listingCarousel" class="carousel slide mb-3" data-bs-ride="carousel">
+					<div class="carousel-indicators">
+						<% images.forEach(function(img, idx){ %>
+							<button type="button" data-bs-target="#listingCarousel" data-bs-slide-to="<%= idx %>" 
+								<%= idx === 0 ? 'class="active" aria-current="true"' : '' %> aria-label="Slide <%= idx + 1 %>"></button>
+						<% }) %>
+					</div>
+					<div class="carousel-inner rounded-3 shadow-sm">
+						<% images.forEach(function(img, idx){ %>
+							<div class="carousel-item <%= idx === 0 ? 'active' : '' %>">
+								<img src="<%= img.url %>" class="d-block w-100 listing-detail-img" alt="Property image <%= idx + 1 %>" />
+							</div>
+						<% }) %>
+					</div>
+					<button class="carousel-control-prev" type="button" data-bs-target="#listingCarousel" data-bs-slide="prev">
+						<span class="carousel-control-prev-icon" aria-hidden="true"></span>
+						<span class="visually-hidden">Previous</span>
+					</button>
+					<button class="carousel-control-next" type="button" data-bs-target="#listingCarousel" data-bs-slide="next">
+						<span class="carousel-control-next-icon" aria-hidden="true"></span>
+						<span class="visually-hidden">Next</span>
+					</button>
 				</div>
-				<button class="carousel-control-prev" type="button" data-bs-target="#listingCarousel" data-bs-slide="prev">
-					<span class="carousel-control-prev-icon" aria-hidden="true"></span>
-					<span class="visually-hidden">Previous</span>
-				</button>
-				<button class="carousel-control-next" type="button" data-bs-target="#listingCarousel" data-bs-slide="next">
-					<span class="carousel-control-next-icon" aria-hidden="true"></span>
-					<span class="visually-hidden">Next</span>
-				</button>
+				
+				<!-- Thumbnail Gallery -->
+				<div class="row g-2 thumbnail-gallery">
+					<% images.slice(0, 4).forEach(function(img, idx){ %>
+						<div class="col-3">
+							<img src="<%= img.url %>" class="thumbnail-img <%= idx === 0 ? 'active' : '' %>" 
+								 data-bs-target="#listingCarousel" data-bs-slide-to="<%= idx %>" 
+								 alt="Thumbnail <%= idx + 1 %>" />
+						</div>
+					<% }); %>
+				</div>
 			</div>
 		<% } else { %>
-			<div class="border" style="height:420px; display:flex; align-items:center; justify-content:center; background:#f8f9fa;">No photos</div>
+			<div class="border rounded-3 shadow-sm" style="height:500px; display:flex; align-items:center; justify-content:center; background:#f8f9fa;">
+				<div class="text-center text-muted">
+					<i class="bi bi-image" style="font-size: 4rem;"></i>
+					<p class="mt-3">No photos available</p>
+				</div>
+			</div>
 		<% } %>
-	</div>
-	<div class="col-md-5">
-		<h1 class="mb-3"><%= listing.title %></h1>
-		<p class="text-muted mb-2"><i class="bi bi-geo-alt-fill"></i> <strong><%= listing.location %></strong></p>
-		<h3 class="text-primary mb-4">$<%= listing.price %> <small class="text-muted">/ night</small></h3>
 		
-		<h5 class="mb-3">Description</h5>
-		<p class="mb-4"><%= listing.description %></p>
+		<!-- Property Description Card -->
+		<div class="card border-0 shadow-sm rounded-3 mb-4">
+			<div class="card-body p-4">
+				<h5 class="card-title fw-bold mb-3">
+					<i class="bi bi-file-text text-primary"></i> About This Property
+				</h5>
+				<p class="card-text text-muted lh-lg"><%= listing.description %></p>
+			</div>
+		</div>
+	</div>
+	
+	<!-- Booking Sidebar -->
+	<div class="col-lg-4">
+		<div class="booking-sidebar">
+			<!-- Price Card -->
+			<div class="card border-0 shadow-sm rounded-3 mb-3 sticky-booking">
+				<div class="card-body p-4">
+					<div class="mb-3">
+						<h1 class="property-title mb-2"><%= listing.title %></h1>
+						<div class="d-flex align-items-center text-muted mb-3">
+							<i class="bi bi-geo-alt-fill me-2"></i>
+							<span class="fw-semibold"><%= listing.location %></span>
+						</div>
+						<div class="price-tag">
+							<span class="price-amount">$<%= listing.price %></span>
+							<span class="price-period">/ night</span>
+						</div>
+					</div>
+					
+					<div class="d-grid gap-2">
+						<a class="btn btn-primary btn-lg rounded-3 py-3" href="/bookings?listing_id=<%= listing.id %>">
+							<i class="bi bi-calendar-check me-2"></i> Book Now
+						</a>
+						<a class="btn btn-outline-secondary rounded-3 py-2" href="/contact">
+							<i class="bi bi-envelope me-2"></i> Contact Owner
+						</a>
+					</div>
+					
+					<!-- Quick Info -->
+					<div class="quick-info mt-4 pt-4 border-top">
+						<div class="d-flex align-items-center mb-3">
+							<div class="info-icon">
+								<i class="bi bi-shield-check"></i>
+							</div>
+							<div class="ms-3">
+								<small class="text-muted d-block">Verified Listing</small>
+								<strong>100% Secure</strong>
+							</div>
+						</div>
+						<div class="d-flex align-items-center">
+							<div class="info-icon">
+								<i class="bi bi-clock-history"></i>
+							</div>
+							<div class="ms-3">
+								<small class="text-muted d-block">Instant Booking</small>
+								<strong>Confirm in Minutes</strong>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 		
 		<% 
 		const desc = listing.description.toLowerCase();
@@ -57,24 +144,56 @@
 		if (desc.includes('bbq') || desc.includes('grill')) amenities.push({ icon: 'fire', text: 'Grill' });
 		%>
 		
-		<% if (amenities.length > 0) { %>
-		<h5 class="mb-3">Amenities</h5>
-		<div class="row mb-4">
-			<% amenities.forEach(function(amenity) { %>
-				<div class="col-6 col-md-6 mb-2">
-					<i class="bi bi-<%= amenity.icon %> text-primary"></i> <%= amenity.text %>
+			<!-- Amenities Card -->
+			<% if (amenities.length > 0) { %>
+			<div class="card border-0 shadow-sm rounded-3">
+				<div class="card-body p-4">
+					<h5 class="card-title fw-bold mb-4">
+						<i class="bi bi-star text-warning"></i> Amenities & Features
+					</h5>
+					<div class="amenities-grid">
+						<% amenities.forEach(function(amenity) { %>
+							<div class="amenity-item">
+								<div class="amenity-icon">
+									<i class="bi bi-<%= amenity.icon %>"></i>
+								</div>
+								<span class="amenity-text"><%= amenity.text %></span>
+							</div>
+						<% }); %>
+					</div>
 				</div>
-			<% }); %>
-		</div>
-		<% } %>
-		
-		<div class="d-grid gap-2 mt-4">
-			<a class="btn btn-success btn-lg" href="/bookings?listing_id=<%= listing.id %>">
-				<i class="bi bi-calendar-check"></i> Rent This Property
-			</a>
-			<a class="btn btn-outline-secondary" href="/contact">
-				<i class="bi bi-envelope"></i> Contact Owner
-			</a>
+			</div>
+			<% } %>
 		</div>
 	</div>
 </div>
+
+<!-- Thumbnail Gallery Interactive Script -->
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+		const thumbnails = document.querySelectorAll('.thumbnail-img');
+		const carousel = document.querySelector('#listingCarousel');
+		
+		// Handle thumbnail clicks
+		thumbnails.forEach(function(thumb) {
+			thumb.addEventListener('click', function() {
+				thumbnails.forEach(t => t.classList.remove('active'));
+				this.classList.add('active');
+			});
+		});
+		
+		// Update active thumbnail when carousel slides
+		if (carousel) {
+			carousel.addEventListener('slid.bs.carousel', function(e) {
+				const activeIndex = e.to;
+				thumbnails.forEach((thumb, idx) => {
+					if (idx === activeIndex) {
+						thumb.classList.add('active');
+					} else {
+						thumb.classList.remove('active');
+					}
+				});
+			});
+		}
+	});
+</script>
