@@ -95,9 +95,20 @@ a.text-decoration-none:hover .quick-book-card p {
   transition: transform .18s ease, box-shadow .18s ease;
   box-shadow: 0 2px 12px rgba(18,38,63,0.08);
 }
-.listing-card:hover{ 
+a:has(.listing-card) {
+  display: block;
+  text-decoration: none;
+}
+a:has(.listing-card):hover .listing-card { 
   transform: translateY(-8px); 
   box-shadow: 0 12px 32px rgba(18,38,63,0.15); 
+  cursor: pointer;
+}
+.listing-card .card-title {
+  transition: color 0.2s ease;
+}
+a:hover .listing-card .card-title {
+  color: #0d6efd !important;
 }
 .listing-img-wrapper {
   position: relative;

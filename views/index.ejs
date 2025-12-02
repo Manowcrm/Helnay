@@ -187,31 +187,33 @@
   <% } %>
   <% listings.forEach(function(l){ %>
     <div class="col-md-4 mb-4" data-amenities="<%= l.description.toLowerCase() %>">
-      <div class="card listing-card h-100">
-        <% if (l.image_url) { %>
-          <div class="listing-img-wrapper">
-            <img src="<%= l.image_url %>" class="card-img-top" alt="<%= l.title %>">
-            <span class="badge badge-location"><i class="bi bi-geo-alt"></i> <%= l.location %></span>
-          </div>
-        <% } %>
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title"><%= l.title %></h5>
-          <p class="card-text text-muted small mb-2">
-            <i class="bi bi-house"></i> Available for rent
-          </p>
-          <p class="card-text"><%= l.description.length > 100 ? l.description.substring(0,100) + '...' : l.description %></p>
-          <div class="mt-auto">
-            <hr>
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <strong class="text-primary fs-5">$<%= l.price %></strong>
-                <small class="text-muted">/night</small>
+      <a href="/listings/<%= l.id %>" class="text-decoration-none">
+        <div class="card listing-card h-100">
+          <% if (l.image_url) { %>
+            <div class="listing-img-wrapper">
+              <img src="<%= l.image_url %>" class="card-img-top" alt="<%= l.title %>">
+              <span class="badge badge-location"><i class="bi bi-geo-alt"></i> <%= l.location %></span>
+            </div>
+          <% } %>
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title text-dark"><%= l.title %></h5>
+            <p class="card-text text-muted small mb-2">
+              <i class="bi bi-house"></i> Available for rent
+            </p>
+            <p class="card-text text-muted"><%= l.description.length > 100 ? l.description.substring(0,100) + '...' : l.description %></p>
+            <div class="mt-auto">
+              <hr>
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <strong class="text-primary fs-5">$<%= l.price %></strong>
+                  <small class="text-muted">/night</small>
+                </div>
+                <span class="btn btn-primary">View Details</span>
               </div>
-              <a href="/listings/<%= l.id %>" class="btn btn-primary">Rent Now</a>
             </div>
           </div>
         </div>
-      </div>
+      </a>
     </div>
   <% }) %>
       </div>

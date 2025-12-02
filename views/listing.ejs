@@ -23,10 +23,46 @@
 		<% } %>
 	</div>
 	<div class="col-md-5">
-		<h1><%= listing.title %></h1>
-		<p class="text-muted"><strong>Location:</strong> <%= listing.location %></p>
-		<h3 class="text-primary">$<%= listing.price %> <small class="text-muted">/ night</small></h3>
-		<p><%= listing.description %></p>
+		<h1 class="mb-3"><%= listing.title %></h1>
+		<p class="text-muted mb-2"><i class="bi bi-geo-alt-fill"></i> <strong><%= listing.location %></strong></p>
+		<h3 class="text-primary mb-4">$<%= listing.price %> <small class="text-muted">/ night</small></h3>
+		
+		<h5 class="mb-3">Description</h5>
+		<p class="mb-4"><%= listing.description %></p>
+		
+		<% 
+		const desc = listing.description.toLowerCase();
+		const amenities = [];
+		if (desc.includes('wifi')) amenities.push({ icon: 'wifi', text: 'WiFi' });
+		if (desc.includes('pool')) amenities.push({ icon: 'water', text: 'Pool' });
+		if (desc.includes('parking')) amenities.push({ icon: 'car-front', text: 'Parking' });
+		if (desc.includes('kitchen')) amenities.push({ icon: 'cup-hot', text: 'Kitchen' });
+		if (desc.includes('air conditioning')) amenities.push({ icon: 'snow', text: 'Air Conditioning' });
+		if (desc.includes('tv')) amenities.push({ icon: 'tv', text: 'TV' });
+		if (desc.includes('washing machine')) amenities.push({ icon: 'recycle', text: 'Washing Machine' });
+		if (desc.includes('balcony') || desc.includes('terrace')) amenities.push({ icon: 'building', text: 'Balcony/Terrace' });
+		if (desc.includes('garden')) amenities.push({ icon: 'flower1', text: 'Garden' });
+		if (desc.includes('fireplace')) amenities.push({ icon: 'fire', text: 'Fireplace' });
+		if (desc.includes('hot tub')) amenities.push({ icon: 'tsunami', text: 'Hot Tub' });
+		if (desc.includes('sauna')) amenities.push({ icon: 'fire', text: 'Sauna' });
+		if (desc.includes('dishwasher')) amenities.push({ icon: 'droplet', text: 'Dishwasher' });
+		if (desc.includes('microwave')) amenities.push({ icon: 'lightning', text: 'Microwave' });
+		if (desc.includes('bbq') || desc.includes('grill')) amenities.push({ icon: 'fire', text: 'BBQ/Grill' });
+		if (desc.includes('pet-friend')) amenities.push({ icon: 'heart', text: 'Pet-Friendly' });
+		if (desc.includes('wheelchair accessible')) amenities.push({ icon: 'person-wheelchair', text: 'Wheelchair Accessible' });
+		%>
+		
+		<% if (amenities.length > 0) { %>
+		<h5 class="mb-3">Amenities</h5>
+		<div class="row mb-4">
+			<% amenities.forEach(function(amenity) { %>
+				<div class="col-6 col-md-6 mb-2">
+					<i class="bi bi-<%= amenity.icon %> text-primary"></i> <%= amenity.text %>
+				</div>
+			<% }); %>
+		</div>
+		<% } %>
+		
 		<div class="d-grid gap-2 mt-4">
 			<a class="btn btn-success btn-lg" href="/bookings?listing_id=<%= listing.id %>">
 				<i class="bi bi-calendar-check"></i> Rent This Property
