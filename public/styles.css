@@ -420,8 +420,45 @@ a:hover .listing-card .card-title {
   width: 100%;
 }
 
-.thumbnail-gallery {
+.thumbnail-gallery-wrapper {
   margin-top: 15px;
+  overflow: hidden;
+  position: relative;
+}
+
+.thumbnail-gallery-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: #0d6efd #f0f0f0;
+  padding-bottom: 10px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.thumbnail-gallery-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.thumbnail-gallery-scroll::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 10px;
+}
+
+.thumbnail-gallery-scroll::-webkit-scrollbar-thumb {
+  background: #0d6efd;
+  border-radius: 10px;
+}
+
+.thumbnail-gallery-scroll::-webkit-scrollbar-thumb:hover {
+  background: #0b5ed7;
+}
+
+.thumbnail-item {
+  flex: 0 0 auto;
+  width: 150px;
+  scroll-snap-align: start;
 }
 
 .thumbnail-img {
@@ -433,6 +470,7 @@ a:hover .listing-card .card-title {
   border: 3px solid transparent;
   transition: all 0.3s ease;
   opacity: 0.7;
+  display: block;
 }
 
 .thumbnail-img:hover {

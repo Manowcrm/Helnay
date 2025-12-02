@@ -35,16 +35,18 @@
 					</button>
 				</div>
 				
-				<!-- Thumbnail Gallery -->
-				<div class="row g-2 thumbnail-gallery">
-					<% images.slice(0, 4).forEach(function(img, idx){ %>
-						<div class="col-3">
+			<!-- Thumbnail Gallery -->
+			<div class="thumbnail-gallery-wrapper">
+				<div class="thumbnail-gallery-scroll">
+					<% images.forEach(function(img, idx){ %>
+						<div class="thumbnail-item">
 							<img src="<%= img.url %>" class="thumbnail-img <%= idx === 0 ? 'active' : '' %>" 
 								 data-bs-target="#listingCarousel" data-bs-slide-to="<%= idx %>" 
 								 alt="Thumbnail <%= idx + 1 %>" />
 						</div>
 					<% }); %>
 				</div>
+			</div>
 			</div>
 		<% } else { %>
 			<div class="border rounded-3 shadow-sm" style="height:500px; display:flex; align-items:center; justify-content:center; background:#f8f9fa;">
