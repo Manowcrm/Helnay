@@ -410,7 +410,15 @@ app.post('/api/admin/listings/:id/update-price', isAdmin, async (req, res) => {
 app.get('/bookings', async (req, res) => {
   try {
     const listings = await db.all('SELECT id,title FROM listings');
-    res.render('bookings', { listings, message: null });
+    const selectedListingId = req.query.listing_id || null;
+    
+    console.log(`📋 [BOOKING FORM] Loading with listing_id=${selectedListingId}`);
+    
+    res.render('bookings', { 
+      listings, 
+      selectedListingId: selectedListingId ? parseInt(selectedListingId) : null,
+      message: null 
+    });
   } catch (err) {
     res.status(500).send('Server error');
   }

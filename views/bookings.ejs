@@ -4,7 +4,9 @@
     <label class="form-label">Listing</label>
     <select name="listing_id" class="form-select" required>
       <% listings.forEach(function(l){ %>
-        <option value="<%= l.id %>"><%= l.title %></option>
+        <option value="<%= l.id %>" <%= selectedListingId && selectedListingId === l.id ? 'selected' : '' %>>
+          <%= l.title %>
+        </option>
       <% }) %>
     </select>
   </div>
