@@ -239,6 +239,13 @@ app.get('/', async (req, res) => {
       listing.serviceKeys = services.map(s => s.filter_key).join(',');
     }
     
+    // Prevent browser caching to ensure fresh prices
+    res.set({
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
+    
     res.render('index', { listings, query: req.query, filtersByCategory });
   } catch (err) {
     console.error(err);
@@ -473,6 +480,13 @@ app.get('/payment/:bookingId', async (req, res) => {
     
     console.log(`💳 [PAYMENT PAGE] Booking ${bookingId}: ${nights} nights × $${booking.price} = $${totalAmount}`);
     
+    // Prevent browser caching
+    res.set({
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
+    
     res.render('payment', {
       booking: { ...booking, total_amount: totalAmount }, // Override stored amount with current calculation
       nights,
@@ -644,6 +658,13 @@ app.get('/admin/listings', isAdmin, async (req, res) => {
     const listings = await db.all(`SELECT l.*, (
       SELECT url FROM listing_images i WHERE i.listing_id = l.id LIMIT 1
     ) as image_url FROM listings l ORDER BY l.created_at DESC`);
+    
+    // Prevent caching to show latest prices
+    res.set({
+      'Cache-Control': 'no-store, no-cache, must-revalidate',
+      'Pragma': 'no-cache'
+    });
+    
     res.render('admin_listings', { listings });
   } catch (err) {
     console.error(err);
@@ -830,7 +851,12 @@ app.post('/admin/listings/:id/update', isAdmin, async (req, res) => {
     
     if (afterUpdate2.price != priceNumber) {
       console.error('❌ [ADMIN UPDATE] PRICE MISMATCH! Expected:', priceNumber, 'Got:', afterUpdate2.price);
+    } else {
+      console.log('✅ [ADMIN UPDATE] SUCCESS! Price updated correctly to $' + priceNumber);
     }
+    
+    // Force a small delay to ensure all writes are complete
+    await new Promise(resolve => setTimeout(resolve, 50));
     
     res.redirect('/admin/listings');
   } catch (err) {
