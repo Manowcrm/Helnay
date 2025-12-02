@@ -117,35 +117,8 @@
 				</div>
 			</div>
 		
-		<% 
-		const desc = listing.description.toLowerCase();
-		const amenities = [];
-		// Services matching the sidebar filters
-		if (desc.includes('pool')) amenities.push({ icon: 'water', text: 'Pool' });
-		if (desc.includes('wifi')) amenities.push({ icon: 'wifi', text: 'WiFi' });
-		if (desc.includes('balcony') || desc.includes('patio') || desc.includes('terrace')) amenities.push({ icon: 'building', text: 'Balcony/Patio' });
-		if (desc.includes('air conditioning')) amenities.push({ icon: 'snow', text: 'Air Conditioning' });
-		if (desc.includes('garden') || desc.includes('yard')) amenities.push({ icon: 'flower1', text: 'Garden' });
-		if (desc.includes('tv')) amenities.push({ icon: 'tv', text: 'TV' });
-		if (desc.includes('parking') || desc.includes('garage')) amenities.push({ icon: 'car-front', text: 'Parking' });
-		if (desc.includes('kitchen')) amenities.push({ icon: 'cup-hot', text: 'Kitchen' });
-		if (desc.includes('washing machine') || desc.includes('washing')) amenities.push({ icon: 'recycle', text: 'Washing Machine' });
-		if (desc.includes('microwave')) amenities.push({ icon: 'lightning', text: 'Microwave' });
-		if (desc.includes('dishwasher')) amenities.push({ icon: 'droplet', text: 'Dishwasher' });
-		if (desc.includes('hot tub')) amenities.push({ icon: 'tsunami', text: 'Hot Tub' });
-		if (desc.includes('sauna')) amenities.push({ icon: 'fire', text: 'Sauna' });
-		if (desc.includes('fireplace')) amenities.push({ icon: 'fire', text: 'Fireplace' });
-		if (desc.includes('cot') || desc.includes('crib')) amenities.push({ icon: 'moon', text: 'Cot' });
-		if (desc.includes('pet-friend')) amenities.push({ icon: 'heart', text: 'Pet-Friendly' });
-		if (desc.includes('no smoking') || desc.includes('smoke-free')) amenities.push({ icon: 'slash-circle', text: 'No Smoking' });
-		if (desc.includes('no pet')) amenities.push({ icon: 'x-circle', text: 'No Pets' });
-		if (desc.includes('wheelchair accessible')) amenities.push({ icon: 'person-wheelchair', text: 'Wheelchair Access' });
-		if (desc.includes('fishing')) amenities.push({ icon: 'life-preserver', text: 'Fishing' });
-		if (desc.includes('bbq') || desc.includes('grill')) amenities.push({ icon: 'fire', text: 'Grill' });
-		%>
-		
-			<!-- Amenities Card -->
-			<% if (amenities.length > 0) { %>
+			<!-- Amenities Card - Now from Database -->
+			<% if (amenities && amenities.length > 0) { %>
 			<div class="card border-0 shadow-sm rounded-3">
 				<div class="card-body p-4">
 					<h5 class="card-title fw-bold mb-4">
@@ -157,7 +130,7 @@
 								<div class="amenity-icon">
 									<i class="bi bi-<%= amenity.icon %>"></i>
 								</div>
-								<span class="amenity-text"><%= amenity.text %></span>
+								<span class="amenity-text"><%= amenity.name %></span>
 							</div>
 						<% }); %>
 					</div>

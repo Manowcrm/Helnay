@@ -101,7 +101,7 @@
     <div class="col-12"><p>No listings found.</p></div>
   <% } %>
   <% listings.forEach(function(l){ %>
-    <div class="col-md-4 mb-4" data-amenities="<%= l.description.toLowerCase() %>">
+    <div class="col-md-4 mb-4" data-amenities="<%= (l.serviceKeys || l.description).toLowerCase() %>">
       <a href="/listings/<%= l.id %>" class="text-decoration-none">
         <div class="card listing-card h-100">
           <% if (l.image_url) { %>

@@ -226,6 +226,19 @@ app.get('/', async (req, res) => {
       return acc;
     }, {});
     
+    // Attach services to each listing for filtering
+    for (const listing of listings) {
+      const services = await db.all(
+        `SELECT fs.filter_key, fs.name, fs.icon 
+         FROM listing_services ls 
+         JOIN filter_services fs ON ls.service_id = fs.id 
+         WHERE ls.listing_id = ?`,
+        [listing.id]
+      );
+      listing.services = services;
+      listing.serviceKeys = services.map(s => s.filter_key).join(',');
+    }
+    
     res.render('index', { listings, query: req.query, filtersByCategory });
   } catch (err) {
     console.error(err);
@@ -311,6 +324,16 @@ app.get('/listings/:id', async (req, res) => {
     console.log(`📄 [LISTING PAGE] Showing listing ${id}: "${listing.title}" at $${listing.price}/night`);
     const images = await db.all('SELECT url FROM listing_images WHERE listing_id = ?', [id]);
     
+    // Get services/amenities from database
+    const amenities = await db.all(
+      `SELECT fs.name, fs.icon 
+       FROM listing_services ls 
+       JOIN filter_services fs ON ls.service_id = fs.id 
+       WHERE ls.listing_id = ? 
+       ORDER BY fs.category, fs.display_order, fs.name`,
+      [id]
+    );
+    
     // Prevent browser caching
     res.set({
       'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
@@ -318,7 +341,7 @@ app.get('/listings/:id', async (req, res) => {
       'Expires': '0'
     });
     
-    res.render('listing', { listing, images });
+    res.render('listing', { listing, images, amenities });
   } catch (err) {
     res.status(500).send('Server error');
   }
