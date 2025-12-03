@@ -31,6 +31,7 @@
 <% } %>
 
 <form method="POST" class="row g-3">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
   <% if (selectedListingId) { %>
     <!-- Hidden field when property is pre-selected -->
     <input type="hidden" name="listing_id" id="listing_id_hidden" value="<%= selectedListingId %>" />

@@ -495,6 +495,67 @@ Helnay Rentals Team`,
   }
 }
 
+// Send email verification email
+async function sendVerificationEmail(user, token) {
+  if (!isEmailConfigured) {
+    console.warn('⚠️ Email not sent - SendGrid API key not configured');
+    return false;
+  }
+
+  const verificationUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/verify-email/${token}`;
+
+  const msg = {
+    to: user.email,
+    from: {
+      email: getSenderEmail(),
+      name: 'Helnay Rentals'
+    },
+    subject: '✉️ Verify Your Email Address',
+    text: `Dear ${user.name},
+
+Thank you for registering with Helnay Rentals!
+
+Please verify your email address by clicking the link below:
+${verificationUrl}
+
+This link will expire in 24 hours.
+
+If you didn't create an account, please ignore this email.
+
+Best regards,
+Helnay Rentals Team`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
+        <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <h2 style="color: #0d6efd; margin-bottom: 20px;">Verify Your Email</h2>
+          <p style="font-size: 16px; line-height: 1.6;">Dear ${user.name},</p>
+          <p style="font-size: 16px; line-height: 1.6;">Thank you for registering with Helnay Rentals!</p>
+          <p style="font-size: 16px; line-height: 1.6;">Please verify your email address by clicking the button below:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${verificationUrl}" style="background-color: #0d6efd; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold; display: inline-block;">Verify Email Address</a>
+          </div>
+          <p style="font-size: 14px; color: #6c757d; line-height: 1.6;">This link will expire in 24 hours.</p>
+          <p style="font-size: 14px; color: #6c757d; line-height: 1.6;">If you didn't create an account, please ignore this email.</p>
+          <hr style="margin: 30px 0; border: none; border-top: 1px solid #dee2e6;">
+          <p style="font-size: 14px; color: #6c757d;">Best regards,<br>Helnay Rentals Team</p>
+        </div>
+      </div>
+    `
+  };
+
+  try {
+    await sgMail.send(msg);
+    console.log(`✓ Verification email sent to ${user.email}`);
+    return true;
+  } catch (error) {
+    console.error('Email send error:', error.message);
+    if (error.response) {
+      console.error('SendGrid error details:', error.response.body);
+    }
+    return false;
+  }
+}
+
 module.exports = {
   sendBookingApprovalEmail,
   sendBookingDenialEmail,
@@ -502,5 +563,6 @@ module.exports = {
   sendBookingCancellationEmail,
   sendContactNotificationToAdmin,
   sendWelcomeEmail,
-  sendContactReply
+  sendContactReply,
+  sendVerificationEmail
 };

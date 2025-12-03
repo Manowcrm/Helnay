@@ -160,8 +160,32 @@ async function init() {
     admin_level TEXT,
     created_by INTEGER,
     is_active INTEGER DEFAULT 1,
+    is_verified INTEGER DEFAULT 0,
     created_at TEXT,
     last_login TEXT
+  )`);
+
+  // Add is_verified column to users table if it doesn't exist
+  try {
+    const usersTableInfo2 = await all(`PRAGMA table_info(users)`);
+    const usersColumnNames2 = usersTableInfo2.map(col => col.name);
+    
+    if (!usersColumnNames2.includes('is_verified')) {
+      await run(`ALTER TABLE users ADD COLUMN is_verified INTEGER DEFAULT 0`);
+      console.log('✓ Added is_verified column to users table');
+    }
+  } catch (e) {
+    console.error('Users table is_verified migration error:', e.message);
+  }
+
+  await run(`CREATE TABLE IF NOT EXISTS email_verifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token TEXT UNIQUE NOT NULL,
+    expires_at TEXT NOT NULL,
+    verified_at TEXT,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
   )`);
 
   await run(`CREATE TABLE IF NOT EXISTS activity_logs (

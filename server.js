@@ -6,15 +6,35 @@ const session = require('express-session');
 const SqliteStore = require('better-sqlite3-session-store')(session);
 const BetterSqlite3 = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
+const helmet = require('helmet');
 const db = require('./db');
 const { backupDatabase } = require('./s3-backup');
 const expressLayouts = require('express-ejs-layouts');
 const { isAuthenticated, isAdmin, isSuperAdmin } = require('./auth-middleware');
-const { sendBookingApprovalEmail, sendBookingDenialEmail, sendBookingDateChangeEmail, sendBookingCancellationEmail, sendContactNotificationToAdmin, sendWelcomeEmail, sendContactReply } = require('./email-service');
+const { sendBookingApprovalEmail, sendBookingDenialEmail, sendBookingDateChangeEmail, sendBookingCancellationEmail, sendContactNotificationToAdmin, sendWelcomeEmail, sendContactReply, sendVerificationEmail } = require('./email-service');
 const { logActivity, getClientIP, getActivityLogs, getActivityStats } = require('./activity-logger');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
+const {
+  loginLimiter,
+  registerLimiter,
+  contactLimiter,
+  apiLimiter,
+  registerValidation,
+  loginValidation,
+  listingValidation,
+  bookingValidation,
+  contactValidation,
+  handleValidationErrors
+} = require('./security-middleware');
+const { csrfProtection, verifyCsrfToken, handleCsrfError } = require('./csrf-middleware');
 
 const app = express();
+
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable for now to allow inline scripts
+  crossOriginEmbedderPolicy: false
+}));
 
 // Trust proxy - required for secure cookies to work behind Render's proxy
 app.set('trust proxy', 1);
@@ -60,6 +80,9 @@ app.use(session({
   rolling: true // Extend session on each request - resets the 30 day timer
 }));
 
+// CSRF Protection - generate token for all requests
+app.use(csrfProtection);
+
 // Make user info available to all views
 app.use((req, res, next) => {
   res.locals.user = req.session.userId ? {
@@ -78,30 +101,12 @@ app.get('/register', (req, res) => {
   res.render('register', { message: null, error: null });
 });
 
-app.post('/register', async (req, res) => {
+app.post('/register', registerLimiter, verifyCsrfToken, registerValidation, handleValidationErrors, async (req, res) => {
   try {
     const { name, email, password, confirmPassword } = req.body;
     
-    if (!name || !email || !password) {
-      return res.render('register', { message: null, error: 'All fields are required' });
-    }
-    
     if (password !== confirmPassword) {
       return res.render('register', { message: null, error: 'Passwords do not match' });
-    }
-    
-    // Password validation: 8 chars min, 1 uppercase, 1 special char, 1 number
-    if (password.length < 8) {
-      return res.render('register', { message: null, error: 'Password must be at least 8 characters long' });
-    }
-    if (!/[A-Z]/.test(password)) {
-      return res.render('register', { message: null, error: 'Password must contain at least 1 uppercase letter' });
-    }
-    if (!/[0-9]/.test(password)) {
-      return res.render('register', { message: null, error: 'Password must contain at least 1 number' });
-    }
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      return res.render('register', { message: null, error: 'Password must contain at least 1 special character (!@#$%^&*(),.?":{}|<>)' });
     }
     
     // Check if user already exists
@@ -113,18 +118,31 @@ app.post('/register', async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    // Create user
-    await db.run(
-      'INSERT INTO users (name, email, password, role, created_at) VALUES (?, ?, ?, ?, ?)',
-      [name, email, hashedPassword, 'user', new Date().toISOString()]
+    // Create user (is_verified = 0 by default)
+    const result = await db.run(
+      'INSERT INTO users (name, email, password, role, is_verified, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, email, hashedPassword, 'user', 0, new Date().toISOString()]
     );
     
-    // Send welcome email (non-blocking - registration succeeds even if email fails)
-    sendWelcomeEmail({ name, email }).catch(err => {
-      console.warn('Welcome email failed but registration succeeded:', err.message);
+    const userId = result.lastInsertRowid;
+    
+    // Generate verification token
+    const crypto = require('crypto');
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours
+    
+    // Store verification token
+    await db.run(
+      'INSERT INTO email_verifications (user_id, token, expires_at, created_at) VALUES (?, ?, ?, ?)',
+      [userId, verificationToken, expiresAt, new Date().toISOString()]
+    );
+    
+    // Send verification email (non-blocking)
+    sendVerificationEmail({ name, email }, verificationToken).catch(err => {
+      console.warn('Verification email failed but registration succeeded:', err.message);
     });
     
-    res.render('register', { message: 'Registration successful! Please check your email for a welcome message, then login.', error: null });
+    res.render('register', { message: 'Registration successful! Please check your email to verify your account before logging in.', error: null });
   } catch (err) {
     console.error(err);
     res.render('register', { message: null, error: 'Registration failed' });
@@ -136,13 +154,9 @@ app.get('/login', (req, res) => {
   res.render('login', { message: null, error: null });
 });
 
-app.post('/login', async (req, res) => {
+app.post('/login', loginLimiter, verifyCsrfToken, loginValidation, handleValidationErrors, async (req, res) => {
   try {
     const { email, password } = req.body;
-    
-    if (!email || !password) {
-      return res.render('login', { message: null, error: 'Email and password are required' });
-    }
     
     // Find user
     const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
@@ -159,6 +173,11 @@ app.post('/login', async (req, res) => {
     // Check if account is active
     if (user.is_active === 0) {
       return res.render('login', { message: null, error: 'Your account has been deactivated. Please contact the system administrator.' });
+    }
+    
+    // Check if email is verified (only for regular users, not admins)
+    if (user.role !== 'admin' && user.is_verified === 0) {
+      return res.render('login', { message: null, error: 'Please verify your email address before logging in. Check your inbox for the verification link.' });
     }
     
     // Update last_login timestamp
@@ -349,7 +368,102 @@ app.get('/mountain-retreats', async (req, res) => {
 app.get('/about', (req, res) => res.render('about'));
 
 app.get('/contact', (req, res) => res.render('contact', { message: null }));
-app.post('/contact', async (req, res) => {
+
+// Resend Verification Email
+app.post('/resend-verification', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+    
+    // Find user
+    const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+    
+    if (!user) {
+      // Don't reveal whether email exists for security
+      return res.json({ success: true, message: 'If this email is registered, a verification link has been sent.' });
+    }
+    
+    if (user.is_verified === 1) {
+      return res.json({ success: false, message: 'This email is already verified.' });
+    }
+    
+    // Generate new verification token
+    const crypto = require('crypto');
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    
+    // Invalidate old tokens and create new one
+    await db.run('DELETE FROM email_verifications WHERE user_id = ?', [user.id]);
+    await db.run(
+      'INSERT INTO email_verifications (user_id, token, expires_at, created_at) VALUES (?, ?, ?, ?)',
+      [user.id, verificationToken, expiresAt, new Date().toISOString()]
+    );
+    
+    // Send verification email
+    await sendVerificationEmail({ name: user.name, email: user.email }, verificationToken);
+    
+    res.json({ success: true, message: 'Verification email sent. Please check your inbox.' });
+  } catch (err) {
+    console.error('Resend verification error:', err);
+    res.status(500).json({ success: false, message: 'Failed to send verification email.' });
+  }
+});
+
+// Email Verification
+app.get('/verify-email/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    
+    // Find verification record
+    const verification = await db.get(
+      'SELECT * FROM email_verifications WHERE token = ? AND verified_at IS NULL',
+      [token]
+    );
+    
+    if (!verification) {
+      return res.render('error', { 
+        message: 'Invalid or expired verification link. Please request a new verification email.', 
+        error: { status: 400 }
+      });
+    }
+    
+    // Check if token has expired
+    if (new Date(verification.expires_at) < new Date()) {
+      return res.render('error', { 
+        message: 'This verification link has expired. Please request a new verification email.', 
+        error: { status: 400 }
+      });
+    }
+    
+    // Mark email as verified
+    await db.run(
+      'UPDATE email_verifications SET verified_at = ? WHERE id = ?',
+      [new Date().toISOString(), verification.id]
+    );
+    
+    await db.run(
+      'UPDATE users SET is_verified = 1 WHERE id = ?',
+      [verification.user_id]
+    );
+    
+    console.log(`✓ Email verified for user ID: ${verification.user_id}`);
+    
+    res.render('login', { 
+      message: 'Email verified successfully! You can now log in to your account.', 
+      error: null 
+    });
+  } catch (err) {
+    console.error('Email verification error:', err);
+    res.render('error', { 
+      message: 'Verification failed. Please try again or contact support.', 
+      error: { status: 500 }
+    });
+  }
+});
+app.post('/contact', contactLimiter, verifyCsrfToken, contactValidation, handleValidationErrors, async (req, res) => {
   try {
     const { name, email, message } = req.body;
     await db.run('INSERT INTO contacts (name,email,message,created_at) VALUES (?,?,?,?)', [name, email, message, new Date().toISOString()]);
@@ -463,7 +577,7 @@ app.get('/bookings', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
-app.post('/bookings', async (req, res) => {
+app.post('/bookings', verifyCsrfToken, bookingValidation, handleValidationErrors, async (req, res) => {
   try {
     const { listing_id, name, email, checkin_date, checkin_time, checkout_date, checkout_time } = req.body;
     const checkin = `${checkin_date} ${checkin_time}`;
