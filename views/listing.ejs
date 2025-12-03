@@ -11,7 +11,7 @@
 		<% if (images && images.length > 0) { %>
 			<div class="listing-gallery">
 				<!-- Main Image -->
-				<div id="listingCarousel" class="carousel slide mb-3" data-bs-ride="carousel" data-bs-interval="false">
+				<div id="listingCarousel" class="carousel slide mb-3">
 					<div class="carousel-indicators">
 						<% images.forEach(function(img, idx){ %>
 							<button type="button" data-bs-target="#listingCarousel" data-bs-slide-to="<%= idx %>" 
@@ -145,31 +145,76 @@
 
 <!-- Carousel Control Script -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-	const carouselEl = document.getElementById('listingCarousel');
-	if (!carouselEl) return;
+(function() {
+	'use strict';
 	
-	const thumbnails = document.querySelectorAll('.thumbnail-img');
-	
-	// Get existing carousel instance or create new one
-	const carousel = bootstrap.Carousel.getOrCreateInstance(carouselEl, {
-		interval: false,
-		wrap: true,
-		keyboard: true
-	});
-	
-	// Sync thumbnails when carousel slides
-	carouselEl.addEventListener('slid.bs.carousel', function(event) {
-		thumbnails.forEach((thumb, idx) => {
-			thumb.classList.toggle('active', idx === event.to);
+	window.addEventListener('load', function() {
+		const carouselEl = document.getElementById('listingCarousel');
+		if (!carouselEl) return;
+		
+		// Initialize carousel manually
+		const carousel = new bootstrap.Carousel(carouselEl, {
+			interval: false,
+			wrap: true,
+			keyboard: true,
+			touch: true
 		});
-	});
-	
-	// Click thumbnail to jump to slide
-	thumbnails.forEach(function(thumb, index) {
-		thumb.addEventListener('click', function() {
-			carousel.to(index);
+		
+		const thumbnails = document.querySelectorAll('.thumbnail-img');
+		const indicators = carouselEl.querySelectorAll('.carousel-indicators button');
+		const prevBtn = carouselEl.querySelector('.carousel-control-prev');
+		const nextBtn = carouselEl.querySelector('.carousel-control-next');
+		
+		// Update active states on slide
+		carouselEl.addEventListener('slid.bs.carousel', function(event) {
+			const activeIndex = event.to;
+			
+			// Update thumbnails
+			thumbnails.forEach((thumb, idx) => {
+				thumb.classList.toggle('active', idx === activeIndex);
+			});
+			
+			// Update indicators
+			indicators.forEach((indicator, idx) => {
+				indicator.classList.toggle('active', idx === activeIndex);
+				if (idx === activeIndex) {
+					indicator.setAttribute('aria-current', 'true');
+				} else {
+					indicator.removeAttribute('aria-current');
+				}
+			});
 		});
+		
+		// Thumbnail clicks
+		thumbnails.forEach(function(thumb, index) {
+			thumb.addEventListener('click', function(e) {
+				e.stopPropagation();
+				carousel.to(index);
+			});
+		});
+		
+		// Indicator clicks
+		indicators.forEach(function(indicator, index) {
+			indicator.addEventListener('click', function(e) {
+				e.stopPropagation();
+				carousel.to(index);
+			});
+		});
+		
+		// Arrow clicks
+		if (prevBtn) {
+			prevBtn.addEventListener('click', function(e) {
+				e.stopPropagation();
+				carousel.prev();
+			});
+		}
+		
+		if (nextBtn) {
+			nextBtn.addEventListener('click', function(e) {
+				e.stopPropagation();
+				carousel.next();
+			});
+		}
 	});
-});
+})();
 </script>
