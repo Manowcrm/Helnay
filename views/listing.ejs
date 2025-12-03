@@ -151,10 +151,11 @@ document.addEventListener('DOMContentLoaded', function() {
 	
 	const thumbnails = document.querySelectorAll('.thumbnail-img');
 	
-	// Initialize carousel (let Bootstrap handle controls automatically)
-	const carousel = new bootstrap.Carousel(carouselEl, {
+	// Get existing carousel instance or create new one
+	const carousel = bootstrap.Carousel.getOrCreateInstance(carouselEl, {
 		interval: false,
-		wrap: true
+		wrap: true,
+		keyboard: true
 	});
 	
 	// Sync thumbnails when carousel slides
