@@ -276,6 +276,9 @@ app.get('/', async (req, res) => {
       listing.serviceKeys = services.map(s => s.filter_key).join(',');
     }
     
+    // Get active browse categories for homepage
+    const browseCategories = await db.all('SELECT * FROM browse_categories WHERE is_active = 1 ORDER BY display_order ASC');
+    
     // Prevent browser caching to ensure fresh prices
     res.set({
       'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
@@ -283,7 +286,7 @@ app.get('/', async (req, res) => {
       'Expires': '0'
     });
     
-    res.render('index', { listings, query: req.query, filtersByCategory });
+    res.render('index', { listings, query: req.query, filtersByCategory, browseCategories });
   } catch (err) {
     console.error(err);
     res.status(500).send('Server error');
@@ -891,6 +894,126 @@ app.get('/admin/activity', isSuperAdmin, async (req, res) => {
   }
 });
 
+// Browse Categories Management (Super Admin Only)
+app.get('/admin/categories', isSuperAdmin, async (req, res) => {
+  try {
+    const categories = await db.all('SELECT * FROM browse_categories ORDER BY display_order ASC');
+    res.render('admin_categories', { categories });
+  } catch (err) {
+    console.error('❌ [CATEGORIES] Error loading categories:', err.message);
+    res.status(500).send('Error loading categories');
+  }
+});
+
+// Create new category
+app.post('/admin/categories/create', isSuperAdmin, async (req, res) => {
+  try {
+    const { title, description, filter_params, image_url, display_order } = req.body;
+    
+    await db.run(
+      'INSERT INTO browse_categories (title, description, filter_params, image_url, display_order, is_active, created_at) VALUES (?,?,?,?,?,?,?)',
+      [title, description, filter_params, image_url, display_order || 99, 1, new Date().toISOString()]
+    );
+    
+    await logActivity({
+      admin_id: req.session.user_id,
+      action_type: 'CREATE',
+      action_description: `Created new browse category: ${title}`,
+      target_type: 'browse_category',
+      ip_address: getClientIP(req)
+    });
+    
+    res.redirect('/admin/categories');
+  } catch (err) {
+    console.error('❌ [CATEGORIES] Error creating category:', err.message);
+    res.status(500).send('Error creating category');
+  }
+});
+
+// Update category
+app.post('/admin/categories/:id/edit', isSuperAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, filter_params, image_url, display_order } = req.body;
+    
+    await db.run(
+      'UPDATE browse_categories SET title=?, description=?, filter_params=?, image_url=?, display_order=? WHERE id=?',
+      [title, description, filter_params, image_url, display_order, id]
+    );
+    
+    await logActivity({
+      admin_id: req.session.user_id,
+      action_type: 'UPDATE',
+      action_description: `Updated browse category: ${title}`,
+      target_type: 'browse_category',
+      target_id: id,
+      ip_address: getClientIP(req)
+    });
+    
+    res.redirect('/admin/categories');
+  } catch (err) {
+    console.error('❌ [CATEGORIES] Error updating category:', err.message);
+    res.status(500).send('Error updating category');
+  }
+});
+
+// Toggle category active status
+app.post('/admin/categories/:id/toggle', isSuperAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const category = await db.get('SELECT * FROM browse_categories WHERE id = ?', [id]);
+    
+    if (!category) {
+      return res.status(404).send('Category not found');
+    }
+    
+    const newStatus = category.is_active === 1 ? 0 : 1;
+    await db.run('UPDATE browse_categories SET is_active = ? WHERE id = ?', [newStatus, id]);
+    
+    await logActivity({
+      admin_id: req.session.user_id,
+      action_type: 'UPDATE',
+      action_description: `${newStatus === 1 ? 'Activated' : 'Deactivated'} browse category: ${category.title}`,
+      target_type: 'browse_category',
+      target_id: id,
+      ip_address: getClientIP(req)
+    });
+    
+    res.redirect('/admin/categories');
+  } catch (err) {
+    console.error('❌ [CATEGORIES] Error toggling category:', err.message);
+    res.status(500).send('Error toggling category');
+  }
+});
+
+// Delete category
+app.post('/admin/categories/:id/delete', isSuperAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const category = await db.get('SELECT title FROM browse_categories WHERE id = ?', [id]);
+    
+    if (!category) {
+      return res.status(404).send('Category not found');
+    }
+    
+    await db.run('DELETE FROM browse_categories WHERE id = ?', [id]);
+    
+    await logActivity({
+      admin_id: req.session.user_id,
+      action_type: 'DELETE',
+      action_description: `Deleted browse category: ${category.title}`,
+      target_type: 'browse_category',
+      target_id: id,
+      ip_address: getClientIP(req)
+    });
+    
+    res.redirect('/admin/categories');
+  } catch (err) {
+    console.error('❌ [CATEGORIES] Error deleting category:', err.message);
+    res.status(500).send('Error deleting category');
+  }
+});
+
 // Admin Users Management
 app.get('/admin/users', isAdmin, async (req, res) => {
   try {
@@ -1432,7 +1555,10 @@ app.get('/admin/filters', isAdmin, async (req, res) => {
       return acc;
     }, {});
     
-    res.render('admin_filters', { filters, filtersByCategory });
+    // Get browse categories
+    const browseCategories = await db.all('SELECT * FROM browse_categories ORDER BY display_order ASC');
+    
+    res.render('admin_filters', { filters, filtersByCategory, browseCategories });
   } catch (err) {
     console.error(err);
     res.status(500).send('Server error');

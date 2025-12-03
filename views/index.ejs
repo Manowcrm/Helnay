@@ -65,18 +65,15 @@
         <div class="filter-section">
           <h6 class="filter-title">Browse by Category</h6>
           <div class="category-links">
-            <a href="/entire-homes" class="category-link">
-              <i class="bi bi-house-door"></i> Entire Homes
-            </a>
-            <a href="/city-stays" class="category-link">
-              <i class="bi bi-building"></i> City Stays
-            </a>
-            <a href="/beach-houses" class="category-link">
-              <i class="bi bi-water"></i> Beach Houses
-            </a>
-            <a href="/mountain-retreats" class="category-link">
-              <i class="bi bi-tree"></i> Mountain Retreats
-            </a>
+            <% if (browseCategories && browseCategories.length > 0) { %>
+              <% browseCategories.forEach(function(category) { %>
+                <a href="/?<%= category.filter_params %>" class="category-link" title="<%= category.description %>">
+                  <i class="bi bi-tag"></i> <%= category.title %>
+                </a>
+              <% }); %>
+            <% } else { %>
+              <p class="text-muted small">No categories available</p>
+            <% } %>
           </div>
         </div>
 

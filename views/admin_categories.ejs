@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browse Categories Management - Admin Panel</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <style>
+    .sidebar {
+      min-height: 100vh;
+      background: #2c3e50;
+    }
+    .sidebar .nav-link {
+      color: #ecf0f1;
+      padding: 12px 20px;
+      transition: all 0.3s;
+    }
+    .sidebar .nav-link:hover, .sidebar .nav-link.active {
+      background: #34495e;
+      color: #fff;
+    }
+    .category-card {
+      transition: all 0.3s;
+      border-left: 4px solid #3498db;
+    }
+    .category-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .category-image {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .badge-active {
+      background: #27ae60;
+    }
+    .badge-inactive {
+      background: #e74c3c;
+    }
+  </style>
+</head>
+<body>
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <nav class="col-md-2 d-md-block sidebar">
+        <div class="position-sticky pt-3">
+          <h5 class="text-white px-3 mb-3">
+            <i class="bi bi-shield-lock"></i> Admin Panel
+          </h5>
+          <ul class="nav flex-column">
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/dashboard">
+                <i class="bi bi-speedometer2"></i> Dashboard
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/listings">
+                <i class="bi bi-house"></i> Listings
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/bookings">
+                <i class="bi bi-calendar-check"></i> Bookings
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/users">
+                <i class="bi bi-people"></i> Users
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/contacts">
+                <i class="bi bi-envelope"></i> Messages
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="/admin/categories">
+                <i class="bi bi-grid-3x3"></i> Browse Categories
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/team">
+                <i class="bi bi-person-badge"></i> Team Management
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/activity">
+                <i class="bi bi-activity"></i> Activity Log
+              </a>
+            </li>
+            <li class="nav-item mt-3">
+              <a class="nav-link text-danger" href="/logout">
+                <i class="bi bi-box-arrow-right"></i> Logout
+              </a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <!-- Main Content -->
+      <main class="col-md-10 ms-sm-auto px-md-4">
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+          <h1 class="h2">
+            <i class="bi bi-grid-3x3"></i> Browse Categories Management
+          </h1>
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
+            <i class="bi bi-plus-circle"></i> Add New Category
+          </button>
+        </div>
+
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle"></i> <strong>Info:</strong> These categories appear on the homepage "Browse by Category" section. You can edit titles, descriptions, filter parameters, and images.
+        </div>
+
+        <!-- Categories List -->
+        <div class="row g-3">
+          <% if (categories.length === 0) { %>
+            <div class="col-12">
+              <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i> No categories found. Click "Add New Category" to create one.
+              </div>
+            </div>
+          <% } else { %>
+            <% categories.forEach(category => { %>
+              <div class="col-md-6 col-lg-4">
+                <div class="card category-card">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                      <h5 class="card-title mb-0">
+                        <%= category.title %>
+                      </h5>
+                      <span class="badge <%= category.is_active === 1 ? 'badge-active' : 'badge-inactive' %>">
+                        <%= category.is_active === 1 ? 'Active' : 'Inactive' %>
+                      </span>
+                    </div>
+                    
+                    <% if (category.image_url) { %>
+                      <img src="<%= category.image_url %>" alt="<%= category.title %>" class="category-image mb-3" onerror="this.src='/images/placeholder.jpg'">
+                    <% } %>
+                    
+                    <p class="card-text text-muted small">
+                      <%= category.description %>
+                    </p>
+                    
+                    <div class="mb-2">
+                      <small class="text-muted">
+                        <i class="bi bi-funnel"></i> Filter: <code><%= category.filter_params %></code>
+                      </small>
+                    </div>
+                    
+                    <div class="mb-3">
+                      <small class="text-muted">
+                        <i class="bi bi-sort-numeric-down"></i> Display Order: <%= category.display_order %>
+                      </small>
+                    </div>
+                    
+                    <div class="btn-group w-100" role="group">
+                      <button class="btn btn-sm btn-outline-primary" onclick="editCategory(<%= category.id %>, '<%= category.title.replace(/'/g, "\\'") %>', '<%= category.description.replace(/'/g, "\\'") %>', '<%= category.filter_params %>', '<%= category.image_url %>', <%= category.display_order %>)">
+                        <i class="bi bi-pencil"></i> Edit
+                      </button>
+                      <form action="/admin/categories/<%= category.id %>/toggle" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-sm <%= category.is_active === 1 ? 'btn-outline-warning' : 'btn-outline-success' %>">
+                          <i class="bi bi-<%= category.is_active === 1 ? 'eye-slash' : 'eye' %>"></i> 
+                          <%= category.is_active === 1 ? 'Deactivate' : 'Activate' %>
+                        </button>
+                      </form>
+                      <button class="btn btn-sm btn-outline-danger" onclick="confirmDelete(<%= category.id %>, '<%= category.title.replace(/'/g, "\\'") %>')">
+                        <i class="bi bi-trash"></i> Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% }) %>
+          <% } %>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Create Category Modal -->
+  <div class="modal fade" id="createCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-plus-circle"></i> Create New Category
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form action="/admin/categories/create" method="POST">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Title <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" name="title" required placeholder="e.g., Entire Homes">
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">Description <span class="text-danger">*</span></label>
+              <textarea class="form-control" name="description" rows="2" required placeholder="Brief description of this category"></textarea>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">Filter Parameters <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" name="filter_params" required placeholder="e.g., category=home or location=city">
+              <small class="form-text text-muted">
+                URL query parameters to filter listings (e.g., "category=home", "location=seaside")
+              </small>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">Image URL <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" name="image_url" required placeholder="/images/category-image.jpg">
+              <small class="form-text text-muted">
+                Path to category image (upload to /public/images folder first)
+              </small>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">Display Order</label>
+              <input type="number" class="form-control" name="display_order" value="99" min="0">
+              <small class="form-text text-muted">
+                Lower numbers appear first (1, 2, 3...)
+              </small>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-circle"></i> Create Category
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Category Modal -->
+  <div class="modal fade" id="editCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-pencil"></i> Edit Category
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="editCategoryForm" method="POST">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Title <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="edit_title" name="title" required>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">Description <span class="text-danger">*</span></label>
+              <textarea class="form-control" id="edit_description" name="description" rows="2" required></textarea>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">Filter Parameters <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="edit_filter_params" name="filter_params" required>
+              <small class="form-text text-muted">
+                URL query parameters to filter listings
+              </small>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">Image URL <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="edit_image_url" name="image_url" required>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">Display Order</label>
+              <input type="number" class="form-control" id="edit_display_order" name="display_order" min="0">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-circle"></i> Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">
+            <i class="bi bi-exclamation-triangle"></i> Confirm Delete
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to delete the category "<strong id="delete_category_name"></strong>"?</p>
+          <p class="text-danger mb-0">
+            <i class="bi bi-exclamation-circle"></i> This action cannot be undone.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <form id="deleteForm" method="POST" class="d-inline">
+            <button type="submit" class="btn btn-danger">
+              <i class="bi bi-trash"></i> Delete Category
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function editCategory(id, title, description, filterParams, imageUrl, displayOrder) {
+      document.getElementById('editCategoryForm').action = '/admin/categories/' + id + '/edit';
+      document.getElementById('edit_title').value = title;
+      document.getElementById('edit_description').value = description;
+      document.getElementById('edit_filter_params').value = filterParams;
+      document.getElementById('edit_image_url').value = imageUrl;
+      document.getElementById('edit_display_order').value = displayOrder;
+      
+      new bootstrap.Modal(document.getElementById('editCategoryModal')).show();
+    }
+    
+    function confirmDelete(id, title) {
+      document.getElementById('delete_category_name').textContent = title;
+      document.getElementById('deleteForm').action = '/admin/categories/' + id + '/delete';
+      
+      new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
+  </script>
+</body>
+</html>

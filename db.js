@@ -198,6 +198,17 @@ async function init() {
     UNIQUE(listing_id, service_id)
   )`);
 
+  await run(`CREATE TABLE IF NOT EXISTS browse_categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    filter_params TEXT NOT NULL,
+    image_url TEXT NOT NULL,
+    display_order INTEGER DEFAULT 0,
+    is_active INTEGER DEFAULT 1,
+    created_at TEXT
+  )`);
+
   // Seed default filter services if none exist
   const filterRows = await all('SELECT COUNT(1) as cnt FROM filter_services');
   const filterCnt = filterRows && filterRows[0] ? filterRows[0].cnt : 0;
@@ -233,6 +244,28 @@ async function init() {
     await run('INSERT INTO filter_services (category,name,icon,filter_key,display_order,created_at) VALUES (?,?,?,?,?,?)', ['Activities', 'Grill', 'fire', 'grill', 2, new Date().toISOString()]);
     
     console.log('✅ [DB INIT] Seeded 21 default filter services');
+  }
+
+  // Seed browse categories if none exist
+  const categoriesCount = await all('SELECT COUNT(1) as cnt FROM browse_categories');
+  const categoriesCnt = categoriesCount && categoriesCount[0] ? categoriesCount[0].cnt : 0;
+  
+  if (categoriesCnt === 0) {
+    console.log('🌱 [DB INIT] Seeding default browse categories');
+    
+    await run('INSERT INTO browse_categories (title, description, filter_params, image_url, display_order, is_active, created_at) VALUES (?,?,?,?,?,?,?)', 
+      ['Entire Homes', 'Spacious homes perfect for families and groups', 'category=home', '/images/entire-homes.jpg', 1, 1, new Date().toISOString()]);
+    
+    await run('INSERT INTO browse_categories (title, description, filter_params, image_url, display_order, is_active, created_at) VALUES (?,?,?,?,?,?,?)', 
+      ['City Stays', 'Modern apartments in the heart of the city', 'location=city', '/images/city-stays.jpg', 2, 1, new Date().toISOString()]);
+    
+    await run('INSERT INTO browse_categories (title, description, filter_params, image_url, display_order, is_active, created_at) VALUES (?,?,?,?,?,?,?)', 
+      ['Beach Houses', 'Coastal cottages with stunning ocean views', 'location=seaside', '/images/beach-houses.jpg', 3, 1, new Date().toISOString()]);
+    
+    await run('INSERT INTO browse_categories (title, description, filter_params, image_url, display_order, is_active, created_at) VALUES (?,?,?,?,?,?,?)', 
+      ['Mountain Retreats', 'Cozy cabins in scenic mountain locations', 'location=highlands', '/images/mountain-retreats.jpg', 4, 1, new Date().toISOString()]);
+    
+    console.log('✅ [DB INIT] Seeded 4 default browse categories');
   }
 
   // seed sample listings if none exist
