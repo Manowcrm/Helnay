@@ -287,9 +287,22 @@ async function init() {
     console.log(`✅ [DB INIT] Database already has ${cnt} listings - skipping seed`);
   }
   
-  // Create default super admin user if none exists
-  const adminCheck = await get('SELECT * FROM users WHERE role = ? AND admin_level = ?', ['admin', 'super_admin']);
-  if (!adminCheck) {
+  // Create or update default super admin user
+  const existingAdmin = await get('SELECT * FROM users WHERE email = ?', ['sysadmin.portal@helnay.com']);
+  
+  if (existingAdmin) {
+    // Update existing admin to super_admin if not already set
+    if (existingAdmin.admin_level !== 'super_admin') {
+      await run(
+        'UPDATE users SET admin_level = ?, is_active = 1 WHERE email = ?',
+        ['super_admin', 'sysadmin.portal@helnay.com']
+      );
+      console.log('✓ Existing admin user upgraded to super_admin');
+    } else {
+      console.log('✓ Super admin user already exists');
+    }
+  } else {
+    // Create new super admin
     const hashedPassword = await bcrypt.hash('Hln@y2024$ecureAdm!n', 10);
     await run(
       'INSERT INTO users (name, email, password, role, admin_level, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
