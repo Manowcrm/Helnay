@@ -11,7 +11,7 @@
 		<% if (images && images.length > 0) { %>
 			<div class="listing-gallery">
 				<!-- Main Image -->
-				<div id="listingCarousel" class="carousel slide mb-3">
+				<div id="listingCarousel" class="carousel slide mb-3" data-bs-ride="true">
 					<div class="carousel-indicators">
 						<% images.forEach(function(img, idx){ %>
 							<button type="button" data-bs-target="#listingCarousel" data-bs-slide-to="<%= idx %>" 
@@ -145,47 +145,17 @@
 
 <!-- Carousel Control Script -->
 <script>
-(function() {
-	'use strict';
+document.addEventListener('DOMContentLoaded', function() {
+	const carouselEl = document.getElementById('listingCarousel');
+	if (!carouselEl) return;
 	
-	window.addEventListener('load', function() {
-		const carouselEl = document.getElementById('listingCarousel');
-		if (!carouselEl) {
-			console.error('Carousel element not found');
-			return;
-		}
-		
-		console.log('Initializing carousel...');
-		
-		// Initialize carousel manually
-		const carousel = new bootstrap.Carousel(carouselEl, {
-			interval: false,
-			wrap: true,
-			keyboard: true,
-			touch: true
+	const thumbnails = document.querySelectorAll('.thumbnail-img');
+	
+	// Sync thumbnail active states when carousel slides
+	carouselEl.addEventListener('slid.bs.carousel', function(event) {
+		thumbnails.forEach((thumb, idx) => {
+			thumb.classList.toggle('active', idx === event.to);
 		});
-		
-		console.log('Carousel initialized:', carousel);
-		
-		const thumbnails = document.querySelectorAll('.thumbnail-img');
-		
-		// Update thumbnail active states when carousel slides
-		carouselEl.addEventListener('slid.bs.carousel', function(event) {
-			console.log('Carousel slid to index:', event.to);
-			thumbnails.forEach((thumb, idx) => {
-				thumb.classList.toggle('active', idx === event.to);
-			});
-		});
-		
-		// Only handle thumbnail clicks (let Bootstrap handle arrows and indicators)
-		thumbnails.forEach(function(thumb, index) {
-			thumb.addEventListener('click', function() {
-				console.log('Thumbnail clicked:', index);
-				carousel.to(index);
-			});
-		});
-		
-		console.log('Carousel setup complete');
 	});
-})();
+});
 </script>
