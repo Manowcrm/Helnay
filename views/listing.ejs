@@ -150,7 +150,12 @@
 	
 	window.addEventListener('load', function() {
 		const carouselEl = document.getElementById('listingCarousel');
-		if (!carouselEl) return;
+		if (!carouselEl) {
+			console.error('Carousel element not found');
+			return;
+		}
+		
+		console.log('Initializing carousel...');
 		
 		// Initialize carousel manually
 		const carousel = new bootstrap.Carousel(carouselEl, {
@@ -160,61 +165,27 @@
 			touch: true
 		});
 		
+		console.log('Carousel initialized:', carousel);
+		
 		const thumbnails = document.querySelectorAll('.thumbnail-img');
-		const indicators = carouselEl.querySelectorAll('.carousel-indicators button');
-		const prevBtn = carouselEl.querySelector('.carousel-control-prev');
-		const nextBtn = carouselEl.querySelector('.carousel-control-next');
 		
-		// Update active states on slide
+		// Update thumbnail active states when carousel slides
 		carouselEl.addEventListener('slid.bs.carousel', function(event) {
-			const activeIndex = event.to;
-			
-			// Update thumbnails
+			console.log('Carousel slid to index:', event.to);
 			thumbnails.forEach((thumb, idx) => {
-				thumb.classList.toggle('active', idx === activeIndex);
-			});
-			
-			// Update indicators
-			indicators.forEach((indicator, idx) => {
-				indicator.classList.toggle('active', idx === activeIndex);
-				if (idx === activeIndex) {
-					indicator.setAttribute('aria-current', 'true');
-				} else {
-					indicator.removeAttribute('aria-current');
-				}
+				thumb.classList.toggle('active', idx === event.to);
 			});
 		});
 		
-		// Thumbnail clicks
+		// Only handle thumbnail clicks (let Bootstrap handle arrows and indicators)
 		thumbnails.forEach(function(thumb, index) {
-			thumb.addEventListener('click', function(e) {
-				e.stopPropagation();
+			thumb.addEventListener('click', function() {
+				console.log('Thumbnail clicked:', index);
 				carousel.to(index);
 			});
 		});
 		
-		// Indicator clicks
-		indicators.forEach(function(indicator, index) {
-			indicator.addEventListener('click', function(e) {
-				e.stopPropagation();
-				carousel.to(index);
-			});
-		});
-		
-		// Arrow clicks
-		if (prevBtn) {
-			prevBtn.addEventListener('click', function(e) {
-				e.stopPropagation();
-				carousel.prev();
-			});
-		}
-		
-		if (nextBtn) {
-			nextBtn.addEventListener('click', function(e) {
-				e.stopPropagation();
-				carousel.next();
-			});
-		}
+		console.log('Carousel setup complete');
 	});
 })();
 </script>
