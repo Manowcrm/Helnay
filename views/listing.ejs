@@ -11,11 +11,11 @@
 		<% if (images && images.length > 0) { %>
 			<div class="listing-gallery">
 				<!-- Main Image -->
-				<div id="listingCarousel" class="carousel slide mb-3" data-bs-ride="true">
+				<div id="listingCarousel" class="carousel slide" data-bs-ride="carousel">
 					<div class="carousel-indicators">
 						<% images.forEach(function(img, idx){ %>
 							<button type="button" data-bs-target="#listingCarousel" data-bs-slide-to="<%= idx %>" 
-								<%= idx === 0 ? 'class="active" aria-current="true"' : '' %> aria-label="Slide <%= idx + 1 %>"></button>
+								class="<%= idx === 0 ? 'active' : '' %>" <%= idx === 0 ? 'aria-current="true"' : '' %> aria-label="Slide <%= idx + 1 %>"></button>
 						<% }) %>
 					</div>
 					<div class="carousel-inner rounded-3 shadow-sm">
@@ -39,9 +39,8 @@
 			<div class="thumbnail-gallery-wrapper">
 				<div class="thumbnail-gallery-scroll">
 					<% images.forEach(function(img, idx){ %>
-						<div class="thumbnail-item">
+						<div class="thumbnail-item" data-slide-index="<%= idx %>">
 							<img src="<%= img.url %>" class="thumbnail-img <%= idx === 0 ? 'active' : '' %>" 
-								 data-bs-target="#listingCarousel" data-bs-slide-to="<%= idx %>" 
 								 alt="Thumbnail <%= idx + 1 %>" />
 						</div>
 					<% }); %>
@@ -146,16 +145,34 @@
 <!-- Carousel Control Script -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-	const carouselEl = document.getElementById('listingCarousel');
-	if (!carouselEl) return;
+	const carouselElement = document.getElementById('listingCarousel');
+	if (!carouselElement) return;
 	
-	const thumbnails = document.querySelectorAll('.thumbnail-img');
+	// Get carousel instance
+	const myCarousel = bootstrap.Carousel.getOrCreateInstance(carouselElement);
 	
-	// Sync thumbnail active states when carousel slides
-	carouselEl.addEventListener('slid.bs.carousel', function(event) {
-		thumbnails.forEach((thumb, idx) => {
-			thumb.classList.toggle('active', idx === event.to);
+	// Get all thumbnails
+	const thumbnails = document.querySelectorAll('.thumbnail-item');
+	
+	// Add click event to thumbnails
+	thumbnails.forEach(function(item) {
+		item.addEventListener('click', function() {
+			const slideIndex = parseInt(this.getAttribute('data-slide-index'));
+			myCarousel.to(slideIndex);
 		});
+	});
+	
+	// Update active thumbnail when carousel slides
+	carouselElement.addEventListener('slid.bs.carousel', function(event) {
+		// Remove active class from all thumbnails
+		document.querySelectorAll('.thumbnail-img').forEach(function(thumb) {
+			thumb.classList.remove('active');
+		});
+		// Add active class to current thumbnail
+		const currentThumbnail = document.querySelector('.thumbnail-item[data-slide-index="' + event.to + '"] .thumbnail-img');
+		if (currentThumbnail) {
+			currentThumbnail.classList.add('active');
+		}
 	});
 });
 </script>
