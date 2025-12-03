@@ -116,6 +116,23 @@ async function init() {
       await run(`ALTER TABLE users ADD COLUMN last_login TEXT`);
       console.log('✓ Added last_login column to users table');
     }
+    
+    if (!usersColumnNames.includes('admin_level')) {
+      await run(`ALTER TABLE users ADD COLUMN admin_level TEXT`);
+      console.log('✓ Added admin_level column to users table');
+    }
+    
+    if (!usersColumnNames.includes('created_by')) {
+      await run(`ALTER TABLE users ADD COLUMN created_by INTEGER`);
+      console.log('✓ Added created_by column to users table');
+    }
+    
+    if (!usersColumnNames.includes('is_active')) {
+      await run(`ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1`);
+      console.log('✓ Added is_active column to users table');
+      // Set all existing users as active
+      await run(`UPDATE users SET is_active = 1 WHERE is_active IS NULL`);
+    }
   } catch (e) {
     console.error('Users table migration error:', e.message);
   }
@@ -140,8 +157,25 @@ async function init() {
     email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
     role TEXT DEFAULT 'user',
+    admin_level TEXT,
+    created_by INTEGER,
+    is_active INTEGER DEFAULT 1,
     created_at TEXT,
     last_login TEXT
+  )`);
+
+  await run(`CREATE TABLE IF NOT EXISTS activity_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    admin_id INTEGER NOT NULL,
+    admin_name TEXT NOT NULL,
+    admin_email TEXT NOT NULL,
+    action_type TEXT NOT NULL,
+    action_description TEXT NOT NULL,
+    target_type TEXT,
+    target_id INTEGER,
+    ip_address TEXT,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (admin_id) REFERENCES users(id)
   )`);
 
   await run(`CREATE TABLE IF NOT EXISTS filter_services (
@@ -253,15 +287,15 @@ async function init() {
     console.log(`✅ [DB INIT] Database already has ${cnt} listings - skipping seed`);
   }
   
-  // Create default admin user if none exists
-  const adminCheck = await get('SELECT * FROM users WHERE role = ?', ['admin']);
+  // Create default super admin user if none exists
+  const adminCheck = await get('SELECT * FROM users WHERE role = ? AND admin_level = ?', ['admin', 'super_admin']);
   if (!adminCheck) {
     const hashedPassword = await bcrypt.hash('Hln@y2024$ecureAdm!n', 10);
     await run(
-      'INSERT INTO users (name, email, password, role, created_at) VALUES (?, ?, ?, ?, ?)',
-      ['System Administrator', 'sysadmin.portal@helnay.com', hashedPassword, 'admin', new Date().toISOString()]
+      'INSERT INTO users (name, email, password, role, admin_level, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      ['System Administrator', 'sysadmin.portal@helnay.com', hashedPassword, 'admin', 'super_admin', 1, new Date().toISOString()]
     );
-    console.log('✓ Default admin user created with secure credentials');
+    console.log('✓ Default super admin user created with secure credentials');
   }
 }
 

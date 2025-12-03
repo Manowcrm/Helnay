@@ -1,0 +1,233 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-people-fill"></i> Admin Team Management</h1>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createAdminModal">
+      <i class="bi bi-person-plus"></i> Create New Admin
+    </button>
+  </div>
+
+  <% if (message) { %>
+    <div class="alert alert-<%= message.type %> alert-dismissible fade show">
+      <%= message.text %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  <% } %>
+
+  <!-- Admin Statistics Cards -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card border-primary">
+        <div class="card-body text-center">
+          <i class="bi bi-person-badge fs-1 text-primary"></i>
+          <h3 class="mt-2"><%= admins.filter(a => a.is_active).length %></h3>
+          <p class="text-muted mb-0">Active Admins</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-warning">
+        <div class="card-body text-center">
+          <i class="bi bi-person-x fs-1 text-warning"></i>
+          <h3 class="mt-2"><%= admins.filter(a => !a.is_active).length %></h3>
+          <p class="text-muted mb-0">Inactive Admins</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-info">
+        <div class="card-body text-center">
+          <i class="bi bi-clock-history fs-1 text-info"></i>
+          <h3 class="mt-2"><%= admins.filter(a => a.last_login && new Date(a.last_login).toDateString() === new Date().toDateString()).length %></h3>
+          <p class="text-muted mb-0">Active Today</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin List Table -->
+  <div class="card shadow-sm">
+    <div class="card-header bg-dark text-white">
+      <h5 class="mb-0"><i class="bi bi-list"></i> Admin Team Members</h5>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Level</th>
+              <th>Status</th>
+              <th>Created By</th>
+              <th>Created On</th>
+              <th>Last Login</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% admins.forEach(function(admin){ %>
+              <tr class="<%= !admin.is_active ? 'table-secondary' : '' %>">
+                <td><%= admin.id %></td>
+                <td>
+                  <%= admin.name %>
+                  <% if (admin.id === currentUserId) { %>
+                    <span class="badge bg-info">You</span>
+                  <% } %>
+                </td>
+                <td><%= admin.email %></td>
+                <td>
+                  <% if (admin.admin_level === 'super_admin') { %>
+                    <span class="badge bg-danger">
+                      <i class="bi bi-shield-fill-check"></i> Super Admin
+                    </span>
+                  <% } else { %>
+                    <span class="badge bg-primary">
+                      <i class="bi bi-person-badge"></i> Admin
+                    </span>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (admin.is_active) { %>
+                    <span class="badge bg-success">Active</span>
+                  <% } else { %>
+                    <span class="badge bg-secondary">Inactive</span>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (admin.creator_name) { %>
+                    <%= admin.creator_name %>
+                  <% } else { %>
+                    <span class="text-muted">System</span>
+                  <% } %>
+                </td>
+                <td>
+                  <%= admin.created_at ? new Date(admin.created_at).toLocaleDateString() : 'N/A' %>
+                  <small class="text-muted d-block">
+                    <%= admin.created_at ? new Date(admin.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '' %>
+                  </small>
+                </td>
+                <td>
+                  <% if (admin.last_login) { %>
+                    <%= new Date(admin.last_login).toLocaleDateString() %>
+                    <small class="text-muted d-block">
+                      <%= new Date(admin.last_login).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) %>
+                    </small>
+                  <% } else { %>
+                    <span class="text-muted">Never</span>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (admin.admin_level !== 'super_admin' && admin.id !== currentUserId) { %>
+                    <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#editAdminModal<%= admin.id %>">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    
+                    <% if (admin.is_active) { %>
+                      <form method="POST" action="/admin/team/<%= admin.id %>/deactivate" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Deactivate this admin? They will not be able to log in.')">
+                          <i class="bi bi-pause-circle"></i>
+                        </button>
+                      </form>
+                    <% } else { %>
+                      <form method="POST" action="/admin/team/<%= admin.id %>/activate" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Reactivate this admin?')">
+                          <i class="bi bi-play-circle"></i>
+                        </button>
+                      </form>
+                    <% } %>
+                    
+                    <a href="/admin/activity?admin_id=<%= admin.id %>" class="btn btn-sm btn-secondary">
+                      <i class="bi bi-clock-history"></i>
+                    </a>
+                  <% } else if (admin.admin_level === 'super_admin') { %>
+                    <span class="badge bg-danger">Protected</span>
+                  <% } %>
+                </td>
+              </tr>
+
+              <!-- Edit Admin Modal -->
+              <% if (admin.admin_level !== 'super_admin' && admin.id !== currentUserId) { %>
+                <div class="modal fade" id="editAdminModal<%= admin.id %>" tabindex="-1">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <form method="POST" action="/admin/team/<%= admin.id %>/edit">
+                        <div class="modal-header">
+                          <h5 class="modal-title">Edit Admin: <%= admin.name %></h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                          <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-control" name="name" value="<%= admin.name %>" required>
+                          </div>
+                          <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" value="<%= admin.email %>" required>
+                          </div>
+                          <div class="mb-3">
+                            <label class="form-label">New Password (leave blank to keep current)</label>
+                            <input type="password" class="form-control" name="password" minlength="8">
+                            <small class="text-muted">Only fill if changing password</small>
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                          <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              <% } %>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Admin Modal -->
+<div class="modal fade" id="createAdminModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="/admin/team/create">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title"><i class="bi bi-person-plus"></i> Create New Admin</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> New admins will have full access to manage listings, bookings, and filters, but cannot access email settings.
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-control" name="name" required>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" name="email" required>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-control" name="password" minlength="8" required>
+            <small class="text-muted">Minimum 8 characters, 1 uppercase, 1 number, 1 special character</small>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Confirm Password</label>
+            <input type="password" class="form-control" name="confirmPassword" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Admin</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

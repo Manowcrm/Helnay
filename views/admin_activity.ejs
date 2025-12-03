@@ -1,0 +1,164 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-clock-history"></i> Activity Log</h1>
+    <div>
+      <% if (filterAdmin) { %>
+        <a href="/admin/activity" class="btn btn-secondary">
+          <i class="bi bi-x-circle"></i> Clear Filter
+        </a>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card border-primary">
+        <div class="card-body text-center">
+          <i class="bi bi-list-check fs-1 text-primary"></i>
+          <h3 class="mt-2"><%= stats.totalLogs %></h3>
+          <p class="text-muted mb-0">Total Actions Logged</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-success">
+        <div class="card-body text-center">
+          <i class="bi bi-calendar-day fs-1 text-success"></i>
+          <h3 class="mt-2"><%= stats.todayLogs %></h3>
+          <p class="text-muted mb-0">Actions Today</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-info">
+        <div class="card-body text-center">
+          <i class="bi bi-people fs-1 text-info"></i>
+          <h3 class="mt-2"><%= stats.adminStats.length %></h3>
+          <p class="text-muted mb-0">Active Admins</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Activity Summary -->
+  <% if (!filterAdmin) { %>
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-dark text-white">
+        <h5 class="mb-0"><i class="bi bi-graph-up"></i> Admin Activity Summary</h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Admin</th>
+                <th>Email</th>
+                <th>Total Actions</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% stats.adminStats.forEach(function(stat){ %>
+                <tr>
+                  <td><%= stat.admin_name %></td>
+                  <td><%= stat.admin_email %></td>
+                  <td><span class="badge bg-primary"><%= stat.action_count %></span></td>
+                  <td>
+                    <a href="/admin/activity?admin_id=<%= stat.admin_id %>" class="btn btn-sm btn-info">
+                      <i class="bi bi-eye"></i> View Logs
+                    </a>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- Activity Log Table -->
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">
+        <i class="bi bi-list-ul"></i> 
+        <% if (filterAdmin) { %>
+          Activity Log - <%= filterAdmin.admin_name %>
+        <% } else { %>
+          Recent Activity (All Admins)
+        <% } %>
+      </h5>
+    </div>
+    <div class="card-body p-0">
+      <% if (logs.length === 0) { %>
+        <div class="alert alert-info m-3">
+          <i class="bi bi-info-circle"></i> No activity logs found.
+        </div>
+      <% } else { %>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Time</th>
+                <th>Admin</th>
+                <th>Action Type</th>
+                <th>Description</th>
+                <th>Target</th>
+                <th>IP Address</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% logs.forEach(function(log){ %>
+                <tr>
+                  <td>
+                    <%= new Date(log.created_at).toLocaleDateString() %>
+                    <small class="text-muted d-block">
+                      <%= new Date(log.created_at).toLocaleTimeString() %>
+                    </small>
+                  </td>
+                  <td>
+                    <strong><%= log.admin_name %></strong>
+                    <small class="text-muted d-block"><%= log.admin_email %></small>
+                  </td>
+                  <td>
+                    <% 
+                      let badgeClass = 'bg-secondary';
+                      if (log.action_type.includes('CREATE')) badgeClass = 'bg-success';
+                      else if (log.action_type.includes('UPDATE') || log.action_type.includes('EDIT')) badgeClass = 'bg-info';
+                      else if (log.action_type.includes('DELETE')) badgeClass = 'bg-danger';
+                      else if (log.action_type.includes('APPROVE')) badgeClass = 'bg-primary';
+                      else if (log.action_type.includes('LOGIN')) badgeClass = 'bg-warning';
+                    %>
+                    <span class="badge <%= badgeClass %>">
+                      <%= log.action_type.replace(/_/g, ' ') %>
+                    </span>
+                  </td>
+                  <td><%= log.action_description %></td>
+                  <td>
+                    <% if (log.target_type && log.target_id) { %>
+                      <span class="text-muted">
+                        <%= log.target_type %> #<%= log.target_id %>
+                      </span>
+                    <% } else { %>
+                      <span class="text-muted">-</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <code class="small"><%= log.ip_address || 'unknown' %></code>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <% if (logs.length > 0) { %>
+    <div class="text-center mt-3">
+      <p class="text-muted">Showing <%= logs.length %> most recent activities</p>
+    </div>
+  <% } %>
+</div>

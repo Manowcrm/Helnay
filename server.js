@@ -9,8 +9,9 @@ const bcrypt = require('bcryptjs');
 const db = require('./db');
 const { backupDatabase } = require('./s3-backup');
 const expressLayouts = require('express-ejs-layouts');
-const { isAuthenticated, isAdmin } = require('./auth-middleware');
+const { isAuthenticated, isAdmin, isSuperAdmin } = require('./auth-middleware');
 const { sendBookingApprovalEmail, sendBookingDenialEmail, sendBookingDateChangeEmail, sendBookingCancellationEmail, sendContactNotificationToAdmin, sendWelcomeEmail, sendContactReply } = require('./email-service');
+const { logActivity, getClientIP, getActivityLogs, getActivityStats } = require('./activity-logger');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
 
 const app = express();
@@ -155,6 +156,11 @@ app.post('/login', async (req, res) => {
       return res.render('login', { message: null, error: 'Invalid email or password' });
     }
     
+    // Check if account is active
+    if (user.is_active === 0) {
+      return res.render('login', { message: null, error: 'Your account has been deactivated. Please contact the system administrator.' });
+    }
+    
     // Update last_login timestamp
     await db.run('UPDATE users SET last_login = ? WHERE id = ?', [new Date().toISOString(), user.id]);
     
@@ -163,6 +169,19 @@ app.post('/login', async (req, res) => {
     req.session.userName = user.name;
     req.session.userEmail = user.email;
     req.session.role = user.role;
+    req.session.adminLevel = user.admin_level;
+    
+    // Log admin login
+    if (user.role === 'admin') {
+      await logActivity({
+        admin_id: user.id,
+        admin_name: user.name,
+        admin_email: user.email,
+        action_type: 'LOGIN',
+        action_description: 'Logged in to admin panel',
+        ip_address: getClientIP(req)
+      });
+    }
     
     // Save session before redirect
     req.session.save((err) => {
@@ -174,6 +193,7 @@ app.post('/login', async (req, res) => {
       console.log('[LOGIN] Session saved successfully:', {
         userId: req.session.userId,
         role: req.session.role,
+        adminLevel: req.session.adminLevel,
         sessionID: req.sessionID
       });
       
@@ -648,6 +668,229 @@ app.use('/admin', (req, res, next) => {
 });
 
 // Admin: dashboard (protected)
+// ====== ADMIN TEAM MANAGEMENT (Super Admin Only) ======
+
+// View admin team
+app.get('/admin/team', isSuperAdmin, async (req, res) => {
+  try {
+    const admins = await db.all(`
+      SELECT u.*, creator.name as creator_name 
+      FROM users u
+      LEFT JOIN users creator ON u.created_by = creator.id
+      WHERE u.role = 'admin'
+      ORDER BY u.created_at DESC
+    `);
+    
+    res.render('admin_team', { 
+      admins,
+      currentUserId: req.session.userId,
+      message: req.session.message || null
+    });
+    delete req.session.message;
+  } catch (err) {
+    console.error('❌ [ADMIN TEAM] Error:', err.message);
+    res.status(500).send('Error loading admin team');
+  }
+});
+
+// Create new admin
+app.post('/admin/team/create', isSuperAdmin, async (req, res) => {
+  try {
+    const { name, email, password, confirmPassword } = req.body;
+    
+    if (!name || !email || !password) {
+      req.session.message = { type: 'danger', text: 'All fields are required' };
+      return res.redirect('/admin/team');
+    }
+    
+    if (password !== confirmPassword) {
+      req.session.message = { type: 'danger', text: 'Passwords do not match' };
+      return res.redirect('/admin/team');
+    }
+    
+    // Password validation
+    if (password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password) || !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      req.session.message = { type: 'danger', text: 'Password must be at least 8 characters with 1 uppercase, 1 number, and 1 special character' };
+      return res.redirect('/admin/team');
+    }
+    
+    // Check if email already exists
+    const existingUser = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+    if (existingUser) {
+      req.session.message = { type: 'danger', text: 'Email already registered' };
+      return res.redirect('/admin/team');
+    }
+    
+    // Hash password and create admin
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const result = await db.run(
+      'INSERT INTO users (name, email, password, role, admin_level, created_by, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [name, email, hashedPassword, 'admin', 'admin', req.session.userId, 1, new Date().toISOString()]
+    );
+    
+    // Log activity
+    await logActivity({
+      admin_id: req.session.userId,
+      admin_name: req.session.userName,
+      admin_email: req.session.userEmail,
+      action_type: 'CREATE_ADMIN',
+      action_description: `Created new admin: ${name} (${email})`,
+      target_type: 'user',
+      target_id: result.lastInsertRowid,
+      ip_address: getClientIP(req)
+    });
+    
+    req.session.message = { type: 'success', text: `Admin ${name} created successfully` };
+    res.redirect('/admin/team');
+  } catch (err) {
+    console.error('❌ [CREATE ADMIN] Error:', err.message);
+    req.session.message = { type: 'danger', text: 'Failed to create admin' };
+    res.redirect('/admin/team');
+  }
+});
+
+// Edit admin
+app.post('/admin/team/:id/edit', isSuperAdmin, async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    const adminId = req.params.id;
+    
+    // Prevent editing super admin or self
+    const targetAdmin = await db.get('SELECT * FROM users WHERE id = ?', [adminId]);
+    if (!targetAdmin || targetAdmin.admin_level === 'super_admin' || targetAdmin.id === req.session.userId) {
+      req.session.message = { type: 'danger', text: 'Cannot edit this admin' };
+      return res.redirect('/admin/team');
+    }
+    
+    if (password) {
+      // Update with new password
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await db.run(
+        'UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?',
+        [name, email, hashedPassword, adminId]
+      );
+    } else {
+      // Update without changing password
+      await db.run(
+        'UPDATE users SET name = ?, email = ? WHERE id = ?',
+        [name, email, adminId]
+      );
+    }
+    
+    // Log activity
+    await logActivity({
+      admin_id: req.session.userId,
+      admin_name: req.session.userName,
+      admin_email: req.session.userEmail,
+      action_type: 'UPDATE_ADMIN',
+      action_description: `Updated admin: ${name}`,
+      target_type: 'user',
+      target_id: adminId,
+      ip_address: getClientIP(req)
+    });
+    
+    req.session.message = { type: 'success', text: 'Admin updated successfully' };
+    res.redirect('/admin/team');
+  } catch (err) {
+    console.error('❌ [EDIT ADMIN] Error:', err.message);
+    req.session.message = { type: 'danger', text: 'Failed to update admin' };
+    res.redirect('/admin/team');
+  }
+});
+
+// Deactivate admin
+app.post('/admin/team/:id/deactivate', isSuperAdmin, async (req, res) => {
+  try {
+    const adminId = req.params.id;
+    
+    // Prevent deactivating super admin or self
+    const targetAdmin = await db.get('SELECT * FROM users WHERE id = ?', [adminId]);
+    if (!targetAdmin || targetAdmin.admin_level === 'super_admin' || targetAdmin.id === req.session.userId) {
+      req.session.message = { type: 'danger', text: 'Cannot deactivate this admin' };
+      return res.redirect('/admin/team');
+    }
+    
+    await db.run('UPDATE users SET is_active = 0 WHERE id = ?', [adminId]);
+    
+    // Log activity
+    await logActivity({
+      admin_id: req.session.userId,
+      admin_name: req.session.userName,
+      admin_email: req.session.userEmail,
+      action_type: 'DEACTIVATE_ADMIN',
+      action_description: `Deactivated admin: ${targetAdmin.name}`,
+      target_type: 'user',
+      target_id: adminId,
+      ip_address: getClientIP(req)
+    });
+    
+    req.session.message = { type: 'warning', text: 'Admin deactivated successfully' };
+    res.redirect('/admin/team');
+  } catch (err) {
+    console.error('❌ [DEACTIVATE ADMIN] Error:', err.message);
+    req.session.message = { type: 'danger', text: 'Failed to deactivate admin' };
+    res.redirect('/admin/team');
+  }
+});
+
+// Activate admin
+app.post('/admin/team/:id/activate', isSuperAdmin, async (req, res) => {
+  try {
+    const adminId = req.params.id;
+    const targetAdmin = await db.get('SELECT * FROM users WHERE id = ?', [adminId]);
+    
+    await db.run('UPDATE users SET is_active = 1 WHERE id = ?', [adminId]);
+    
+    // Log activity
+    await logActivity({
+      admin_id: req.session.userId,
+      admin_name: req.session.userName,
+      admin_email: req.session.userEmail,
+      action_type: 'ACTIVATE_ADMIN',
+      action_description: `Reactivated admin: ${targetAdmin.name}`,
+      target_type: 'user',
+      target_id: adminId,
+      ip_address: getClientIP(req)
+    });
+    
+    req.session.message = { type: 'success', text: 'Admin reactivated successfully' };
+    res.redirect('/admin/team');
+  } catch (err) {
+    console.error('❌ [ACTIVATE ADMIN] Error:', err.message);
+    req.session.message = { type: 'danger', text: 'Failed to reactivate admin' };
+    res.redirect('/admin/team');
+  }
+});
+
+// ====== ACTIVITY LOG VIEWER (Super Admin Only) ======
+
+app.get('/admin/activity', isSuperAdmin, async (req, res) => {
+  try {
+    const adminId = req.query.admin_id ? parseInt(req.query.admin_id) : null;
+    
+    const logs = await getActivityLogs({
+      admin_id: adminId,
+      limit: 200
+    });
+    
+    const stats = await getActivityStats();
+    
+    let filterAdmin = null;
+    if (adminId) {
+      filterAdmin = await db.get('SELECT id, name as admin_name, email FROM users WHERE id = ?', [adminId]);
+    }
+    
+    res.render('admin_activity', { 
+      logs,
+      stats,
+      filterAdmin
+    });
+  } catch (err) {
+    console.error('❌ [ACTIVITY LOG] Error:', err.message);
+    res.status(500).send('Error loading activity logs');
+  }
+});
+
 // Admin Users Management
 app.get('/admin/users', isAdmin, async (req, res) => {
   try {
@@ -687,7 +930,10 @@ app.get('/admin', isAdmin, async (req, res) => {
     };
     
     console.log('✅ [ADMIN DASHBOARD] Stats:', stats);
-    res.render('admin_dashboard', { stats });
+    res.render('admin_dashboard', { 
+      stats,
+      isSuperAdmin: req.session.adminLevel === 'super_admin'
+    });
   } catch (err) {
     console.error('❌ [ADMIN DASHBOARD] Error:', err.message, err);
     res.status(500).send('Server error: ' + err.message);

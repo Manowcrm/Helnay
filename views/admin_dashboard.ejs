@@ -74,4 +74,36 @@
       </div>
     </div>
   </div>
+
+  <% if (isSuperAdmin) { %>
+    <div class="row mt-4">
+      <div class="col-md-6">
+        <div class="card border-danger">
+          <div class="card-header bg-danger text-white">
+            <h5 class="mb-0"><i class="bi bi-people-fill"></i> Admin Team Management</h5>
+          </div>
+          <div class="card-body">
+            <p class="mb-3">Manage admin users, create sub-admins, and monitor their activities</p>
+            <a href="/admin/team" class="btn btn-danger">
+              <i class="bi bi-person-badge"></i> Manage Team
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-6">
+        <div class="card border-info">
+          <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="bi bi-clock-history"></i> Activity Monitoring</h5>
+          </div>
+          <div class="card-body">
+            <p class="mb-3">View detailed activity logs for all admin actions</p>
+            <a href="/admin/activity" class="btn btn-info">
+              <i class="bi bi-list-check"></i> View Activity Log
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% } %>
 </div>
