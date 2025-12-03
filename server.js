@@ -137,27 +137,22 @@ app.post('/register', registerLimiter, verifyCsrfToken, registerValidation, hand
       [userId, verificationToken, expiresAt, new Date().toISOString()]
     );
     
-    // Send verification email if enabled (non-blocking)
+    // Send verification email (always send, even if verification is disabled)
+    sendVerificationEmail({ name, email }, verificationToken).catch(err => {
+      console.warn('Verification email failed but registration succeeded:', err.message);
+    });
+    
     const requireVerification = process.env.REQUIRE_EMAIL_VERIFICATION === 'true';
     
-    if (requireVerification) {
-      sendVerificationEmail({ name, email }, verificationToken).catch(err => {
-        console.warn('Verification email failed but registration succeeded:', err.message);
-      });
-      
-      res.render('register', { 
-        message: 'Registration successful! ✉️ A verification email has been sent to ' + email + '. Please check your inbox (and spam folder) and click the verification link before logging in.', 
-        error: null 
-      });
-    } else {
-      // Auto-verify if verification is disabled
+    if (!requireVerification) {
+      // Auto-verify if verification is disabled for testing
       await db.run('UPDATE users SET is_verified = 1 WHERE id = ?', [userId]);
-      
-      res.render('register', { 
-        message: 'Registration successful! You can now log in with your credentials.', 
-        error: null 
-      });
     }
+    
+    res.render('register', { 
+      message: '✅ Registration successful! <br><br>📧 <strong>IMPORTANT:</strong> A verification email has been sent to <strong>' + email + '</strong><br><br>Please check your inbox (and spam/junk folder) and click the verification link to activate your account.<br><br>⚠️ You must verify your email before you can log in.', 
+      error: null 
+    });
   } catch (err) {
     console.error(err);
     res.render('register', { message: null, error: 'Registration failed' });
@@ -192,11 +187,11 @@ app.post('/login', loginLimiter, verifyCsrfToken, loginValidation, handleValidat
     
     // Check if email is verified (only for regular users, not admins)
     // Skip verification check if REQUIRE_EMAIL_VERIFICATION is set to 'false'
-    const requireVerification = process.env.REQUIRE_EMAIL_VERIFICATION !== 'false';
+    const requireVerification = process.env.REQUIRE_EMAIL_VERIFICATION === 'true';
     if (requireVerification && user.role !== 'admin' && user.is_verified === 0) {
       return res.render('login', { 
         message: null, 
-        error: '❌ Email not verified. Please check your email inbox (and spam folder) for the verification link we sent you. If you didn\'t receive it, please contact support.' 
+        error: '⚠️ <strong>Email Not Verified</strong><br><br>Your account is not yet activated. Please check your email inbox (including spam/junk folder) for the verification link we sent to <strong>' + email + '</strong>.<br><br>📧 Click the link in the email to verify your account, then try logging in again.<br><br>Still can\'t find it? Contact support at ' + (process.env.ADMIN_EMAIL || 'admin@helnay.com') 
       });
     }
     
