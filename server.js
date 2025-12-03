@@ -137,15 +137,27 @@ app.post('/register', registerLimiter, verifyCsrfToken, registerValidation, hand
       [userId, verificationToken, expiresAt, new Date().toISOString()]
     );
     
-    // Send verification email (non-blocking)
-    sendVerificationEmail({ name, email }, verificationToken).catch(err => {
-      console.warn('Verification email failed but registration succeeded:', err.message);
-    });
+    // Send verification email if enabled (non-blocking)
+    const requireVerification = process.env.REQUIRE_EMAIL_VERIFICATION === 'true';
     
-    res.render('register', { 
-      message: 'Registration successful! ✉️ A verification email has been sent to ' + email + '. Please check your inbox (and spam folder) and click the verification link before logging in.', 
-      error: null 
-    });
+    if (requireVerification) {
+      sendVerificationEmail({ name, email }, verificationToken).catch(err => {
+        console.warn('Verification email failed but registration succeeded:', err.message);
+      });
+      
+      res.render('register', { 
+        message: 'Registration successful! ✉️ A verification email has been sent to ' + email + '. Please check your inbox (and spam folder) and click the verification link before logging in.', 
+        error: null 
+      });
+    } else {
+      // Auto-verify if verification is disabled
+      await db.run('UPDATE users SET is_verified = 1 WHERE id = ?', [userId]);
+      
+      res.render('register', { 
+        message: 'Registration successful! You can now log in with your credentials.', 
+        error: null 
+      });
+    }
   } catch (err) {
     console.error(err);
     res.render('register', { message: null, error: 'Registration failed' });
