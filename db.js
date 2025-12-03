@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 
-// Use persistent disk path on Render, or local data folder in development
+// Use persistent disk path on Render (/opt/render/project/src/data), or local data folder in development
 const dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'data');
 const dbFile = path.join(dbPath, 'helnay.db');
 

@@ -420,6 +420,35 @@ a:hover .listing-card .card-title {
   width: 100%;
 }
 
+/* Carousel controls visibility */
+.carousel-control-prev,
+.carousel-control-next {
+  width: 50px;
+  opacity: 0.8;
+  z-index: 10;
+}
+
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+  opacity: 1;
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  width: 2rem;
+  height: 2rem;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  padding: 10px;
+}
+
+.carousel-indicators button {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin: 0 5px;
+}
+
 .thumbnail-gallery-wrapper {
   margin-top: 15px;
   overflow: hidden;
