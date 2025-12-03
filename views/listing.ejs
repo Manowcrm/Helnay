@@ -11,7 +11,7 @@
 		<% if (images && images.length > 0) { %>
 			<div class="listing-gallery">
 				<!-- Main Image -->
-				<div id="listingCarousel" class="carousel slide mb-3" data-bs-ride="false">
+				<div id="listingCarousel" class="carousel slide mb-3" data-bs-ride="carousel" data-bs-interval="false">
 					<div class="carousel-indicators">
 						<% images.forEach(function(img, idx){ %>
 							<button type="button" data-bs-target="#listingCarousel" data-bs-slide-to="<%= idx %>" 
@@ -143,68 +143,29 @@
 	</div>
 </div>
 
-<!-- Carousel Interactive Script -->
+<!-- Thumbnail Sync Script -->
 <script>
-(function() {
-	'use strict';
+document.addEventListener('DOMContentLoaded', function() {
+	const carouselEl = document.getElementById('listingCarousel');
+	if (!carouselEl) return;
 	
-	// Wait for everything to load
-	window.addEventListener('load', function() {
-		const carouselEl = document.querySelector('#listingCarousel');
-		if (!carouselEl) return;
-		
-		// Initialize carousel manually
-		const carousel = new bootstrap.Carousel(carouselEl, {
-			interval: false,
-			ride: false,
-			wrap: true,
-			keyboard: true,
-			touch: true,
-			pause: false
+	const thumbnails = document.querySelectorAll('.thumbnail-img');
+	
+	// Sync thumbnails when carousel slides
+	carouselEl.addEventListener('slid.bs.carousel', function(event) {
+		thumbnails.forEach((thumb, idx) => {
+			thumb.classList.toggle('active', idx === event.to);
 		});
-		
-		// Get all thumbnails
-		const thumbnails = document.querySelectorAll('.thumbnail-img');
-		
-		// Thumbnail click handler
-		thumbnails.forEach(function(thumbnail, index) {
-			thumbnail.addEventListener('click', function(e) {
-				e.preventDefault();
-				e.stopPropagation();
-				
-				// Go to specific slide
-				carousel.to(index);
-				
-				// Update active state
-				thumbnails.forEach(t => t.classList.remove('active'));
-				thumbnail.classList.add('active');
-			});
-		});
-		
-		// Sync thumbnails when carousel changes
-		carouselEl.addEventListener('slid.bs.carousel', function(e) {
-			thumbnails.forEach((thumb, idx) => {
-				thumb.classList.toggle('active', idx === e.to);
-			});
-		});
-		
-		// Make sure arrows work
-		const prevBtn = carouselEl.querySelector('.carousel-control-prev');
-		const nextBtn = carouselEl.querySelector('.carousel-control-next');
-		
-		if (prevBtn) {
-			prevBtn.addEventListener('click', function(e) {
-				e.preventDefault();
-				carousel.prev();
-			});
-		}
-		
-		if (nextBtn) {
-			nextBtn.addEventListener('click', function(e) {
-				e.preventDefault();
-				carousel.next();
-			});
-		}
 	});
-})();
+	
+	// Click thumbnail to jump to slide
+	thumbnails.forEach(function(thumb, index) {
+		thumb.addEventListener('click', function() {
+			const carousel = bootstrap.Carousel.getInstance(carouselEl);
+			if (carousel) {
+				carousel.to(index);
+			}
+		});
+	});
+});
 </script>
