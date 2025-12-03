@@ -1,59 +1,109 @@
 <div class="container mt-4">
-  <h1>Contact Messages</h1>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-envelope"></i> Contact Messages</h1>
+    <span class="badge bg-primary fs-6">Total: <%= contacts.length %></span>
+  </div>
 
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Message</th>
-        <th>Received</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% contacts.forEach(function(c){ %>
-        <tr>
-          <td><%= c.id %></td>
-          <td><%= c.name %></td>
-          <td><a href="mailto:<%= c.email %>"><%= c.email %></a></td>
-          <td><%= c.message.substring(0, 50) %>...</td>
-          <td><%= new Date(c.created_at).toLocaleDateString() %></td>
-          <td>
-            <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#messageModal<%= c.id %>">
-              <i class="bi bi-eye"></i> View
-            </button>
-            <form method="POST" action="/admin/contacts/<%= c.id %>/delete" style="display:inline;">
-              <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this message?')">
-                <i class="bi bi-trash"></i>
-              </button>
-            </form>
-          </td>
-        </tr>
-        
-        <!-- Modal -->
-        <div class="modal fade" id="messageModal<%= c.id %>" tabindex="-1">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title">Message from <%= c.name %></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-              </div>
-              <div class="modal-body">
-                <p><strong>Email:</strong> <a href="mailto:<%= c.email %>"><%= c.email %></a></p>
-                <p><strong>Date:</strong> <%= new Date(c.created_at).toLocaleString() %></p>
-                <hr>
-                <p><%= c.message %></p>
-              </div>
-              <div class="modal-footer">
-                <a href="mailto:<%= c.email %>" class="btn btn-primary">Reply</a>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+  <% if (contacts.length === 0) { %>
+    <div class="alert alert-info">
+      <i class="bi bi-info-circle"></i> No contact messages yet.
+    </div>
+  <% } else { %>
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead class="table-dark">
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Message Preview</th>
+            <th>Received</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% contacts.forEach(function(c){ %>
+            <tr>
+              <td><%= c.id %></td>
+              <td><%= c.name %></td>
+              <td><a href="mailto:<%= c.email %>"><%= c.email %></a></td>
+              <td><%= c.message.substring(0, 60) %><%= c.message.length > 60 ? '...' : '' %></td>
+              <td>
+                <%= new Date(c.created_at).toLocaleDateString() %>
+                <small class="text-muted d-block"><%= new Date(c.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) %></small>
+              </td>
+              <td>
+                <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#messageModal<%= c.id %>">
+                  <i class="bi bi-eye"></i> View & Reply
+                </button>
+                <form method="POST" action="/admin/contacts/<%= c.id %>/delete" style="display:inline;">
+                  <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this message?')">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            
+            <!-- Modal -->
+            <div class="modal fade" id="messageModal<%= c.id %>" tabindex="-1">
+              <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                  <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-envelope-open"></i> Message from <%= c.name %></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="card mb-3">
+                      <div class="card-body">
+                        <div class="row mb-2">
+                          <div class="col-md-6">
+                            <p class="mb-1"><strong><i class="bi bi-person"></i> Name:</strong> <%= c.name %></p>
+                          </div>
+                          <div class="col-md-6">
+                            <p class="mb-1"><strong><i class="bi bi-envelope"></i> Email:</strong> <a href="mailto:<%= c.email %>"><%= c.email %></a></p>
+                          </div>
+                        </div>
+                        <p class="mb-0"><strong><i class="bi bi-calendar"></i> Date:</strong> <%= new Date(c.created_at).toLocaleString() %></p>
+                      </div>
+                    </div>
+                    
+                    <div class="card">
+                      <div class="card-header">
+                        <strong>Message:</strong>
+                      </div>
+                      <div class="card-body">
+                        <p style="white-space: pre-wrap;"><%= c.message %></p>
+                      </div>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="mb-3"><i class="bi bi-reply"></i> Send Reply</h6>
+                    <form method="POST" action="/admin/contacts/<%= c.id %>/reply">
+                      <div class="mb-3">
+                        <label class="form-label">Subject</label>
+                        <input type="text" class="form-control" name="subject" value="Re: Your message to Helnay" required />
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Reply Message</label>
+                        <textarea class="form-control" name="reply" rows="6" placeholder="Type your reply here..." required></textarea>
+                      </div>
+                      <input type="hidden" name="to_email" value="<%= c.email %>" />
+                      <input type="hidden" name="to_name" value="<%= c.name %>" />
+                      <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send"></i> Send Reply
+                      </button>
+                    </form>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      <% }) %>
-    </tbody>
-  </table>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
 </div>

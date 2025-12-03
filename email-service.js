@@ -440,11 +440,67 @@ async function sendContactNotificationToAdmin(contactData) {
   }
 }
 
+// Send reply to contact message
+async function sendContactReply(replyData) {
+  if (!isEmailConfigured) {
+    console.warn('⚠️ Email not sent - SendGrid API key not configured');
+    return false;
+  }
+
+  const msg = {
+    to: replyData.to_email,
+    from: {
+      email: getSenderEmail(),
+      name: 'Helnay Rentals Support'
+    },
+    subject: replyData.subject,
+    text: `Dear ${replyData.to_name},
+
+${replyData.reply}
+
+Best regards,
+Helnay Rentals Team`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+        <div style="background-color: #0d6efd; color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
+          <h2 style="margin: 0;">Helnay Rentals</h2>
+        </div>
+        
+        <div style="padding: 30px 20px;">
+          <p>Dear ${replyData.to_name},</p>
+          
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #0d6efd;">
+            <p style="margin: 0; white-space: pre-wrap;">${replyData.reply}</p>
+          </div>
+          
+          <p style="margin-top: 30px;">If you have any further questions, please don't hesitate to reach out.</p>
+          
+          <p style="margin-top: 30px;">Best regards,<br><strong>Helnay Rentals Team</strong></p>
+        </div>
+        
+        <div style="background-color: #f8f9fa; padding: 15px; text-align: center; border-radius: 0 0 10px 10px; margin-top: 20px;">
+          <p style="margin: 0; color: #6c757d; font-size: 0.9em;">This email was sent in response to your contact form submission.</p>
+        </div>
+      </div>
+    `
+  };
+
+  try {
+    await sgMail.send(msg);
+    console.log(`✓ Contact reply sent to ${replyData.to_email} via SendGrid`);
+    return true;
+  } catch (error) {
+    console.error('Error sending contact reply:', error);
+    return false;
+  }
+}
+
 module.exports = {
   sendBookingApprovalEmail,
   sendBookingDenialEmail,
   sendBookingDateChangeEmail,
   sendBookingCancellationEmail,
   sendContactNotificationToAdmin,
-  sendWelcomeEmail
+  sendWelcomeEmail,
+  sendContactReply
 };

@@ -25,8 +25,14 @@
             
             <div class="mb-3">
               <label for="password" class="form-label">Password</label>
-              <input type="password" class="form-control" id="password" name="password" minlength="6" required>
-              <small class="text-muted">At least 6 characters</small>
+              <input type="password" class="form-control" id="password" name="password" minlength="8" required>
+              <small class="text-muted d-block mt-1">Password must contain:</small>
+              <ul class="text-muted small ps-3 mb-0">
+                <li>At least 8 characters</li>
+                <li>1 uppercase letter (A-Z)</li>
+                <li>1 number (0-9)</li>
+                <li>1 special character (!@#$%^&*)</li>
+              </ul>
             </div>
             
             <div class="mb-3">

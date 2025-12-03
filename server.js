@@ -10,7 +10,7 @@ const db = require('./db');
 const { backupDatabase } = require('./s3-backup');
 const expressLayouts = require('express-ejs-layouts');
 const { isAuthenticated, isAdmin } = require('./auth-middleware');
-const { sendBookingApprovalEmail, sendBookingDenialEmail, sendBookingDateChangeEmail, sendBookingCancellationEmail, sendContactNotificationToAdmin, sendWelcomeEmail } = require('./email-service');
+const { sendBookingApprovalEmail, sendBookingDenialEmail, sendBookingDateChangeEmail, sendBookingCancellationEmail, sendContactNotificationToAdmin, sendWelcomeEmail, sendContactReply } = require('./email-service');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
 
 const app = express();
@@ -89,6 +89,20 @@ app.post('/register', async (req, res) => {
       return res.render('register', { message: null, error: 'Passwords do not match' });
     }
     
+    // Password validation: 8 chars min, 1 uppercase, 1 special char, 1 number
+    if (password.length < 8) {
+      return res.render('register', { message: null, error: 'Password must be at least 8 characters long' });
+    }
+    if (!/[A-Z]/.test(password)) {
+      return res.render('register', { message: null, error: 'Password must contain at least 1 uppercase letter' });
+    }
+    if (!/[0-9]/.test(password)) {
+      return res.render('register', { message: null, error: 'Password must contain at least 1 number' });
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      return res.render('register', { message: null, error: 'Password must contain at least 1 special character (!@#$%^&*(),.?":{}|<>)' });
+    }
+    
     // Check if user already exists
     const existingUser = await db.get('SELECT * FROM users WHERE email = ?', [email]);
     if (existingUser) {
@@ -140,6 +154,9 @@ app.post('/login', async (req, res) => {
     if (!validPassword) {
       return res.render('login', { message: null, error: 'Invalid email or password' });
     }
+    
+    // Update last_login timestamp
+    await db.run('UPDATE users SET last_login = ? WHERE id = ?', [new Date().toISOString(), user.id]);
     
     // Set session
     req.session.userId = user.id;
@@ -631,6 +648,17 @@ app.use('/admin', (req, res, next) => {
 });
 
 // Admin: dashboard (protected)
+// Admin Users Management
+app.get('/admin/users', isAdmin, async (req, res) => {
+  try {
+    const users = await db.all('SELECT id, name, email, role, created_at, last_login FROM users ORDER BY created_at DESC');
+    res.render('admin_users', { users });
+  } catch (err) {
+    console.error('❌ [ADMIN USERS] Error:', err.message, err);
+    res.status(500).send('Error loading users');
+  }
+});
+
 app.get('/admin', isAdmin, async (req, res) => {
   try {
     console.log('📊 [ADMIN DASHBOARD] Loading dashboard...');
@@ -954,6 +982,36 @@ app.get('/admin/contacts', isAdmin, async (req, res) => {
     res.render('admin_contacts', { contacts });
   } catch (err) {
     console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: reply to contact
+app.post('/admin/contacts/:id/reply', isAdmin, async (req, res) => {
+  try {
+    const { subject, reply, to_email, to_name } = req.body;
+    
+    if (!subject || !reply || !to_email || !to_name) {
+      return res.status(400).send('Missing required fields');
+    }
+
+    // Send reply email
+    const emailSent = await sendContactReply({
+      subject,
+      reply,
+      to_email,
+      to_name
+    });
+
+    if (emailSent) {
+      console.log('✓ Reply sent successfully');
+    } else {
+      console.warn('⚠️ Reply email failed to send');
+    }
+
+    res.redirect('/admin/contacts');
+  } catch (err) {
+    console.error('Error sending reply:', err);
     res.status(500).send('Server error');
   }
 });

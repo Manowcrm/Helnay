@@ -1,21 +1,80 @@
-<h1>Contact</h1>
-<% if (message) { %>
-  <div class="alert alert-success"><%= message %></div>
-<% } %>
-<form method="POST" class="row g-3">
-  <div class="col-md-6">
-    <label class="form-label">Name</label>
-    <input class="form-control" name="name" required />
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <!-- Header Section -->
+      <div class="text-center mb-5">
+        <h1 class="display-4 mb-3"><i class="bi bi-envelope-heart text-primary"></i> Get in Touch</h1>
+        <p class="lead text-muted">Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+      </div>
+
+      <% if (message) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          <i class="bi bi-check-circle-fill me-2"></i><%= message %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      <% } %>
+
+      <!-- Contact Info Cards -->
+      <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+          <div class="card text-center h-100 border-0 shadow-sm">
+            <div class="card-body">
+              <i class="bi bi-envelope fs-1 text-primary mb-3"></i>
+              <h6 class="card-title">Email Us</h6>
+              <p class="card-text small text-muted">info@helnay.com</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="card text-center h-100 border-0 shadow-sm">
+            <div class="card-body">
+              <i class="bi bi-telephone fs-1 text-success mb-3"></i>
+              <h6 class="card-title">Call Us</h6>
+              <p class="card-text small text-muted">+1 (555) 123-4567</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="card text-center h-100 border-0 shadow-sm">
+            <div class="card-body">
+              <i class="bi bi-clock fs-1 text-info mb-3"></i>
+              <h6 class="card-title">Hours</h6>
+              <p class="card-text small text-muted">Mon-Fri: 9AM-6PM</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Form -->
+      <div class="card shadow-lg border-0">
+        <div class="card-body p-4">
+          <h3 class="card-title mb-4"><i class="bi bi-chat-left-text me-2"></i>Send us a Message</h3>
+          <form method="POST" class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold"><i class="bi bi-person me-2"></i>Your Name</label>
+              <input class="form-control form-control-lg" name="name" placeholder="John Doe" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold"><i class="bi bi-envelope me-2"></i>Your Email</label>
+              <input class="form-control form-control-lg" name="email" type="email" placeholder="john@example.com" required />
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold"><i class="bi bi-chat-square-text me-2"></i>Message</label>
+              <textarea class="form-control form-control-lg" name="message" rows="6" placeholder="Tell us how we can help you..." required></textarea>
+            </div>
+            <div class="col-12">
+              <button class="btn btn-primary btn-lg w-100" type="submit">
+                <i class="bi bi-send me-2"></i>Send Message
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Additional Info -->
+      <div class="text-center mt-4">
+        <p class="text-muted"><i class="bi bi-shield-check me-2"></i>We respect your privacy and will never share your information.</p>
+      </div>
+    </div>
   </div>
-  <div class="col-md-6">
-    <label class="form-label">Email</label>
-    <input class="form-control" name="email" type="email" required />
-  </div>
-  <div class="col-12">
-    <label class="form-label">Message</label>
-    <textarea class="form-control" name="message" rows="4" required></textarea>
-  </div>
-  <div class="col-12">
-    <button class="btn btn-primary">Send</button>
-  </div>
-</form>
+</div>

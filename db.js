@@ -107,6 +107,19 @@ async function init() {
     console.error('Migration error:', e.message);
   }
 
+  // Add last_login column to users table if it doesn't exist
+  try {
+    const usersTableInfo = await all(`PRAGMA table_info(users)`);
+    const usersColumnNames = usersTableInfo.map(col => col.name);
+    
+    if (!usersColumnNames.includes('last_login')) {
+      await run(`ALTER TABLE users ADD COLUMN last_login TEXT`);
+      console.log('✓ Added last_login column to users table');
+    }
+  } catch (e) {
+    console.error('Users table migration error:', e.message);
+  }
+
   await run(`CREATE TABLE IF NOT EXISTS contacts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT,
@@ -127,7 +140,8 @@ async function init() {
     email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
     role TEXT DEFAULT 'user',
-    created_at TEXT
+    created_at TEXT,
+    last_login TEXT
   )`);
 
   await run(`CREATE TABLE IF NOT EXISTS filter_services (
