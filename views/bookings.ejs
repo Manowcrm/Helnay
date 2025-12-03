@@ -3,29 +3,52 @@
 <% if (selectedListingId) { %>
   <% const selectedListing = listings.find(l => l.id === parseInt(selectedListingId)); %>
   <% if (selectedListing) { %>
-    <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
-      <i class="bi bi-info-circle-fill me-3" style="font-size: 1.5rem;"></i>
-      <div>
-        <strong>Booking for:</strong> <%= selectedListing.title %> 
-        <span class="badge bg-primary ms-2">$<%= selectedListing.price %>/night</span>
-        <br>
-        <small class="text-muted"><i class="bi bi-geo-alt"></i> <%= selectedListing.location %></small>
+    <!-- Property Selected - Show as Card -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-4">
+        <div class="row align-items-center">
+          <div class="col-md-8">
+            <h4 class="mb-2">
+              <i class="bi bi-house-door-fill text-primary me-2"></i>
+              <%= selectedListing.title %>
+            </h4>
+            <p class="text-muted mb-2">
+              <i class="bi bi-geo-alt-fill me-1"></i> <%= selectedListing.location %>
+            </p>
+            <span class="badge bg-success" style="font-size: 1rem; padding: 0.5rem 1rem;">
+              <i class="bi bi-tag-fill me-1"></i> $<%= selectedListing.price %> per night
+            </span>
+          </div>
+          <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="/bookings" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left me-2"></i> Choose Different Property
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   <% } %>
 <% } %>
 
 <form method="POST" class="row g-3">
-  <div class="col-md-6">
-    <label class="form-label fw-bold">Listing</label>
-    <select name="listing_id" class="form-select" id="listing_select" required>
-      <% listings.forEach(function(l){ %>
-        <option value="<%= l.id %>" data-price="<%= l.price %>" data-title="<%= l.title %>" data-location="<%= l.location %>" <%= selectedListingId && selectedListingId == l.id ? 'selected' : '' %>>
-          <%= l.title %> - $<%= l.price %>/night
-        </option>
-      <% }) %>
-    </select>
-  </div>
+  <% if (selectedListingId) { %>
+    <!-- Hidden field when property is pre-selected -->
+    <input type="hidden" name="listing_id" id="listing_id_hidden" value="<%= selectedListingId %>" />
+  <% } else { %>
+    <!-- Show dropdown when no property selected -->
+    <div class="col-12">
+      <label class="form-label fw-bold">Select Property</label>
+      <select name="listing_id" class="form-select form-select-lg" id="listing_select" required>
+        <option value="">-- Choose a property to book --</option>
+        <% listings.forEach(function(l){ %>
+          <option value="<%= l.id %>" data-price="<%= l.price %>" data-title="<%= l.title %>" data-location="<%= l.location %>">
+            <%= l.title %> - $<%= l.price %>/night (<%= l.location %>)
+          </option>
+        <% }) %>
+      </select>
+    </div>
+  <% } %>
+  
   <div class="col-md-6">
     <label class="form-label fw-bold">Your name</label>
     <input name="name" class="form-control" placeholder="Enter your full name" required />
@@ -70,7 +93,11 @@
     const checkoutDateInput = document.getElementById('checkout_date');
     const checkoutTimeInput = document.getElementById('checkout_time');
     const listingSelect = document.getElementById('listing_select');
+    const listingHidden = document.getElementById('listing_id_hidden');
     const bookingSummary = document.getElementById('booking_summary');
+    
+    // Check if property is pre-selected
+    const isPropertyPreSelected = listingHidden !== null;
     
     // Get current date and time
     const now = new Date();
@@ -171,10 +198,30 @@
     function calculateBookingCost() {
       const checkinDate = checkinDateInput.value;
       const checkoutDate = checkoutDateInput.value;
-      const selectedOption = listingSelect.options[listingSelect.selectedIndex];
-      const pricePerNight = parseFloat(selectedOption.getAttribute('data-price'));
-      const listingTitle = selectedOption.getAttribute('data-title');
-      const listingLocation = selectedOption.getAttribute('data-location');
+      
+      let pricePerNight, listingTitle, listingLocation;
+      
+      if (isPropertyPreSelected) {
+        // Get data from the page (pre-selected property)
+        <% if (selectedListingId) { %>
+          <% const selectedListing = listings.find(l => l.id === parseInt(selectedListingId)); %>
+          <% if (selectedListing) { %>
+            pricePerNight = <%= selectedListing.price %>;
+            listingTitle = "<%= selectedListing.title %>";
+            listingLocation = "<%= selectedListing.location %>";
+          <% } %>
+        <% } %>
+      } else {
+        // Get data from dropdown
+        if (!listingSelect || !listingSelect.value) {
+          bookingSummary.innerHTML = '<p class="text-muted mb-0"><small><i class="bi bi-arrow-up"></i> Please select a property above</small></p>';
+          return;
+        }
+        const selectedOption = listingSelect.options[listingSelect.selectedIndex];
+        pricePerNight = parseFloat(selectedOption.getAttribute('data-price'));
+        listingTitle = selectedOption.getAttribute('data-title');
+        listingLocation = selectedOption.getAttribute('data-location');
+      }
       
       if (checkinDate && checkoutDate && pricePerNight) {
         // Calculate number of nights
@@ -215,10 +262,16 @@
     // Add event listeners for cost calculation
     checkinDateInput.addEventListener('change', calculateBookingCost);
     checkoutDateInput.addEventListener('change', calculateBookingCost);
-    listingSelect.addEventListener('change', calculateBookingCost);
     
-    // Initial calculation if dates are pre-filled
-    calculateBookingCost();
+    // Only add listener to dropdown if it exists
+    if (listingSelect) {
+      listingSelect.addEventListener('change', calculateBookingCost);
+    }
+    
+    // Initial calculation if property is pre-selected
+    if (isPropertyPreSelected) {
+      calculateBookingCost();
+    }
   </script>
   <div class="col-12">
     <button class="btn btn-primary btn-lg w-100 py-3">
