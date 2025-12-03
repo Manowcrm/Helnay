@@ -142,7 +142,10 @@ app.post('/register', registerLimiter, verifyCsrfToken, registerValidation, hand
       console.warn('Verification email failed but registration succeeded:', err.message);
     });
     
-    res.render('register', { message: 'Registration successful! Please check your email to verify your account before logging in.', error: null });
+    res.render('register', { 
+      message: 'Registration successful! ✉️ A verification email has been sent to ' + email + '. Please check your inbox (and spam folder) and click the verification link before logging in.', 
+      error: null 
+    });
   } catch (err) {
     console.error(err);
     res.render('register', { message: null, error: 'Registration failed' });
@@ -176,8 +179,13 @@ app.post('/login', loginLimiter, verifyCsrfToken, loginValidation, handleValidat
     }
     
     // Check if email is verified (only for regular users, not admins)
-    if (user.role !== 'admin' && user.is_verified === 0) {
-      return res.render('login', { message: null, error: 'Please verify your email address before logging in. Check your inbox for the verification link.' });
+    // Skip verification check if REQUIRE_EMAIL_VERIFICATION is set to 'false'
+    const requireVerification = process.env.REQUIRE_EMAIL_VERIFICATION !== 'false';
+    if (requireVerification && user.role !== 'admin' && user.is_verified === 0) {
+      return res.render('login', { 
+        message: null, 
+        error: '❌ Email not verified. Please check your email inbox (and spam folder) for the verification link we sent you. If you didn\'t receive it, please contact support.' 
+      });
     }
     
     // Update last_login timestamp

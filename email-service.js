@@ -1,19 +1,28 @@
-const sgMail = require('@sendgrid/mail');
+const nodemailer = require('nodemailer');
 
-// Check if SendGrid is configured
-const isEmailConfigured = !!process.env.SENDGRID_API_KEY;
+// Check if email is configured (SMTP or SendGrid)
+const isEmailConfigured = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 
-if (!isEmailConfigured) {
-  console.warn('⚠️ Email not configured. SENDGRID_API_KEY environment variable is required.');
+let transporter;
+if (isEmailConfigured) {
+  transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: false, // true for 465, false for other ports
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    }
+  });
+  console.log('✓ SMTP email service configured');
 } else {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  console.log('✓ SendGrid email service configured');
+  console.warn('⚠️ Email not configured. SMTP credentials required.');
 }
 
 // Get sender email - use ADMIN_EMAIL if set, otherwise use a default
 const getSenderEmail = () => {
   return process.env.ADMIN_EMAIL || 'noreply@helnay.com';
-};
+}
 
 // Send booking approval email
 async function sendBookingApprovalEmail(booking, listing) {
@@ -544,14 +553,17 @@ Helnay Rentals Team`,
   };
 
   try {
-    await sgMail.send(msg);
+    await transporter.sendMail({
+      from: `"Helnay Rentals" <${getSenderEmail()}>`,
+      to: user.email,
+      subject: msg.subject,
+      text: msg.text,
+      html: msg.html
+    });
     console.log(`✓ Verification email sent to ${user.email}`);
     return true;
   } catch (error) {
     console.error('Email send error:', error.message);
-    if (error.response) {
-      console.error('SendGrid error details:', error.response.body);
-    }
     return false;
   }
 }
