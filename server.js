@@ -19,6 +19,7 @@ const {
   registerLimiter,
   contactLimiter,
   apiLimiter,
+  passwordResetLimiter,
   registerValidation,
   loginValidation,
   listingValidation,
@@ -191,7 +192,7 @@ app.post('/login', loginLimiter, verifyCsrfToken, loginValidation, handleValidat
     if (requireVerification && user.role !== 'admin' && user.is_verified === 0) {
       return res.render('login', { 
         message: null, 
-        error: '⚠️ <strong>Email Not Verified</strong><br><br>Your account is not yet activated. Please check your email inbox (including spam/junk folder) for the verification link we sent to <strong>' + email + '</strong>.<br><br>📧 Click the link in the email to verify your account, then try logging in again.<br><br>Still can\'t find it? Contact support at ' + (process.env.ADMIN_EMAIL || 'admin@helnay.com') 
+        error: '⚠️ <strong>Email Not Verified</strong><br><br>Your account is not yet activated. Please check your email inbox (including spam/junk folder) for the verification link we sent to <strong>' + email + '</strong>.<br><br>📧 Click the link in the email to verify your account, then try logging in again.<br><br>Didn\'t receive the email? <a href="/resend-verification?email=' + encodeURIComponent(email) + '" class="alert-link">Click here to resend</a>' 
       });
     }
     
@@ -384,13 +385,16 @@ app.get('/about', (req, res) => res.render('about'));
 
 app.get('/contact', (req, res) => res.render('contact', { message: null }));
 
-// Resend Verification Email
-app.post('/resend-verification', async (req, res) => {
+// Resend Verification Email (with rate limiting)
+app.get('/resend-verification', passwordResetLimiter, async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email } = req.query;
     
     if (!email) {
-      return res.status(400).json({ success: false, message: 'Email is required' });
+      return res.render('login', { 
+        message: null, 
+        error: '⚠️ Please provide your email address to resend verification.' 
+      });
     }
     
     // Find user
@@ -398,11 +402,17 @@ app.post('/resend-verification', async (req, res) => {
     
     if (!user) {
       // Don't reveal whether email exists for security
-      return res.json({ success: true, message: 'If this email is registered, a verification link has been sent.' });
+      return res.render('login', { 
+        message: '✅ If an account exists with that email, a verification link has been sent.', 
+        error: null 
+      });
     }
     
     if (user.is_verified === 1) {
-      return res.json({ success: false, message: 'This email is already verified.' });
+      return res.render('login', { 
+        message: '✅ Your account is already verified! You can log in now.', 
+        error: null 
+      });
     }
     
     // Generate new verification token
@@ -420,10 +430,16 @@ app.post('/resend-verification', async (req, res) => {
     // Send verification email
     await sendVerificationEmail({ name: user.name, email: user.email }, verificationToken);
     
-    res.json({ success: true, message: 'Verification email sent. Please check your inbox.' });
+    res.render('login', { 
+      message: '✅ Verification email sent! Please check your inbox (and spam folder) for the verification link.', 
+      error: null 
+    });
   } catch (err) {
     console.error('Resend verification error:', err);
-    res.status(500).json({ success: false, message: 'Failed to send verification email.' });
+    res.render('login', { 
+      message: null, 
+      error: 'Failed to resend verification email. Please try again later.' 
+    });
   }
 });
 

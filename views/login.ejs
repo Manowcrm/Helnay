@@ -42,3 +42,14 @@
     </div>
   </div>
 </div>
+
+<script>
+// Prevent alert-link from dismissing the alert when clicked
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.alert-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.stopPropagation();
+    });
+  });
+});
+</script>
