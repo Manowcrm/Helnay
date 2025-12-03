@@ -1,38 +1,66 @@
-<h1>Make a Booking</h1>
+<h1 class="mb-4">Make a Booking</h1>
+
+<% if (selectedListingId) { %>
+  <% const selectedListing = listings.find(l => l.id === parseInt(selectedListingId)); %>
+  <% if (selectedListing) { %>
+    <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+      <i class="bi bi-info-circle-fill me-3" style="font-size: 1.5rem;"></i>
+      <div>
+        <strong>Booking for:</strong> <%= selectedListing.title %> 
+        <span class="badge bg-primary ms-2">$<%= selectedListing.price %>/night</span>
+        <br>
+        <small class="text-muted"><i class="bi bi-geo-alt"></i> <%= selectedListing.location %></small>
+      </div>
+    </div>
+  <% } %>
+<% } %>
+
 <form method="POST" class="row g-3">
   <div class="col-md-6">
-    <label class="form-label">Listing</label>
-    <select name="listing_id" class="form-select" required>
+    <label class="form-label fw-bold">Listing</label>
+    <select name="listing_id" class="form-select" id="listing_select" required>
       <% listings.forEach(function(l){ %>
-        <option value="<%= l.id %>" <%= selectedListingId && selectedListingId === l.id ? 'selected' : '' %>>
-          <%= l.title %>
+        <option value="<%= l.id %>" data-price="<%= l.price %>" data-title="<%= l.title %>" data-location="<%= l.location %>" <%= selectedListingId && selectedListingId == l.id ? 'selected' : '' %>>
+          <%= l.title %> - $<%= l.price %>/night
         </option>
       <% }) %>
     </select>
   </div>
   <div class="col-md-6">
-    <label class="form-label">Your name</label>
-    <input name="name" class="form-control" required />
+    <label class="form-label fw-bold">Your name</label>
+    <input name="name" class="form-control" placeholder="Enter your full name" required />
   </div>
   <div class="col-md-6">
-    <label class="form-label">Email</label>
-    <input name="email" type="email" class="form-control" required />
+    <label class="form-label fw-bold">Email</label>
+    <input name="email" type="email" class="form-control" placeholder="your@email.com" required />
   </div>
-  <div class="col-md-3">
-    <label class="form-label">Check-in Date</label>
+  <div class="col-md-6">
+    <label class="form-label fw-bold">Check-in Date</label>
     <input name="checkin_date" type="date" class="form-control" id="checkin_date" required />
   </div>
-  <div class="col-md-3">
-    <label class="form-label">Check-in Time</label>
+  <div class="col-md-6">
+    <label class="form-label fw-bold">Check-in Time</label>
     <input name="checkin_time" type="time" class="form-control" id="checkin_time" value="15:00" required />
   </div>
-  <div class="col-md-3">
-    <label class="form-label">Check-out Date</label>
+  <div class="col-md-6">
+    <label class="form-label fw-bold">Check-out Date</label>
     <input name="checkout_date" type="date" class="form-control" id="checkout_date" required />
   </div>
-  <div class="col-md-3">
-    <label class="form-label">Check-out Time</label>
+  <div class="col-md-6">
+    <label class="form-label fw-bold">Check-out Time</label>
     <input name="checkout_time" type="time" class="form-control" id="checkout_time" value="11:00" required />
+  </div>
+  
+  <!-- Booking Summary Card -->
+  <div class="col-12">
+    <div class="card bg-light border-0 shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title mb-3"><i class="bi bi-calculator"></i> Booking Summary</h5>
+        <div id="booking_summary">
+          <p class="text-muted"><small>Select dates to see the total cost</small></p>
+        </div>
+      </div>
+    </div>
   </div>
   
   <script>
@@ -41,6 +69,8 @@
     const checkinTimeInput = document.getElementById('checkin_time');
     const checkoutDateInput = document.getElementById('checkout_date');
     const checkoutTimeInput = document.getElementById('checkout_time');
+    const listingSelect = document.getElementById('listing_select');
+    const bookingSummary = document.getElementById('booking_summary');
     
     // Get current date and time
     const now = new Date();
@@ -136,8 +166,63 @@
     
     // Initialize: trigger check-in date validation
     checkinDateInput.dispatchEvent(new Event('change'));
+    
+    // Calculate booking cost
+    function calculateBookingCost() {
+      const checkinDate = checkinDateInput.value;
+      const checkoutDate = checkoutDateInput.value;
+      const selectedOption = listingSelect.options[listingSelect.selectedIndex];
+      const pricePerNight = parseFloat(selectedOption.getAttribute('data-price'));
+      const listingTitle = selectedOption.getAttribute('data-title');
+      const listingLocation = selectedOption.getAttribute('data-location');
+      
+      if (checkinDate && checkoutDate && pricePerNight) {
+        // Calculate number of nights
+        const checkin = new Date(checkinDate);
+        const checkout = new Date(checkoutDate);
+        const diffTime = Math.abs(checkout - checkin);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const nights = diffDays || 1; // Minimum 1 night
+        
+        const totalCost = nights * pricePerNight;
+        
+        // Update summary
+        bookingSummary.innerHTML = `
+          <div class="row">
+            <div class="col-md-6">
+              <p class="mb-2"><strong><i class="bi bi-building"></i> Property:</strong> ${listingTitle}</p>
+              <p class="mb-2"><small class="text-muted"><i class="bi bi-geo-alt"></i> ${listingLocation}</small></p>
+            </div>
+            <div class="col-md-6 text-md-end">
+              <p class="mb-2"><strong><i class="bi bi-moon"></i> Nights:</strong> ${nights}</p>
+              <p class="mb-2"><strong><i class="bi bi-tag"></i> Price per night:</strong> $${pricePerNight}</p>
+            </div>
+          </div>
+          <hr class="my-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-cash-coin"></i> Total Cost:</h5>
+            <h4 class="mb-0 text-primary">$${totalCost.toFixed(2)}</h4>
+          </div>
+          <small class="text-muted d-block mt-2">
+            <i class="bi bi-info-circle"></i> Payment will be processed after confirmation
+          </small>
+        `;
+      } else {
+        bookingSummary.innerHTML = '<p class="text-muted mb-0"><small>Select dates to see the total cost</small></p>';
+      }
+    }
+    
+    // Add event listeners for cost calculation
+    checkinDateInput.addEventListener('change', calculateBookingCost);
+    checkoutDateInput.addEventListener('change', calculateBookingCost);
+    listingSelect.addEventListener('change', calculateBookingCost);
+    
+    // Initial calculation if dates are pre-filled
+    calculateBookingCost();
   </script>
   <div class="col-12">
-    <button class="btn btn-primary">Confirm Booking</button>
+    <button class="btn btn-primary btn-lg w-100 py-3">
+      <i class="bi bi-check-circle me-2"></i> Confirm Booking
+    </button>
   </div>
 </form>
