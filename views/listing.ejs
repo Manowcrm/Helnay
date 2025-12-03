@@ -151,11 +151,11 @@ document.addEventListener('DOMContentLoaded', function() {
 	
 	const thumbnails = document.querySelectorAll('.thumbnail-img');
 	
-	// Get or create carousel instance
-	let carousel = bootstrap.Carousel.getInstance(carouselEl);
-	if (!carousel) {
-		carousel = new bootstrap.Carousel(carouselEl);
-	}
+	// Initialize carousel (let Bootstrap handle controls automatically)
+	const carousel = new bootstrap.Carousel(carouselEl, {
+		interval: false,
+		wrap: true
+	});
 	
 	// Sync thumbnails when carousel slides
 	carouselEl.addEventListener('slid.bs.carousel', function(event) {
@@ -166,40 +166,9 @@ document.addEventListener('DOMContentLoaded', function() {
 	
 	// Click thumbnail to jump to slide
 	thumbnails.forEach(function(thumb, index) {
-		thumb.addEventListener('click', function(e) {
-			e.preventDefault();
-			carousel.to(index);
-			// Update active thumbnail immediately
-			thumbnails.forEach(t => t.classList.remove('active'));
-			thumb.classList.add('active');
-		});
-	});
-	
-	// Ensure indicators work
-	const indicators = carouselEl.querySelectorAll('.carousel-indicators button');
-	indicators.forEach(function(indicator, index) {
-		indicator.addEventListener('click', function(e) {
-			e.preventDefault();
+		thumb.addEventListener('click', function() {
 			carousel.to(index);
 		});
 	});
-	
-	// Ensure arrow buttons work
-	const prevBtn = carouselEl.querySelector('.carousel-control-prev');
-	const nextBtn = carouselEl.querySelector('.carousel-control-next');
-	
-	if (prevBtn) {
-		prevBtn.addEventListener('click', function(e) {
-			e.preventDefault();
-			carousel.prev();
-		});
-	}
-	
-	if (nextBtn) {
-		nextBtn.addEventListener('click', function(e) {
-			e.preventDefault();
-			carousel.next();
-		});
-	}
 });
 </script>
