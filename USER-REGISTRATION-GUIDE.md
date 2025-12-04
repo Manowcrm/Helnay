@@ -116,9 +116,9 @@ verification link to activate your account.
 
 **What to expect:**
 - Email should arrive within 1-2 minutes
-- From: manowcrmabd@gmail.com
-- Subject: "Verify Your Email - Helnay"
-- Contains a blue "Verify Email" button
+- From: Helnay Rentals <info@helnay.com>
+- Subject: "✉️ Verify Your Email Address"
+- Contains a blue "Verify Email Address" button
 
 **If you don't get the email:**
 1. Check spam/junk folder
