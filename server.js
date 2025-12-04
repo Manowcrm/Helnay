@@ -99,7 +99,7 @@ app.use((req, res, next) => {
 
 // Register page
 app.get('/register', (req, res) => {
-  res.render('register', { message: null, error: null, csrfToken: req.csrfToken() });
+  res.render('register', { message: null, error: null, csrfToken: res.locals.csrfToken });
 });
 
 app.post('/register', registerLimiter, verifyCsrfToken, registerValidation, handleValidationErrors, async (req, res) => {
@@ -177,7 +177,7 @@ app.post('/register', registerLimiter, verifyCsrfToken, registerValidation, hand
 
 // Login page
 app.get('/login', (req, res) => {
-  res.render('login', { message: null, error: null, csrfToken: req.csrfToken() });
+  res.render('login', { message: null, error: null, csrfToken: res.locals.csrfToken });
 });
 
 app.post('/login', loginLimiter, verifyCsrfToken, loginValidation, handleValidationErrors, async (req, res) => {
