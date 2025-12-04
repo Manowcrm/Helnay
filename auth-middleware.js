@@ -6,7 +6,7 @@ function isAuthenticated(req, res, next) {
   res.redirect('/login');
 }
 
-// Middleware to check if user is admin
+// Middleware to check if user is admin (includes both admin and super_admin)
 function isAdmin(req, res, next) {
   console.log('[ADMIN CHECK] Session data:', {
     hasSession: !!req.session,
@@ -15,13 +15,13 @@ function isAdmin(req, res, next) {
     sessionID: req.sessionID
   });
   
-  if (req.session && req.session.userId && req.session.role === 'admin') {
+  if (req.session && req.session.userId && (req.session.role === 'admin' || req.session.role === 'super_admin')) {
     // Check if admin is active
     const db = require('./db');
     db.get('SELECT is_active FROM users WHERE id = ?', [req.session.userId])
       .then(user => {
         if (user && user.is_active === 1) {
-          console.log('[ADMIN CHECK] ✓ Access granted');
+          console.log('[ADMIN CHECK] ✓ Access granted to', req.session.role);
           return next();
         } else {
           console.log('[ADMIN CHECK] ✗ Admin account is deactivated');
@@ -36,7 +36,7 @@ function isAdmin(req, res, next) {
     return;
   }
   
-  console.log('[ADMIN CHECK] ✗ Access denied - Missing session or not admin');
+  console.log('[ADMIN CHECK] ✗ Access denied - Missing session or not admin/super_admin');
   res.status(403).send('Access denied. Admin only.');
 }
 

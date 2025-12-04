@@ -204,7 +204,7 @@ app.post('/login', loginLimiter, verifyCsrfToken, loginValidation, handleValidat
     // Check if email is verified (only for regular users, not admins)
     // Skip verification check if REQUIRE_EMAIL_VERIFICATION is set to 'false'
     const requireVerification = process.env.REQUIRE_EMAIL_VERIFICATION === 'true';
-    if (requireVerification && user.role !== 'admin' && user.is_verified === 0) {
+    if (requireVerification && user.role !== 'admin' && user.role !== 'super_admin' && user.is_verified === 0) {
       return res.render('login', { 
         message: null, 
         error: '⚠️ <strong>Email Not Verified</strong><br><br>Your account is not yet activated. Please check your email inbox (including spam/junk folder) for the verification link we sent to <strong>' + email + '</strong>.<br><br>📧 Click the link in the email to verify your account, then try logging in again.<br><br>Didn\'t receive the email? <a href="/resend-verification?email=' + encodeURIComponent(email) + '" class="alert-link">Click here to resend</a>' 
@@ -222,13 +222,13 @@ app.post('/login', loginLimiter, verifyCsrfToken, loginValidation, handleValidat
     req.session.adminLevel = user.admin_level;
     
     // Log admin login
-    if (user.role === 'admin') {
+    if (user.role === 'admin' || user.role === 'super_admin') {
       await logActivity({
         admin_id: user.id,
         admin_name: user.name,
         admin_email: user.email,
         action_type: 'LOGIN',
-        action_description: 'Logged in to admin panel',
+        action_description: `Logged in to admin panel as ${user.role}`,
         ip_address: getClientIP(req)
       });
     }
@@ -248,7 +248,7 @@ app.post('/login', loginLimiter, verifyCsrfToken, loginValidation, handleValidat
       });
       
       // Redirect based on role
-      if (user.role === 'admin') {
+      if (user.role === 'admin' || user.role === 'super_admin') {
         res.redirect('/admin');
       } else {
         res.redirect('/');
