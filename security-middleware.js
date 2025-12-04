@@ -17,6 +17,15 @@ const registerLimiter = rateLimit({
   message: 'Too many accounts created from this IP, please try again after an hour',
   standardHeaders: true,
   legacyHeaders: false,
+  handler: (req, res) => {
+    console.error(`❌ [RATE LIMIT] Registration blocked for IP: ${req.ip}`);
+    res.render('register', {
+      message: null,
+      error: 'Too many registration attempts from this IP address. Please try again after an hour.',
+      csrfToken: res.locals.csrfToken,
+      formData: req.body
+    });
+  }
 });
 
 // Rate limiting for password reset
@@ -170,12 +179,35 @@ const contactValidation = [
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    // Log validation failures for debugging
+    console.log('[VALIDATION] Failed:', req.path);
+    console.log('[VALIDATION] Errors:', errors.array().map(e => e.msg).join('; '));
+    
     // For API requests, return JSON
     if (req.xhr || req.headers.accept.indexOf('json') > -1) {
       return res.status(400).json({ errors: errors.array() });
     }
-    // For form submissions, flash errors and redirect back
+    
+    // For form submissions, show error message directly on the page
     const errorMessages = errors.array().map(err => err.msg).join(', ');
+    
+    // Determine which view to render based on the route
+    const viewName = req.path.includes('/register') ? 'register' : 
+                     req.path.includes('/login') ? 'login' : 
+                     req.path.includes('/contact') ? 'contact' : null;
+    
+    if (viewName) {
+      // Render the same page with error messages
+      return res.render(viewName, {
+        message: null,
+        error: `❌ ${errorMessages}`,
+        csrfToken: res.locals.csrfToken,
+        // Preserve form data so user doesn't have to retype everything
+        formData: req.body
+      });
+    }
+    
+    // Fallback to redirect with session error
     req.session.error = errorMessages;
     return res.redirect('back');
   }

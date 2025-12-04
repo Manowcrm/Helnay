@@ -42,12 +42,16 @@ function verifyCsrfToken(req, res, next) {
   // Compare with session token
   if (!token || token !== req.session.csrfToken) {
     console.error('❌ [CSRF] Invalid or missing CSRF token');
+    console.error(`[CSRF] Method: ${req.method}, Path: ${req.path}`);
+    console.error(`[CSRF] Received token: ${token ? token.substring(0, 10) + '...' : 'NONE'}`);
+    console.error(`[CSRF] Expected token: ${req.session.csrfToken ? req.session.csrfToken.substring(0, 10) + '...' : 'NONE'}`);
     return res.status(403).render('error', { 
       message: 'Invalid security token. Please refresh the page and try again.',
       error: { status: 403 }
     });
   }
   
+  console.log(`✓ [CSRF] Valid token for ${req.method} ${req.path}`);
   // Token is valid, proceed
   next();
 }
