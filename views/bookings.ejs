@@ -1,5 +1,19 @@
 <h1 class="mb-4">Make a Booking</h1>
 
+<% if (error) { %>
+  <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <%- error %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+<% } %>
+
+<% if (message) { %>
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <%- message %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+<% } %>
+
 <% if (selectedListingId) { %>
   <% const selectedListing = listings.find(l => l.id === parseInt(selectedListingId)); %>
   <% if (selectedListing) { %>

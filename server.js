@@ -609,7 +609,7 @@ app.post('/api/admin/listings/:id/update-price', isAdmin, async (req, res) => {
 
 app.get('/bookings', async (req, res) => {
   try {
-    const listings = await db.all('SELECT id,title FROM listings');
+    const listings = await db.all('SELECT id, title, price, location FROM listings');
     const selectedListingId = req.query.listing_id || null;
     
     console.log(`📋 [BOOKING FORM] Loading with listing_id=${selectedListingId}`);
@@ -617,9 +617,13 @@ app.get('/bookings', async (req, res) => {
     res.render('bookings', { 
       listings, 
       selectedListingId: selectedListingId ? parseInt(selectedListingId) : null,
-      message: null 
+      message: null,
+      error: null,
+      csrfToken: res.locals.csrfToken,
+      formData: {}
     });
   } catch (err) {
+    console.error('[BOOKING] Error loading form:', err);
     res.status(500).send('Server error');
   }
 });

@@ -125,8 +125,19 @@ const bookingValidation = [
     .isInt({ min: 1 })
     .withMessage('Invalid listing ID'),
   
-  body('check_in')
-    .isISO8601()
+  body('name')
+    .trim()
+    .isLength({ min: 2, max: 100 })
+    .withMessage('Name must be between 2 and 100 characters'),
+  
+  body('email')
+    .trim()
+    .isEmail()
+    .withMessage('Invalid email address')
+    .normalizeEmail(),
+  
+  body('checkin_date')
+    .isDate()
     .withMessage('Invalid check-in date')
     .custom((value) => {
       const checkIn = new Date(value);
@@ -138,21 +149,25 @@ const bookingValidation = [
       return true;
     }),
   
-  body('check_out')
-    .isISO8601()
+  body('checkin_time')
+    .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
+    .withMessage('Invalid check-in time format (HH:MM)'),
+  
+  body('checkout_date')
+    .isDate()
     .withMessage('Invalid check-out date')
     .custom((value, { req }) => {
-      const checkIn = new Date(req.body.check_in);
-      const checkOut = new Date(value);
-      if (checkOut <= checkIn) {
-        throw new Error('Check-out date must be after check-in date');
+      const checkInDate = new Date(req.body.checkin_date);
+      const checkOutDate = new Date(value);
+      if (checkOutDate < checkInDate) {
+        throw new Error('Check-out date must be on or after check-in date');
       }
       return true;
     }),
   
-  body('guests')
-    .isInt({ min: 1, max: 50 })
-    .withMessage('Number of guests must be between 1 and 50'),
+  body('checkout_time')
+    .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
+    .withMessage('Invalid check-out time format (HH:MM)'),
 ];
 
 const contactValidation = [
@@ -194,17 +209,35 @@ const handleValidationErrors = (req, res, next) => {
     // Determine which view to render based on the route
     const viewName = req.path.includes('/register') ? 'register' : 
                      req.path.includes('/login') ? 'login' : 
-                     req.path.includes('/contact') ? 'contact' : null;
+                     req.path.includes('/contact') ? 'contact' : 
+                     req.path.includes('/bookings') ? 'bookings' : null;
     
     if (viewName) {
       // Render the same page with error messages
-      return res.render(viewName, {
+      const renderData = {
         message: null,
         error: `❌ ${errorMessages}`,
         csrfToken: res.locals.csrfToken,
         // Preserve form data so user doesn't have to retype everything
         formData: req.body
-      });
+      };
+      
+      // For bookings, we need to fetch listings data
+      if (viewName === 'bookings') {
+        const db = require('./db');
+        db.all('SELECT id, title, price, location FROM listings').then(listings => {
+          renderData.listings = listings;
+          renderData.selectedListingId = req.body.listing_id ? parseInt(req.body.listing_id) : null;
+          return res.render(viewName, renderData);
+        }).catch(err => {
+          console.error('[VALIDATION] Error fetching listings:', err);
+          req.session.error = errorMessages;
+          return res.redirect('back');
+        });
+        return; // Exit here, render will happen in promise
+      }
+      
+      return res.render(viewName, renderData);
     }
     
     // Fallback to redirect with session error
