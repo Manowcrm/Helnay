@@ -26,10 +26,12 @@
             <td><%= u.name %></td>
             <td><%= u.email %></td>
             <td>
-              <% if (u.role === 'admin') { %>
-                <span class="badge bg-danger">Admin</span>
+              <% if (u.role === 'super_admin') { %>
+                <span class="badge bg-danger"><i class="bi bi-shield-fill-check"></i> Super Admin</span>
+              <% } else if (u.role === 'admin') { %>
+                <span class="badge bg-warning"><i class="bi bi-shield-fill"></i> Admin</span>
               <% } else { %>
-                <span class="badge bg-secondary">User</span>
+                <span class="badge bg-secondary"><i class="bi bi-person-fill"></i> User</span>
               <% } %>
             </td>
             <td>
@@ -52,12 +54,14 @@
               <a href="/admin/users/<%= u.id %>/bookings" class="btn btn-sm btn-info">
                 <i class="bi bi-calendar"></i> Bookings
               </a>
-              <% if (u.role !== 'admin') { %>
+              <% if (u.role !== 'admin' && u.role !== 'super_admin') { %>
                 <form method="POST" action="/admin/users/<%= u.id %>/delete" style="display:inline;">
-                  <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this user and all their bookings?')">
-                    <i class="bi bi-trash"></i>
+                  <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('⚠️ Delete this user?\n\nThis will permanently remove:\n- User account\n- All their bookings\n- All their data\n\nThis action cannot be undone!')">
+                    <i class="bi bi-trash"></i> Delete
                   </button>
                 </form>
+              <% } else { %>
+                <span class="badge bg-secondary"><i class="bi bi-lock-fill"></i> Protected</span>
               <% } %>
             </td>
           </tr>

@@ -1500,10 +1500,35 @@ app.get('/admin/users/:id/bookings', isAdmin, async (req, res) => {
 // Admin: delete user
 app.post('/admin/users/:id/delete', isAdmin, async (req, res) => {
   try {
-    await db.run('DELETE FROM users WHERE id = ? AND role != "admin"', [req.params.id]);
+    const userId = req.params.id;
+    
+    // Get the user to be deleted
+    const userToDelete = await db.get('SELECT id, email, role FROM users WHERE id = ?', [userId]);
+    
+    if (!userToDelete) {
+      console.error(`[DELETE USER] User ${userId} not found`);
+      return res.status(404).send('User not found');
+    }
+    
+    // Prevent deletion of admin and super_admin accounts
+    if (userToDelete.role === 'admin' || userToDelete.role === 'super_admin') {
+      console.error(`[DELETE USER] Attempted to delete ${userToDelete.role} account: ${userToDelete.email}`);
+      return res.status(403).send('Cannot delete admin accounts');
+    }
+    
+    // Only super_admin can delete users
+    if (req.session.role !== 'super_admin') {
+      console.error(`[DELETE USER] Non-super-admin attempted deletion: ${req.session.email}`);
+      return res.status(403).send('Only super administrators can delete users');
+    }
+    
+    // Delete the user
+    await db.run('DELETE FROM users WHERE id = ?', [userId]);
+    console.log(`[DELETE USER] ✓ User deleted: ${userToDelete.email} (ID: ${userId})`);
+    
     res.redirect('/admin/users');
   } catch (err) {
-    console.error(err);
+    console.error('[DELETE USER] Error:', err);
     res.status(500).send('Server error');
   }
 });
