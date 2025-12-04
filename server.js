@@ -99,25 +99,30 @@ app.use((req, res, next) => {
 
 // Register page
 app.get('/register', (req, res) => {
-  res.render('register', { message: null, error: null });
+  res.render('register', { message: null, error: null, csrfToken: req.csrfToken() });
 });
 
 app.post('/register', registerLimiter, verifyCsrfToken, registerValidation, handleValidationErrors, async (req, res) => {
   try {
     const { name, email, password, confirmPassword } = req.body;
     
+    console.log(`[REGISTRATION] Attempt for email: ${email}`);
+    
     if (password !== confirmPassword) {
+      console.log('[REGISTRATION] Error: Passwords do not match');
       return res.render('register', { message: null, error: 'Passwords do not match' });
     }
     
     // Check if user already exists
     const existingUser = await db.get('SELECT * FROM users WHERE email = ?', [email]);
     if (existingUser) {
+      console.log(`[REGISTRATION] Error: Email already registered: ${email}`);
       return res.render('register', { message: null, error: 'Email already registered' });
     }
     
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log('[REGISTRATION] Password hashed successfully');
     
     // Create user (is_verified = 0 by default)
     const result = await db.run(
@@ -126,6 +131,7 @@ app.post('/register', registerLimiter, verifyCsrfToken, registerValidation, hand
     );
     
     const userId = result.lastInsertRowid;
+    console.log(`[REGISTRATION] User created successfully with ID: ${userId}`);
     
     // Generate verification token
     const crypto = require('crypto');
@@ -137,32 +143,41 @@ app.post('/register', registerLimiter, verifyCsrfToken, registerValidation, hand
       'INSERT INTO email_verifications (user_id, token, expires_at, created_at) VALUES (?, ?, ?, ?)',
       [userId, verificationToken, expiresAt, new Date().toISOString()]
     );
+    console.log(`[REGISTRATION] Verification token created for user ID: ${userId}`);
     
     // Send verification email (always send, even if verification is disabled)
-    sendVerificationEmail({ name, email }, verificationToken).catch(err => {
-      console.warn('Verification email failed but registration succeeded:', err.message);
-    });
+    console.log(`[REGISTRATION] Attempting to send verification email to: ${email}`);
+    sendVerificationEmail({ name, email }, verificationToken)
+      .then(() => {
+        console.log(`[REGISTRATION] ✓ Verification email sent successfully to: ${email}`);
+      })
+      .catch(err => {
+        console.error(`[REGISTRATION] ⚠️ Verification email failed for ${email}:`, err.message);
+      });
     
     const requireVerification = process.env.REQUIRE_EMAIL_VERIFICATION === 'true';
     
     if (!requireVerification) {
       // Auto-verify if verification is disabled for testing
       await db.run('UPDATE users SET is_verified = 1 WHERE id = ?', [userId]);
+      console.log(`[REGISTRATION] User auto-verified (verification disabled)`);
     }
     
+    console.log(`[REGISTRATION] ✅ Registration complete for: ${email}`);
     res.render('register', { 
       message: '✅ Registration successful! <br><br>📧 <strong>IMPORTANT:</strong> A verification email has been sent to <strong>' + email + '</strong><br><br>Please check your inbox (and spam/junk folder) and click the verification link to activate your account.<br><br>⚠️ You must verify your email before you can log in.', 
       error: null 
     });
   } catch (err) {
-    console.error(err);
-    res.render('register', { message: null, error: 'Registration failed' });
+    console.error('[REGISTRATION] ERROR:', err);
+    console.error('[REGISTRATION] Stack trace:', err.stack);
+    res.render('register', { message: null, error: 'Registration failed. Please try again.' });
   }
 });
 
 // Login page
 app.get('/login', (req, res) => {
-  res.render('login', { message: null, error: null });
+  res.render('login', { message: null, error: null, csrfToken: req.csrfToken() });
 });
 
 app.post('/login', loginLimiter, verifyCsrfToken, loginValidation, handleValidationErrors, async (req, res) => {
