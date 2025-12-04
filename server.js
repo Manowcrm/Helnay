@@ -1766,6 +1766,68 @@ app.post('/admin/filters/:id/delete', isAdmin, async (req, res) => {
   }
 });
 
+// ====== DIAGNOSTIC ENDPOINTS ======
+
+// Check if user exists (for troubleshooting)
+app.get('/admin/api/check-user', isAdmin, async (req, res) => {
+  try {
+    const { email } = req.query;
+    
+    if (!email) {
+      return res.json({ error: 'Email parameter required' });
+    }
+    
+    const user = await db.get(
+      'SELECT id, name, email, role, is_verified, is_active, created_at, last_login FROM users WHERE email = ?',
+      [email]
+    );
+    
+    if (!user) {
+      return res.json({
+        exists: false,
+        email: email,
+        message: 'User not found - needs to register'
+      });
+    }
+    
+    // Get verification tokens
+    const tokens = await db.all(
+      `SELECT token, expires_at, verified_at, created_at 
+       FROM email_verifications 
+       WHERE user_id = ? 
+       ORDER BY created_at DESC`,
+      [user.id]
+    );
+    
+    const activeToken = tokens.find(t => !t.verified_at && new Date(t.expires_at) > new Date());
+    
+    res.json({
+      exists: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        is_verified: user.is_verified === 1,
+        is_active: user.is_active === 1,
+        created_at: user.created_at,
+        last_login: user.last_login
+      },
+      verification: {
+        total_tokens_sent: tokens.length,
+        active_token: activeToken ? {
+          created: activeToken.created_at,
+          expires: activeToken.expires_at,
+          link: `${process.env.BASE_URL || 'http://localhost:3000'}/verify-email/${activeToken.token}`
+        } : null
+      }
+    });
+  } catch (err) {
+    console.error('Check user error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Start server after DB initialized
 (async () => {
   try {

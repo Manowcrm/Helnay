@@ -1,0 +1,10 @@
+{
+  "javascript.validate.enable": false,
+  "typescript.validate.enable": false,
+  "files.associations": {
+    "*.ejs": "ejs"
+  },
+  "emmet.includeLanguages": {
+    "ejs": "html"
+  }
+}
