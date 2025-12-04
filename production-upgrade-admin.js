@@ -20,20 +20,22 @@ try {
     console.log(`  ${i + 1}. ${a.email} - Role: ${a.role}`);
   });
   
-  // Upgrade admin@helnay.com to super_admin if it exists
-  const adminUser = db.prepare('SELECT id, email, role FROM users WHERE email = ?').get('admin@helnay.com');
+  // Upgrade both admin accounts to super_admin
+  const adminEmails = ['admin@helnay.com', 'sysadmin.portal@helnay.com'];
   
-  if (adminUser) {
-    if (adminUser.role !== 'super_admin') {
-      db.prepare('UPDATE users SET role = ? WHERE id = ?').run('super_admin', adminUser.id);
-      console.log(`\n✅ Upgraded ${adminUser.email} to super_admin`);
+  for (const email of adminEmails) {
+    const adminUser = db.prepare('SELECT id, email, role FROM users WHERE email = ?').get(email);
+    
+    if (adminUser) {
+      if (adminUser.role !== 'super_admin') {
+        db.prepare('UPDATE users SET role = ? WHERE id = ?').run('super_admin', adminUser.id);
+        console.log(`\n✅ Upgraded ${adminUser.email} to super_admin`);
+      } else {
+        console.log(`\n✓ ${adminUser.email} is already super_admin`);
+      }
     } else {
-      console.log(`\n✓ ${adminUser.email} is already super_admin`);
+      console.log(`\n⚠️ ${email} not found`);
     }
-  } else {
-    console.log('\n⚠️ admin@helnay.com not found. Creating super_admin account...');
-    // This shouldn't happen, but just in case
-    console.log('Please create the account manually first.');
   }
   
   // Show final state
