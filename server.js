@@ -1502,6 +1502,12 @@ app.post('/admin/users/:id/delete', isAdmin, async (req, res) => {
   try {
     const userId = req.params.id;
     
+    // FIRST: Only super_admin can delete users (authorization check)
+    if (req.session.role !== 'super_admin') {
+      console.error(`[DELETE USER] Non-super-admin attempted deletion: ${req.session.email || 'unknown'}`);
+      return res.status(403).send('Only super administrators can delete users');
+    }
+    
     // Get the user to be deleted
     const userToDelete = await db.get('SELECT id, email, role FROM users WHERE id = ?', [userId]);
     
@@ -1516,15 +1522,9 @@ app.post('/admin/users/:id/delete', isAdmin, async (req, res) => {
       return res.status(403).send('Cannot delete admin accounts');
     }
     
-    // Only super_admin can delete users
-    if (req.session.role !== 'super_admin') {
-      console.error(`[DELETE USER] Non-super-admin attempted deletion: ${req.session.email}`);
-      return res.status(403).send('Only super administrators can delete users');
-    }
-    
     // Delete the user
     await db.run('DELETE FROM users WHERE id = ?', [userId]);
-    console.log(`[DELETE USER] ✓ User deleted: ${userToDelete.email} (ID: ${userId})`);
+    console.log(`[DELETE USER] ✓ User deleted by ${req.session.email}: ${userToDelete.email} (ID: ${userId})`);
     
     res.redirect('/admin/users');
   } catch (err) {
