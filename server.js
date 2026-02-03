@@ -1522,9 +1522,27 @@ app.post('/admin/users/:id/delete', isAdmin, async (req, res) => {
       return res.status(403).send('Cannot delete admin accounts');
     }
     
+    // Delete related data first (to avoid foreign key constraints)
+    // Delete user's bookings
+    await db.run('DELETE FROM bookings WHERE email = ?', [userToDelete.email]);
+    
+    // Delete user's verification tokens
+    await db.run('DELETE FROM verification_tokens WHERE user_id = ?', [userId]);
+    
     // Delete the user
     await db.run('DELETE FROM users WHERE id = ?', [userId]);
-    console.log(`[DELETE USER] ✓ User deleted by ${req.session.email}: ${userToDelete.email} (ID: ${userId})`);
+    
+    // Log the activity
+    await logActivity({
+      admin_id: req.session.userId,
+      admin_name: req.session.userName,
+      admin_email: req.session.userEmail,
+      action_type: 'USER_DELETE',
+      action_description: `Deleted user ${userToDelete.email} (ID: ${userId})`,
+      ip_address: getClientIP(req)
+    });
+    
+    console.log(`[DELETE USER] ✓ User deleted by ${req.session.userEmail}: ${userToDelete.email} (ID: ${userId})`);
     
     res.redirect('/admin/users');
   } catch (err) {
