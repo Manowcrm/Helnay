@@ -1526,8 +1526,11 @@ app.post('/admin/users/:id/delete', isAdmin, async (req, res) => {
     // Delete user's bookings
     await db.run('DELETE FROM bookings WHERE email = ?', [userToDelete.email]);
     
-    // Delete user's verification tokens
-    await db.run('DELETE FROM verification_tokens WHERE user_id = ?', [userId]);
+    // Delete user's email verification records
+    await db.run('DELETE FROM email_verifications WHERE user_id = ?', [userId]);
+    
+    // Delete user's activity logs (as admin)
+    await db.run('DELETE FROM activity_logs WHERE admin_id = ?', [userId]);
     
     // Delete the user
     await db.run('DELETE FROM users WHERE id = ?', [userId]);
