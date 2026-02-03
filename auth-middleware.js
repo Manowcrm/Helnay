@@ -49,7 +49,7 @@ function isSuperAdmin(req, res, next) {
     adminLevel: req.session?.adminLevel
   });
   
-  if (req.session && req.session.userId && req.session.role === 'admin' && req.session.adminLevel === 'super_admin') {
+  if (req.session && req.session.userId && req.session.role === 'super_admin') {
     console.log('[SUPER ADMIN CHECK] ✓ Access granted');
     return next();
   }
