@@ -1533,6 +1533,104 @@ app.post('/admin/users/:id/delete', isAdmin, async (req, res) => {
   }
 });
 
+// Admin: promote user to admin (super_admin only)
+app.post('/admin/users/:id/promote-to-admin', isAdmin, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    
+    // Only super_admin can promote users to admin
+    if (req.session.role !== 'super_admin') {
+      console.error(`[PROMOTE USER] Non-super-admin attempted promotion: ${req.session.email || 'unknown'}`);
+      return res.status(403).send('Only super administrators can create admin accounts');
+    }
+    
+    // Get the user to be promoted
+    const userToPromote = await db.get('SELECT id, email, role, name FROM users WHERE id = ?', [userId]);
+    
+    if (!userToPromote) {
+      console.error(`[PROMOTE USER] User ${userId} not found`);
+      return res.status(404).send('User not found');
+    }
+    
+    // Check if user is already an admin
+    if (userToPromote.role === 'admin' || userToPromote.role === 'super_admin') {
+      return res.status(400).send('User is already an administrator');
+    }
+    
+    // Promote to admin
+    await db.run('UPDATE users SET role = ? WHERE id = ?', ['admin', userId]);
+    
+    // Log the activity
+    await logActivity({
+      admin_id: req.session.userId,
+      admin_name: req.session.userName,
+      admin_email: req.session.userEmail,
+      action_type: 'USER_ROLE_CHANGE',
+      action_description: `Promoted ${userToPromote.name} (${userToPromote.email}) to Admin`,
+      ip_address: getClientIP(req)
+    });
+    
+    console.log(`[PROMOTE USER] ✓ User promoted to admin by ${req.session.userEmail}: ${userToPromote.email} (ID: ${userId})`);
+    
+    res.redirect('/admin/users');
+  } catch (err) {
+    console.error('[PROMOTE USER] Error:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Admin: demote admin to user (super_admin only)
+app.post('/admin/users/:id/demote-to-user', isAdmin, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    
+    // Only super_admin can demote admins
+    if (req.session.role !== 'super_admin') {
+      console.error(`[DEMOTE USER] Non-super-admin attempted demotion: ${req.session.email || 'unknown'}`);
+      return res.status(403).send('Only super administrators can modify admin accounts');
+    }
+    
+    // Get the user to be demoted
+    const userToDemote = await db.get('SELECT id, email, role, name FROM users WHERE id = ?', [userId]);
+    
+    if (!userToDemote) {
+      console.error(`[DEMOTE USER] User ${userId} not found`);
+      return res.status(404).send('User not found');
+    }
+    
+    // Prevent demotion of super_admin accounts
+    if (userToDemote.role === 'super_admin') {
+      console.error(`[DEMOTE USER] Attempted to demote super_admin: ${userToDemote.email}`);
+      return res.status(403).send('Cannot demote super administrator accounts');
+    }
+    
+    // Check if user is not an admin
+    if (userToDemote.role !== 'admin') {
+      return res.status(400).send('User is not an administrator');
+    }
+    
+    // Demote to regular user
+    await db.run('UPDATE users SET role = ? WHERE id = ?', ['user', userId]);
+    
+    // Log the activity
+    await logActivity({
+      admin_id: req.session.userId,
+      admin_name: req.session.userName,
+      admin_email: req.session.userEmail,
+      action_type: 'USER_ROLE_CHANGE',
+      action_description: `Demoted ${userToDemote.name} (${userToDemote.email}) from Admin to User`,
+      ip_address: getClientIP(req)
+    });
+    
+    console.log(`[DEMOTE USER] ✓ Admin demoted to user by ${req.session.userEmail}: ${userToDemote.email} (ID: ${userId})`);
+    
+    res.redirect('/admin/users');
+  } catch (err) {
+    console.error('[DEMOTE USER] Error:', err);
+    res.status(500).send('Server error');
+  }
+});
+
 // Admin: view contacts
 app.get('/admin/contacts', isAdmin, async (req, res) => {
   try {

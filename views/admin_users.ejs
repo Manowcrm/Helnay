@@ -54,13 +54,33 @@
               <a href="/admin/users/<%= u.id %>/bookings" class="btn btn-sm btn-info">
                 <i class="bi bi-calendar"></i> Bookings
               </a>
+              
+              <% if (user.role === 'super_admin') { %>
+                <!-- Super Admin can promote users to admin or demote admins to user -->
+                <% if (u.role === 'user') { %>
+                  <form method="POST" action="/admin/users/<%= u.id %>/promote-to-admin" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Promote <%= u.name %> to Admin?')">
+                      <i class="bi bi-shield-fill"></i> Make Admin
+                    </button>
+                  </form>
+                <% } else if (u.role === 'admin') { %>
+                  <form method="POST" action="/admin/users/<%= u.id %>/demote-to-user" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-secondary" onclick="return confirm('Demote <%= u.name %> to regular user?')">
+                      <i class="bi bi-person-fill"></i> Demote
+                    </button>
+                  </form>
+                <% } %>
+              <% } %>
+              
               <% if (u.role !== 'admin' && u.role !== 'super_admin') { %>
                 <form method="POST" action="/admin/users/<%= u.id %>/delete" style="display:inline;">
                   <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('⚠️ Delete this user?\n\nThis will permanently remove:\n- User account\n- All their bookings\n- All their data\n\nThis action cannot be undone!')">
                     <i class="bi bi-trash"></i> Delete
                   </button>
                 </form>
-              <% } else { %>
+              <% } else if (u.role === 'super_admin') { %>
+                <span class="badge bg-danger"><i class="bi bi-lock-fill"></i> System Protected</span>
+              <% } else if (u.role === 'admin' && user.role !== 'super_admin') { %>
                 <span class="badge bg-secondary"><i class="bi bi-lock-fill"></i> Protected</span>
               <% } %>
             </td>
