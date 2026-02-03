@@ -1060,6 +1060,122 @@ app.get('/admin/activity', isSuperAdmin, async (req, res) => {
   }
 });
 
+// ====== USER VERIFICATIONS (Super Admin Only) ======
+
+app.get('/admin/verifications', isSuperAdmin, async (req, res) => {
+  try {
+    // Get all users with their verification status
+    const users = await db.all(`
+      SELECT u.*, v.phone_number, v.phone_verified as v_phone_verified, 
+             v.id_document_type, v.id_document_url, v.id_selfie_url, 
+             v.id_verified as v_id_verified, v.created_at as v_created_at
+      FROM users u
+      LEFT JOIN user_verifications v ON u.id = v.user_id
+      WHERE u.role = 'user'
+      ORDER BY u.created_at DESC
+    `);
+    
+    // Get pending ID verifications
+    const pending = await db.all(`
+      SELECT u.*, v.phone_number, v.phone_verified, 
+             v.id_document_type, v.id_document_url, v.id_selfie_url, 
+             v.created_at
+      FROM users u
+      INNER JOIN user_verifications v ON u.id = v.user_id
+      WHERE u.role = 'user' AND v.id_document_url IS NOT NULL AND v.id_verified = 0
+      ORDER BY v.created_at ASC
+    `);
+    
+    // Calculate stats
+    const stats = {
+      email_verified: users.filter(u => u.is_verified === 1).length,
+      phone_verified: users.filter(u => u.phone_verified === 1).length,
+      id_verified: users.filter(u => u.id_verified === 1).length,
+      pending_review: pending.length
+    };
+    
+    res.render('admin_verifications', { users, pending, stats });
+  } catch (err) {
+    console.error('❌ [VERIFICATIONS] Error:', err.message);
+    res.status(500).send('Error loading verifications');
+  }
+});
+
+// Approve ID verification
+app.post('/admin/verify-id/:userId/approve', isSuperAdmin, async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    
+    // Update user verification status
+    await db.run('UPDATE users SET id_verified = 1 WHERE id = ?', [userId]);
+    
+    // Update verification record
+    await db.run(
+      `UPDATE user_verifications 
+       SET id_verified = 1, id_verified_at = ?, id_verified_by = ?, updated_at = ?
+       WHERE user_id = ?`,
+      [new Date().toISOString(), req.session.userId, new Date().toISOString(), userId]
+    );
+    
+    // Log activity
+    const user = await db.get('SELECT name, email FROM users WHERE id = ?', [userId]);
+    await logActivity({
+      admin_id: req.session.userId,
+      admin_name: req.session.userName,
+      admin_email: req.session.userEmail,
+      action_type: 'ID_VERIFICATION_APPROVED',
+      action_description: `Approved ID verification for ${user.name} (${user.email})`,
+      target_type: 'user',
+      target_id: userId,
+      ip_address: getClientIP(req)
+    });
+    
+    console.log(`✅ [ID VERIFICATION] Approved for user ${userId} by ${req.session.userEmail}`);
+    res.redirect('/admin/verifications');
+  } catch (err) {
+    console.error('❌ [ID VERIFICATION] Approval error:', err);
+    res.status(500).send('Error approving verification');
+  }
+});
+
+// Reject ID verification
+app.post('/admin/verify-id/:userId/reject', isSuperAdmin, async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const { reason, notes } = req.body;
+    const rejectionReason = notes ? `${reason}: ${notes}` : reason;
+    
+    // Update verification record with rejection reason
+    await db.run(
+      `UPDATE user_verifications 
+       SET id_rejection_reason = ?, id_document_url = NULL, id_selfie_url = NULL, updated_at = ?
+       WHERE user_id = ?`,
+      [rejectionReason, new Date().toISOString(), userId]
+    );
+    
+    // Log activity
+    const user = await db.get('SELECT name, email FROM users WHERE id = ?', [userId]);
+    await logActivity({
+      admin_id: req.session.userId,
+      admin_name: req.session.userName,
+      admin_email: req.session.userEmail,
+      action_type: 'ID_VERIFICATION_REJECTED',
+      action_description: `Rejected ID verification for ${user.name} (${user.email}). Reason: ${rejectionReason}`,
+      target_type: 'user',
+      target_id: userId,
+      ip_address: getClientIP(req)
+    });
+    
+    // TODO: Send email notification to user about rejection
+    
+    console.log(`⚠️ [ID VERIFICATION] Rejected for user ${userId}: ${rejectionReason}`);
+    res.redirect('/admin/verifications');
+  } catch (err) {
+    console.error('❌ [ID VERIFICATION] Rejection error:', err);
+    res.status(500).send('Error rejecting verification');
+  }
+});
+
 // Browse Categories Management (Super Admin Only)
 app.get('/admin/categories', isSuperAdmin, async (req, res) => {
   try {

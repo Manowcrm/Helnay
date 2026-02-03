@@ -133,6 +133,21 @@ async function init() {
       // Set all existing users as active
       await run(`UPDATE users SET is_active = 1 WHERE is_active IS NULL`);
     }
+    
+    if (!usersColumnNames.includes('phone_verified')) {
+      await run(`ALTER TABLE users ADD COLUMN phone_verified INTEGER DEFAULT 0`);
+      console.log('✓ Added phone_verified column to users table');
+    }
+    
+    if (!usersColumnNames.includes('id_verified')) {
+      await run(`ALTER TABLE users ADD COLUMN id_verified INTEGER DEFAULT 0`);
+      console.log('✓ Added id_verified column to users table');
+    }
+    
+    if (!usersColumnNames.includes('trust_level')) {
+      await run(`ALTER TABLE users ADD COLUMN trust_level TEXT DEFAULT 'basic'`);
+      console.log('✓ Added trust_level column to users table');
+    }
   } catch (e) {
     console.error('Users table migration error:', e.message);
   }
@@ -231,6 +246,42 @@ async function init() {
     display_order INTEGER DEFAULT 0,
     is_active INTEGER DEFAULT 1,
     created_at TEXT
+  )`);
+
+  // User verifications table for phone, ID, payment verification
+  await run(`CREATE TABLE IF NOT EXISTS user_verifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    phone_number TEXT,
+    phone_verified INTEGER DEFAULT 0,
+    phone_verified_at TEXT,
+    id_document_type TEXT,
+    id_document_url TEXT,
+    id_selfie_url TEXT,
+    id_verified INTEGER DEFAULT 0,
+    id_verified_at TEXT,
+    id_verified_by INTEGER,
+    id_rejection_reason TEXT,
+    payment_verified INTEGER DEFAULT 0,
+    payment_verified_at TEXT,
+    trust_score INTEGER DEFAULT 0,
+    created_at TEXT,
+    updated_at TEXT,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (id_verified_by) REFERENCES users(id)
+  )`);
+
+  // Phone verification OTP codes
+  await run(`CREATE TABLE IF NOT EXISTS phone_verification_codes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    phone_number TEXT NOT NULL,
+    code TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    verified INTEGER DEFAULT 0,
+    attempts INTEGER DEFAULT 0,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
   )`);
 
   // Seed default filter services if none exist

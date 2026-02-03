@@ -14,6 +14,7 @@
           <th>Name</th>
           <th>Email</th>
           <th>Role</th>
+          <th>Verifications</th>
           <th>Registered</th>
           <th>Last Login</th>
           <th>Actions</th>
@@ -32,6 +33,20 @@
                 <span class="badge bg-warning"><i class="bi bi-shield-fill"></i> Admin</span>
               <% } else { %>
                 <span class="badge bg-secondary"><i class="bi bi-person-fill"></i> User</span>
+              <% } %>
+            </td>
+            <td>
+              <% if (u.is_verified) { %>
+                <span class="badge bg-success" title="Email verified"><i class="bi bi-envelope-check"></i></span>
+              <% } %>
+              <% if (u.phone_verified) { %>
+                <span class="badge bg-success" title="Phone verified"><i class="bi bi-phone-fill"></i></span>
+              <% } %>
+              <% if (u.id_verified) { %>
+                <span class="badge bg-primary" title="ID verified"><i class="bi bi-card-heading"></i></span>
+              <% } %>
+              <% if (!u.is_verified && !u.phone_verified && !u.id_verified) { %>
+                <span class="text-muted small">None</span>
               <% } %>
             </td>
             <td>
