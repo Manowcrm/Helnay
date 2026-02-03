@@ -13,6 +13,8 @@ const expressLayouts = require('express-ejs-layouts');
 const { isAuthenticated, isAdmin, isSuperAdmin } = require('./auth-middleware');
 const { sendBookingApprovalEmail, sendBookingDenialEmail, sendBookingDateChangeEmail, sendBookingCancellationEmail, sendContactNotificationToAdmin, sendWelcomeEmail, sendContactReply, sendVerificationEmail } = require('./email-service');
 const { logActivity, getClientIP, getActivityLogs, getActivityStats } = require('./activity-logger');
+const { getUserVerificationStatus, calculateTrustScore } = require('./verification-service');
+const uploadConfig = require('./upload-config');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
 const {
   loginLimiter,
@@ -606,6 +608,105 @@ app.post('/api/admin/listings/:id/update-price', isAdmin, async (req, res) => {
   } catch (err) {
     console.error('❌ [API UPDATE] Error:', err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ====== USER VERIFICATION ROUTES ======
+
+// User verification page
+app.get('/verify', isAuthenticated, async (req, res) => {
+  try {
+    const verificationStatus = await getUserVerificationStatus(req.session.userId);
+    
+    // Get ID verification details
+    const verificationRecord = await db.get(
+      'SELECT * FROM user_verifications WHERE user_id = ?',
+      [req.session.userId]
+    );
+    
+    // Determine ID status
+    let idStatus = 'none';
+    if (verificationStatus.id_verified) {
+      idStatus = 'verified';
+    } else if (verificationRecord && verificationRecord.id_document_url) {
+      idStatus = verificationRecord.id_verified === 0 ? 'pending' : 'verified';
+    }
+    
+    const trustScore = calculateTrustScore(
+      verificationStatus.email_verified,
+      verificationStatus.phone_verified,
+      verificationStatus.id_verified,
+      false // payment verified
+    );
+    
+    res.render('user_verification', {
+      verification: {
+        email_verified: verificationStatus.email_verified,
+        phone_verified: verificationStatus.phone_verified,
+        id_verified: verificationStatus.id_verified,
+        id_status: idStatus,
+        rejection_reason: verificationRecord?.id_rejection_reason || null
+      },
+      trustScore,
+      message: req.session.message || null
+    });
+    
+    delete req.session.message;
+  } catch (err) {
+    console.error('[VERIFICATION PAGE] Error:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Upload ID verification documents
+app.post('/verify/upload-id', isAuthenticated, uploadConfig.idVerification, async (req, res) => {
+  try {
+    const { document_type } = req.body;
+    const userId = req.session.userId;
+    
+    if (!req.files || !req.files.id_document || !req.files.selfie) {
+      req.session.message = { type: 'danger', text: 'Please upload both ID document and selfie photo' };
+      return res.redirect('/verify');
+    }
+    
+    const idDocumentPath = `/uploads/verifications/${req.files.id_document[0].filename}`;
+    const selfiePath = `/uploads/verifications/${req.files.selfie[0].filename}`;
+    
+    // Check if user already has a verification record
+    const existing = await db.get(
+      'SELECT * FROM user_verifications WHERE user_id = ?',
+      [userId]
+    );
+    
+    if (existing) {
+      // Update existing record
+      await db.run(
+        `UPDATE user_verifications 
+         SET id_document_type = ?, id_document_url = ?, id_selfie_url = ?, 
+             id_verified = 0, id_rejection_reason = NULL, updated_at = ?
+         WHERE user_id = ?`,
+        [document_type, idDocumentPath, selfiePath, new Date().toISOString(), userId]
+      );
+    } else {
+      // Create new record
+      await db.run(
+        `INSERT INTO user_verifications 
+         (user_id, id_document_type, id_document_url, id_selfie_url, created_at, updated_at) 
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [userId, document_type, idDocumentPath, selfiePath, new Date().toISOString(), new Date().toISOString()]
+      );
+    }
+    
+    console.log(`✅ [ID VERIFICATION] Documents uploaded by user ${userId}`);
+    req.session.message = { 
+      type: 'success', 
+      text: 'ID documents submitted successfully! We\'ll review them within 24-48 hours.' 
+    };
+    res.redirect('/verify');
+  } catch (err) {
+    console.error('[ID UPLOAD] Error:', err);
+    req.session.message = { type: 'danger', text: 'Error uploading documents. Please try again.' };
+    res.redirect('/verify');
   }
 });
 

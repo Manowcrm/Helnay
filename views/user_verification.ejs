@@ -1,0 +1,282 @@
+<div class="container my-5">
+  <div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Account</h5>
+          <div class="list-group list-group-flush">
+            <a href="#" class="list-group-item list-group-item-action active">
+              <i class="bi bi-shield-check"></i> Verification
+            </a>
+            <a href="/bookings" class="list-group-item list-group-item-action">
+              <i class="bi bi-calendar-check"></i> My Bookings
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-md-9">
+      <h1 class="mb-4"><i class="bi bi-shield-check"></i> Account Verification</h1>
+      
+      <% if (message) { %>
+        <div class="alert alert-<%= message.type %> alert-dismissible fade show">
+          <%= message.text %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      <% } %>
+
+      <!-- Trust Score -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <h5 class="card-title mb-3">Your Trust Score</h5>
+              <p class="text-muted">Complete verifications to build trust and unlock more features</p>
+            </div>
+            <div class="col-md-4 text-center">
+              <div class="position-relative d-inline-block">
+                <svg width="120" height="120">
+                  <circle cx="60" cy="60" r="50" fill="none" stroke="#e9ecef" stroke-width="10"/>
+                  <circle cx="60" cy="60" r="50" fill="none" stroke="#198754" stroke-width="10"
+                    stroke-dasharray="<%= trustScore * 3.14 %> 314" 
+                    transform="rotate(-90 60 60)"
+                    style="transition: stroke-dasharray 0.5s;"/>
+                </svg>
+                <div class="position-absolute top-50 start-50 translate-middle">
+                  <h2 class="mb-0"><%= trustScore %>%</h2>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Verification Steps -->
+      
+      <!-- Email Verification -->
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <h5 class="mb-2">
+                <i class="bi bi-envelope-check fs-4 text-primary me-2"></i>
+                Email Verification
+              </h5>
+              <p class="text-muted mb-0">Verify your email address</p>
+            </div>
+            <div class="col-md-4 text-end">
+              <% if (verification.email_verified) { %>
+                <span class="badge bg-success p-3">
+                  <i class="bi bi-check-circle"></i> Verified
+                </span>
+              <% } else { %>
+                <a href="/resend-verification?email=<%= user.email %>" class="btn btn-primary">
+                  Verify Email
+                </a>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phone Verification -->
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <h5 class="mb-2">
+                <i class="bi bi-phone-fill fs-4 text-success me-2"></i>
+                Phone Verification
+              </h5>
+              <p class="text-muted mb-0">Verify your phone number for account security</p>
+            </div>
+            <div class="col-md-4 text-end">
+              <% if (verification.phone_verified) { %>
+                <span class="badge bg-success p-3">
+                  <i class="bi bi-check-circle"></i> Verified
+                </span>
+              <% } else { %>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#phoneModal">
+                  Verify Phone
+                </button>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ID Verification -->
+      <div class="card mb-3 border-warning">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <h5 class="mb-2">
+                <i class="bi bi-card-heading fs-4 text-info me-2"></i>
+                ID Verification
+              </h5>
+              <p class="text-muted mb-2">Upload a government-issued ID for identity verification</p>
+              <% if (verification.id_status === 'pending') { %>
+                <div class="alert alert-warning mb-0">
+                  <i class="bi bi-clock-history"></i> Your ID is being reviewed. This usually takes 24-48 hours.
+                </div>
+              <% } else if (verification.id_status === 'rejected') { %>
+                <div class="alert alert-danger mb-0">
+                  <i class="bi bi-x-circle"></i> <strong>Verification Rejected:</strong> <%= verification.rejection_reason %>
+                  <br><small>Please upload a new document.</small>
+                </div>
+              <% } %>
+            </div>
+            <div class="col-md-4 text-end">
+              <% if (verification.id_verified) { %>
+                <span class="badge bg-success p-3">
+                  <i class="bi bi-shield-check"></i> Verified
+                </span>
+              <% } else { %>
+                <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#idModal">
+                  <i class="bi bi-upload"></i> Upload ID
+                </button>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Why Verify -->
+      <div class="card bg-light">
+        <div class="card-body">
+          <h5 class="card-title"><i class="bi bi-question-circle"></i> Why verify your identity?</h5>
+          <ul class="mb-0">
+            <li>✅ <strong>Build trust</strong> - Hosts prefer verified guests</li>
+            <li>✅ <strong>Faster bookings</strong> - Skip additional checks</li>
+            <li>✅ <strong>Account security</strong> - Protect against fraud</li>
+            <li>✅ <strong>Better support</strong> - Priority customer service</li>
+            <li>🔒 <strong>Your data is secure</strong> - Encrypted and GDPR compliant</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Phone Verification Modal -->
+<div class="modal fade" id="phoneModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Verify Phone Number</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="/verify/phone" id="phoneForm">
+        <div class="modal-body">
+          <div id="phoneStep1">
+            <div class="mb-3">
+              <label class="form-label">Phone Number</label>
+              <input type="tel" class="form-control" name="phone" placeholder="+1234567890" required>
+              <small class="text-muted">Include country code (e.g., +1 for US/Canada)</small>
+            </div>
+          </div>
+          <div id="phoneStep2" style="display:none;">
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle"></i> We've sent a 6-digit code to your phone
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Verification Code</label>
+              <input type="text" class="form-control" name="code" placeholder="123456" maxlength="6">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Send Code</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ID Upload Modal -->
+<div class="modal fade" id="idModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Upload Government ID</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="/verify/upload-id" enctype="multipart/form-data">
+        <div class="modal-body">
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> <strong>Accepted documents:</strong> Passport, National ID card, Driver's License
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label"><strong>Document Type</strong></label>
+            <select class="form-select" name="document_type" required>
+              <option value="">Select document type...</option>
+              <option value="passport">Passport</option>
+              <option value="national_id">National ID Card</option>
+              <option value="drivers_license">Driver's License</option>
+            </select>
+          </div>
+
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <label class="form-label"><strong>1. Photo of ID Document</strong></label>
+              <div class="border rounded p-4 text-center bg-light">
+                <i class="bi bi-card-image fs-1 text-muted mb-3 d-block"></i>
+                <input type="file" class="form-control" name="id_document" accept="image/*" required>
+                <small class="text-muted d-block mt-2">Clear photo of your ID (front side)</small>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><strong>2. Selfie Photo</strong></label>
+              <div class="border rounded p-4 text-center bg-light">
+                <i class="bi bi-person-bounding-box fs-1 text-muted mb-3 d-block"></i>
+                <input type="file" class="form-control" name="selfie" accept="image/*" required>
+                <small class="text-muted d-block mt-2">Clear selfie of yourself</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert alert-warning">
+            <small>
+              <i class="bi bi-shield-lock"></i> Your documents are encrypted and securely stored. 
+              They will only be used for identity verification and will be deleted after review.
+            </small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-warning">
+            <i class="bi bi-upload"></i> Submit for Review
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// Phone verification form handling
+const phoneForm = document.getElementById('phoneForm');
+let codeSent = false;
+
+phoneForm?.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  if (!codeSent) {
+    // Send code
+    const phone = phoneForm.querySelector('[name="phone"]').value;
+    // TODO: Make AJAX request to send code
+    document.getElementById('phoneStep1').style.display = 'none';
+    document.getElementById('phoneStep2').style.display = 'block';
+    phoneForm.querySelector('button[type="submit"]').textContent = 'Verify Code';
+    codeSent = true;
+  } else {
+    // Verify code
+    phoneForm.submit();
+  }
+});
+</script>
