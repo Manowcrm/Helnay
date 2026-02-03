@@ -398,6 +398,8 @@ app.get('/mountain-retreats', async (req, res) => {
 
 app.get('/about', (req, res) => res.render('about'));
 
+app.get('/become-a-host', (req, res) => res.render('become_host'));
+
 app.get('/contact', (req, res) => res.render('contact', { message: null }));
 
 // Resend Verification Email (with rate limiting)
