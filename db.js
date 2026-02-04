@@ -523,6 +523,69 @@ async function init() {
       );
     }
     console.log(`✅ [DB INIT] Seeded ${defaultLocations.length} default locations`);
+  } else {
+    // Check if we need to add UK locations to existing database
+    const hasUKLocations = await get(`SELECT COUNT(*) as count FROM locations WHERE name LIKE '%UK%' OR name LIKE '%London%'`);
+    if (hasUKLocations.count === 0) {
+      console.log('🇬🇧 [DB MIGRATION] Adding UK locations to existing database...');
+      const ukLocations = [
+        { name: 'Euston, London', order: 16 },
+        { name: 'Oxford, UK', order: 17 },
+        { name: 'Brixton, London', order: 18 },
+        { name: 'Westminster, London', order: 19 },
+        { name: 'Camden, London', order: 20 },
+        { name: 'Shoreditch, London', order: 21 },
+        { name: 'Kensington, London', order: 22 },
+        { name: 'Chelsea, London', order: 23 },
+        { name: 'Notting Hill, London', order: 24 },
+        { name: 'Canary Wharf, London', order: 25 },
+        { name: 'Birmingham, UK', order: 26 },
+        { name: 'Manchester, UK', order: 27 },
+        { name: 'Edinburgh, UK', order: 28 },
+        { name: 'Glasgow, UK', order: 29 },
+        { name: 'Liverpool, UK', order: 30 },
+        { name: 'Bristol, UK', order: 31 },
+        { name: 'Leeds, UK', order: 32 },
+        { name: 'Cambridge, UK', order: 33 },
+        { name: 'Brighton, UK', order: 34 }
+      ];
+      
+      for (const loc of ukLocations) {
+        await run(
+          'INSERT INTO locations (name, display_order, is_active, created_at) VALUES (?, ?, ?, ?)',
+          [loc.name, loc.order, 1, new Date().toISOString()]
+        );
+      }
+      console.log(`✅ [DB MIGRATION] Added ${ukLocations.length} UK locations`);
+      
+      // Auto-assign UK locations to existing listings
+      console.log('🔄 [DB MIGRATION] Assigning UK locations to listings...');
+      const listings = await all('SELECT id, title FROM listings');
+      const allLocations = await all('SELECT * FROM locations');
+      
+      const assignments = [
+        { id: 1, location: 'Euston, London' },
+        { id: 2, location: 'Kensington, London' },
+        { id: 3, location: 'Oxford, UK' },
+        { id: 4, location: 'Shoreditch, London' },
+        { id: 5, location: 'Brixton, London' },
+        { id: 6, location: 'Brighton, UK' },
+        { id: 7, location: 'Brighton, UK' },
+        { id: 8, location: 'Brighton, UK' },
+        { id: 9, location: 'Edinburgh, UK' },
+        { id: 10, location: 'Edinburgh, UK' },
+        { id: 11, location: 'Westminster, London' },
+        { id: 12, location: 'Manhattan' }
+      ];
+      
+      for (const assignment of assignments) {
+        const location = allLocations.find(l => l.name === assignment.location);
+        if (location && assignment.id <= listings.length) {
+          await run('UPDATE listings SET location_id = ? WHERE id = ?', [location.id, assignment.id]);
+        }
+      }
+      console.log('✅ [DB MIGRATION] Updated listings with UK locations');
+    }
   }
   
   // Create or update default super admin user
