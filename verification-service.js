@@ -1,16 +1,40 @@
 const db = require('./db');
 const crypto = require('crypto');
+const logger = require('./logger');
 
 // Generate random 6-digit OTP code
 function generateOTP() {
   return crypto.randomInt(100000, 999999).toString();
 }
 
-// Send OTP code (placeholder - integrate with Twilio/SMS service)
+// Send OTP code via SMS (requires Twilio or similar service)
 async function sendPhoneOTP(phoneNumber, code) {
-  // TODO: Integrate with Twilio, Vonage, or other SMS provider
-  // For now, just log it (in production, this would send SMS)
-  console.log(`📱 [PHONE VERIFICATION] OTP for ${phoneNumber}: ${code}`);
+  // NOTE: Phone verification via SMS requires a service like Twilio, Vonage, or AWS SNS
+  // To enable SMS verification:
+  // 1. Sign up for a service (e.g., Twilio: https://www.twilio.com)
+  // 2. Add credentials to .env: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER
+  // 3. Install SDK: npm install twilio
+  // 4. Uncomment and configure the code below
+  
+  /* Example Twilio implementation:
+  const twilio = require('twilio');
+  const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+  
+  try {
+    await client.messages.create({
+      body: `Your Helnay verification code is: ${code}. Valid for 10 minutes.`,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: phoneNumber
+    });
+    return { success: true, message: 'OTP sent successfully' };
+  } catch (error) {
+    logger.error('SMS sending failed:', error);
+    return { success: false, message: 'Failed to send OTP' };
+  }
+  */
+  
+  // Development fallback - log to console
+  logger.info(`[PHONE VERIFICATION] OTP for ${phoneNumber}: ${code}`);
   
   // In development, you can also email the code
   // or display it in the UI for testing

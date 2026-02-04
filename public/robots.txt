@@ -1,0 +1,24 @@
+# Robots.txt for Helnay Rentals
+# Allow all search engines to crawl the site
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://helnay.com/sitemap.xml
+
+# Disallow admin and private pages
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /bookings
+Disallow: /api/
+Disallow: /register
+Disallow: /login
+Disallow: /logout
+
+# Allow listing pages for SEO
+Allow: /listings/
+Allow: /beach-houses
+Allow: /city-stays
+Allow: /mountain-retreats
+Allow: /entire-homes

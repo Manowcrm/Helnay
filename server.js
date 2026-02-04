@@ -3,6 +3,8 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const morgan = require('morgan');
+const logger = require('./logger');
 const SqliteStore = require('better-sqlite3-session-store')(session);
 const BetterSqlite3 = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
@@ -15,7 +17,18 @@ const { sendBookingApprovalEmail, sendBookingDenialEmail, sendBookingDateChangeE
 const { logActivity, getClientIP, getActivityLogs, getActivityStats } = require('./activity-logger');
 const { getUserVerificationStatus, calculateTrustScore } = require('./verification-service');
 const uploadConfig = require('./upload-config');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
+
+// Validate required environment variables in production
+if (process.env.NODE_ENV === 'production') {
+  const required = ['STRIPE_SECRET_KEY', 'SESSION_SECRET', 'SENDGRID_API_KEY'];
+  const missing = required.filter(key => !process.env[key]);
+  if (missing.length > 0) {
+    logger.error(`Missing required environment variables: ${missing.join(', ')}`);
+    process.exit(1);
+  }
+}
+
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const {
   loginLimiter,
   registerLimiter,
@@ -77,11 +90,22 @@ app.use(helmet({
 // Trust proxy - required for secure cookies to work behind Render's proxy
 app.set('trust proxy', 1);
 
+// HTTP request logging
+if (process.env.NODE_ENV === 'production') {
+  app.use(morgan('combined', { stream: logger.stream }));
+} else {
+  app.use(morgan('dev'));
+}
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(expressLayouts);
 app.set('layout', 'layout');
-app.use(express.static(path.join(__dirname, 'public')));
+// Static files with caching in production
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0,
+  etag: true
+}));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.json()); // For Stripe webhook and API calls
 
@@ -96,7 +120,7 @@ if (!fs.existsSync(sessionDbPath)) {
 }
 
 const sessionDb = new BetterSqlite3(sessionDbFile);
-console.log('✅ Session database at:', sessionDbFile);
+logger.info(`Session database initialized at: ${sessionDbFile}`);
 
 app.use(session({
   store: new SqliteStore({
@@ -106,7 +130,7 @@ app.use(session({
       intervalMs: 24 * 60 * 60 * 1000 // Check once per day for expired sessions
     }
   }),
-  secret: process.env.SESSION_SECRET || 'your-secret-key-change-this-in-production',
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: { 
@@ -114,7 +138,7 @@ app.use(session({
     httpOnly: true, // Prevent JavaScript access
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     sameSite: 'lax', // CSRF protection
-    domain: process.env.NODE_ENV === 'production' ? 'helnay.com' : undefined
+    domain: process.env.COOKIE_DOMAIN || undefined
   },
   rolling: true, // Extend session on activity
   name: 'helnay_session' // Custom name instead of default
@@ -156,23 +180,23 @@ app.post('/register', registerLimiter, verifyCsrfToken, registerValidation, hand
   try {
     const { name, email, password, confirmPassword } = req.body;
     
-    console.log(`[REGISTRATION] Attempt for email: ${email}`);
+    logger.info(`Registration attempt for email: ${email}`);
     
     if (password !== confirmPassword) {
-      console.log('[REGISTRATION] Error: Passwords do not match');
+      logger.warn(`Registration failed - passwords do not match: ${email}`);
       return res.render('register', { message: null, error: 'Passwords do not match' });
     }
     
     // Check if user already exists
     const existingUser = await db.get('SELECT * FROM users WHERE email = ?', [email]);
     if (existingUser) {
-      console.log(`[REGISTRATION] Error: Email already registered: ${email}`);
+      logger.warn(`Registration failed - email already exists: ${email}`);
       return res.render('register', { message: null, error: 'Email already registered' });
     }
     
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log('[REGISTRATION] Password hashed successfully');
+    logger.debug('Password hashed successfully');
     
     // Create user (is_verified = 0 by default)
     const result = await db.run(
@@ -181,7 +205,7 @@ app.post('/register', registerLimiter, verifyCsrfToken, registerValidation, hand
     );
     
     const userId = result.lastInsertRowid;
-    console.log(`[REGISTRATION] User created successfully with ID: ${userId}`);
+    logger.info(`User created successfully - ID: ${userId}, Email: ${email}`);
     
     // Generate verification token
     const crypto = require('crypto');
@@ -193,16 +217,16 @@ app.post('/register', registerLimiter, verifyCsrfToken, registerValidation, hand
       'INSERT INTO email_verifications (user_id, token, expires_at, created_at) VALUES (?, ?, ?, ?)',
       [userId, verificationToken, expiresAt, new Date().toISOString()]
     );
-    console.log(`[REGISTRATION] Verification token created for user ID: ${userId}`);
+    logger.debug(`Verification token created for user ID: ${userId}`);
     
     // Send verification email (always send, even if verification is disabled)
-    console.log(`[REGISTRATION] Attempting to send verification email to: ${email}`);
+    logger.debug(`Attempting to send verification email to: ${email}`);
     sendVerificationEmail({ name, email }, verificationToken)
       .then(() => {
-        console.log(`[REGISTRATION] ✓ Verification email sent successfully to: ${email}`);
+        logger.info(`Verification email sent successfully to: ${email}`);
       })
       .catch(err => {
-        console.error(`[REGISTRATION] ⚠️ Verification email failed for ${email}:`, err.message);
+        logger.error(`Verification email failed for ${email}: ${err.message}`);
       });
     
     const requireVerification = process.env.REQUIRE_EMAIL_VERIFICATION === 'true';
@@ -210,17 +234,16 @@ app.post('/register', registerLimiter, verifyCsrfToken, registerValidation, hand
     if (!requireVerification) {
       // Auto-verify if verification is disabled for testing
       await db.run('UPDATE users SET is_verified = 1 WHERE id = ?', [userId]);
-      console.log(`[REGISTRATION] User auto-verified (verification disabled)`);
+      logger.debug('User auto-verified (verification disabled)');
     }
     
-    console.log(`[REGISTRATION] ✅ Registration complete for: ${email}`);
+    logger.info(`Registration complete for: ${email}`);
     res.render('register', { 
       message: '✅ Registration successful! <br><br>📧 <strong>IMPORTANT:</strong> A verification email has been sent to <strong>' + email + '</strong><br><br>Please check your inbox (and spam/junk folder) and click the verification link to activate your account.<br><br>⚠️ You must verify your email before you can log in.', 
       error: null 
     });
   } catch (err) {
-    console.error('[REGISTRATION] ERROR:', err);
-    console.error('[REGISTRATION] Stack trace:', err.stack);
+    logger.error('Registration error:', err);
     res.render('register', { message: null, error: 'Registration failed. Please try again.' });
   }
 });
@@ -771,21 +794,8 @@ app.get('/listings/:id', async (req, res) => {
     
     res.render('listing', { listing, images, amenities });
   } catch (err) {
+    logger.error('Listing page error:', err);
     res.status(500).send('Server error');
-  }
-});
-
-// Debug route to check database prices
-app.get('/api/debug/listings', async (req, res) => {
-  try {
-    const listings = await db.all('SELECT id, title, price, location FROM listings ORDER BY id');
-    res.json({
-      message: 'Current prices in database',
-      timestamp: new Date().toISOString(),
-      listings: listings
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
   }
 });
 
@@ -2532,9 +2542,59 @@ app.get('/admin/api/check-user', isAdmin, async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('Check user error:', err);
+    logger.error('Check user error:', err);
     res.status(500).json({ error: 'Server error' });
   }
+});
+
+// ====== HEALTH CHECK ENDPOINT ======
+app.get('/health', async (req, res) => {
+  try {
+    // Check database connectivity
+    await db.get('SELECT 1');
+    
+    res.status(200).json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'development'
+    });
+  } catch (err) {
+    logger.error('Health check failed:', err);
+    res.status(503).json({
+      status: 'unhealthy',
+      error: 'Database connection failed'
+    });
+  }
+});
+
+// ====== GLOBAL ERROR HANDLER ======
+// 404 handler - must be after all routes
+app.use((req, res, next) => {
+  res.status(404).render('error', {
+    message: 'Page not found',
+    error: { status: 404 }
+  });
+});
+
+// Global error handler - must be last
+app.use((err, req, res, next) => {
+  logger.error('Unhandled error:', {
+    message: err.message,
+    stack: err.stack,
+    url: req.url,
+    method: req.method
+  });
+  
+  // Don't leak error details in production
+  const errorMessage = process.env.NODE_ENV === 'production' 
+    ? 'An unexpected error occurred. Please try again later.'
+    : err.message;
+  
+  res.status(err.status || 500).render('error', {
+    message: errorMessage,
+    error: { status: err.status || 500 }
+  });
 });
 
 // Start server after DB initialized
@@ -2542,21 +2602,24 @@ app.get('/admin/api/check-user', isAdmin, async (req, res) => {
   try {
     await db.init();
     const PORT = process.env.PORT || 3000;
-    const server = app.listen(PORT, () => console.log(`Server listening on http://localhost:${PORT}`));
+    const server = app.listen(PORT, () => logger.info(`Server listening on http://localhost:${PORT}`));
     
     // Handle server errors
     server.on('error', (err) => {
-      console.error('Server error:', err);
+      logger.error('Server error:', err);
     });
     
-    // Keep process alive
+    // Graceful shutdown
     process.on('SIGTERM', () => {
-      console.log('SIGTERM received, closing server');
-      server.close();
+      logger.info('SIGTERM received, closing server gracefully');
+      server.close(() => {
+        logger.info('Server closed');
+        process.exit(0);
+      });
     });
     
   } catch (err) {
-    console.error('Failed to initialize DB', err);
+    logger.error('Failed to initialize DB', err);
     process.exit(1);
   }
 })();
