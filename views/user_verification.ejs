@@ -233,9 +233,25 @@
             <div class="col-md-6">
               <label class="form-label"><strong>2. Selfie Photo</strong></label>
               <div class="border rounded p-4 text-center bg-light">
-                <i class="bi bi-person-bounding-box fs-1 text-muted mb-3 d-block"></i>
-                <input type="file" class="form-control" name="selfie" accept="image/*" required>
-                <small class="text-muted d-block mt-2">Clear selfie of yourself</small>
+                <div id="cameraPreview" style="display:none;">
+                  <video id="videoElement" width="100%" height="auto" autoplay style="border-radius:8px; max-height: 300px;"></video>
+                  <canvas id="canvasElement" style="display:none;"></canvas>
+                  <img id="capturedImage" style="display:none; width:100%; border-radius:8px; max-height: 300px;">
+                </div>
+                <div id="cameraPlaceholder">
+                  <i class="bi bi-camera fs-1 text-muted mb-3 d-block"></i>
+                  <small class="text-muted d-block mb-2">Take a clear selfie</small>
+                </div>
+                <button type="button" id="startCameraBtn" class="btn btn-outline-primary btn-sm mt-2" onclick="startCamera()">
+                  <i class="bi bi-camera-fill"></i> Start Camera
+                </button>
+                <button type="button" id="captureSelfieBtn" class="btn btn-success btn-sm mt-2" style="display:none;" onclick="captureSelfie()">
+                  <i class="bi bi-camera"></i> Capture Photo
+                </button>
+                <button type="button" id="retakeSelfieBtn" class="btn btn-warning btn-sm mt-2" style="display:none;" onclick="retakeSelfie()">
+                  <i class="bi bi-arrow-clockwise"></i> Retake
+                </button>
+                <input type="hidden" name="selfie" id="selfieData" required>
               </div>
             </div>
           </div>
@@ -279,4 +295,140 @@ phoneForm?.addEventListener('submit', async function(e) {
     phoneForm.submit();
   }
 });
+
+// Camera selfie capture
+let videoStream = null;
+let videoElement = null;
+let canvasElement = null;
+let capturedImage = null;
+
+function startCamera() {
+  videoElement = document.getElementById('videoElement');
+  canvasElement = document.getElementById('canvasElement');
+  capturedImage = document.getElementById('capturedImage');
+  
+  // Check if browser supports getUserMedia
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert('Your browser does not support camera access. Please use a modern browser.');
+    return;
+  }
+  
+  // Request camera access
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } })
+    .then(function(stream) {
+      videoStream = stream;
+      videoElement.srcObject = stream;
+      
+      // Show camera preview
+      document.getElementById('cameraPlaceholder').style.display = 'none';
+      document.getElementById('cameraPreview').style.display = 'block';
+      document.getElementById('startCameraBtn').style.display = 'none';
+      document.getElementById('captureSelfieBtn').style.display = 'inline-block';
+    })
+    .catch(function(err) {
+      console.error('Camera error:', err);
+      alert('Unable to access camera. Please ensure you have granted camera permissions.');
+    });
+}
+
+function captureSelfie() {
+  if (!videoElement || !canvasElement) return;
+  
+  // Set canvas size to match video
+  canvasElement.width = videoElement.videoWidth;
+  canvasElement.height = videoElement.videoHeight;
+  
+  // Draw video frame to canvas
+  const ctx = canvasElement.getContext('2d');
+  ctx.drawImage(videoElement, 0, 0);
+  
+  // Convert canvas to base64 image
+  const imageData = canvasElement.toDataURL('image/jpeg', 0.9);
+  
+  // Show captured image
+  capturedImage.src = imageData;
+  capturedImage.style.display = 'block';
+  videoElement.style.display = 'none';
+  
+  // Stop camera stream
+  if (videoStream) {
+    videoStream.getTracks().forEach(track => track.stop());
+    videoStream = null;
+  }
+  
+  // Update UI
+  document.getElementById('captureSelfieBtn').style.display = 'none';
+  document.getElementById('retakeSelfieBtn').style.display = 'inline-block';
+  
+  // Store image data in hidden input
+  document.getElementById('selfieData').value = imageData;
+}
+
+function retakeSelfie() {
+  // Reset UI
+  capturedImage.style.display = 'none';
+  capturedImage.src = '';
+  videoElement.style.display = 'block';
+  document.getElementById('retakeSelfieBtn').style.display = 'none';
+  
+  // Clear hidden input
+  document.getElementById('selfieData').value = '';
+  
+  // Restart camera
+  startCamera();
+}
+
+// ID document validation
+const idDocumentInput = document.querySelector('input[name="id_document"]');
+if (idDocumentInput) {
+  idDocumentInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB');
+      e.target.value = '';
+      return;
+    }
+    
+    // Check file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    if (!validTypes.includes(file.type)) {
+      alert('Please upload a valid ID document (JPEG, PNG, or PDF only)');
+      e.target.value = '';
+      return;
+    }
+    
+    // For images, perform basic validation
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          // Check minimum dimensions (at least 500x300 for readability)
+          if (img.width < 500 || img.height < 300) {
+            alert('Image quality too low. Please upload a clearer photo (minimum 500x300 pixels)');
+            idDocumentInput.value = '';
+            return;
+          }
+          
+          // Check aspect ratio (IDs are usually rectangular, not square)
+          const aspectRatio = img.width / img.height;
+          if (aspectRatio < 1.2 || aspectRatio > 2.0) {
+            const confirmUpload = confirm(
+              'This image doesn\'t look like a typical ID document (unusual dimensions). ' +
+              'Make sure you\'re uploading a clear photo of your ID. Continue anyway?'
+            );
+            if (!confirmUpload) {
+              idDocumentInput.value = '';
+            }
+          }
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+}
 </script>

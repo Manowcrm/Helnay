@@ -661,16 +661,46 @@ app.get('/verify', isAuthenticated, async (req, res) => {
 // Upload ID verification documents
 app.post('/verify/upload-id', isAuthenticated, uploadConfig.idVerification, async (req, res) => {
   try {
-    const { document_type } = req.body;
+    const { document_type, selfie } = req.body;
     const userId = req.session.userId;
     
-    if (!req.files || !req.files.id_document || !req.files.selfie) {
-      req.session.message = { type: 'danger', text: 'Please upload both ID document and selfie photo' };
+    // Validate ID document upload
+    if (!req.file) {
+      req.session.message = { type: 'danger', text: 'Please upload your ID document' };
       return res.redirect('/verify');
     }
     
-    const idDocumentPath = `/uploads/verifications/${req.files.id_document[0].filename}`;
-    const selfiePath = `/uploads/verifications/${req.files.selfie[0].filename}`;
+    // Validate selfie camera capture
+    if (!selfie || !selfie.startsWith('data:image/')) {
+      req.session.message = { type: 'danger', text: 'Please capture a selfie photo using your camera' };
+      return res.redirect('/verify');
+    }
+    
+    // Basic ID document validation (check file size and type)
+    const fileSize = req.file.size;
+    const mimeType = req.file.mimetype;
+    
+    if (fileSize > 5 * 1024 * 1024) {
+      req.session.message = { type: 'danger', text: 'ID document file size too large (max 5MB)' };
+      return res.redirect('/verify');
+    }
+    
+    const validMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    if (!validMimeTypes.includes(mimeType)) {
+      req.session.message = { type: 'danger', text: 'Invalid file type. Please upload JPEG, PNG, or PDF only.' };
+      return res.redirect('/verify');
+    }
+    
+    const idDocumentPath = `/uploads/verifications/${req.file.filename}`;
+    
+    // Save base64 selfie to file
+    const base64Data = selfie.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    const selfieFilename = `${userId}_${Date.now()}_selfie.jpg`;
+    const selfiePath = path.join(__dirname, 'public', 'uploads', 'verifications', selfieFilename);
+    
+    fs.writeFileSync(selfiePath, buffer);
+    const selfieUrl = `/uploads/verifications/${selfieFilename}`;
     
     // Check if user already has a verification record
     const existing = await db.get(
@@ -685,7 +715,7 @@ app.post('/verify/upload-id', isAuthenticated, uploadConfig.idVerification, asyn
          SET id_document_type = ?, id_document_url = ?, id_selfie_url = ?, 
              id_verified = 0, id_rejection_reason = NULL, updated_at = ?
          WHERE user_id = ?`,
-        [document_type, idDocumentPath, selfiePath, new Date().toISOString(), userId]
+        [document_type, idDocumentPath, selfieUrl, new Date().toISOString(), userId]
       );
     } else {
       // Create new record
@@ -693,7 +723,7 @@ app.post('/verify/upload-id', isAuthenticated, uploadConfig.idVerification, asyn
         `INSERT INTO user_verifications 
          (user_id, id_document_type, id_document_url, id_selfie_url, created_at, updated_at) 
          VALUES (?, ?, ?, ?, ?, ?)`,
-        [userId, document_type, idDocumentPath, selfiePath, new Date().toISOString(), new Date().toISOString()]
+        [userId, document_type, idDocumentPath, selfieUrl, new Date().toISOString(), new Date().toISOString()]
       );
     }
     

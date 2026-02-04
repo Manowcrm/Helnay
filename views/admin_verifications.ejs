@@ -90,6 +90,7 @@
               </td>
               <td>
                 <form method="POST" action="/admin/verify-id/<%= item.user_id %>/approve" style="display:inline;">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                   <button type="submit" class="btn btn-sm btn-success">
                     <i class="bi bi-check-circle"></i> Approve
                   </button>
@@ -107,6 +108,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                       </div>
                       <form method="POST" action="/admin/verify-id/<%= item.user_id %>/reject">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <div class="modal-body">
                           <p>User: <strong><%= item.name %></strong> (<%= item.email %>)</p>
                           <div class="mb-3">

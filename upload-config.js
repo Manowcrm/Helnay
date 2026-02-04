@@ -51,11 +51,8 @@ module.exports = {
   // For single file upload
   single: (fieldName) => upload.single(fieldName),
   
-  // For ID verification (2 files: ID document + selfie)
-  idVerification: upload.fields([
-    { name: 'id_document', maxCount: 1 },
-    { name: 'selfie', maxCount: 1 }
-  ]),
+  // For ID verification (only ID document - selfie is captured via camera as base64)
+  idVerification: upload.single('id_document'),
   
   // For property listing images
   listingImages: upload.array('images', 10),
