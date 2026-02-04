@@ -494,7 +494,26 @@ async function init() {
       { name: 'Austin', order: 12 },
       { name: 'Denver', order: 13 },
       { name: 'Phoenix', order: 14 },
-      { name: 'San Diego', order: 15 }
+      { name: 'San Diego', order: 15 },
+      // UK Locations
+      { name: 'Euston, London', order: 16 },
+      { name: 'Oxford, UK', order: 17 },
+      { name: 'Brixton, London', order: 18 },
+      { name: 'Westminster, London', order: 19 },
+      { name: 'Camden, London', order: 20 },
+      { name: 'Shoreditch, London', order: 21 },
+      { name: 'Kensington, London', order: 22 },
+      { name: 'Chelsea, London', order: 23 },
+      { name: 'Notting Hill, London', order: 24 },
+      { name: 'Canary Wharf, London', order: 25 },
+      { name: 'Birmingham, UK', order: 26 },
+      { name: 'Manchester, UK', order: 27 },
+      { name: 'Edinburgh, UK', order: 28 },
+      { name: 'Glasgow, UK', order: 29 },
+      { name: 'Liverpool, UK', order: 30 },
+      { name: 'Bristol, UK', order: 31 },
+      { name: 'Leeds, UK', order: 32 },
+      { name: 'Cambridge, UK', order: 33 }
     ];
     
     for (const loc of defaultLocations) {
