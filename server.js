@@ -717,15 +717,27 @@ app.post('/verify/upload-id', isAuthenticated, uploadConfig.idVerification, asyn
          WHERE user_id = ?`,
         [document_type, idDocumentPath, selfieUrl, new Date().toISOString(), userId]
       );
+      console.log(`✅ [ID VERIFICATION] Updated existing record for user ${userId}`);
     } else {
       // Create new record
       await db.run(
         `INSERT INTO user_verifications 
-         (user_id, id_document_type, id_document_url, id_selfie_url, created_at, updated_at) 
-         VALUES (?, ?, ?, ?, ?, ?)`,
+         (user_id, id_document_type, id_document_url, id_selfie_url, id_verified, created_at, updated_at) 
+         VALUES (?, ?, ?, ?, 0, ?, ?)`,
         [userId, document_type, idDocumentPath, selfieUrl, new Date().toISOString(), new Date().toISOString()]
       );
+      console.log(`✅ [ID VERIFICATION] Created new record for user ${userId}`);
     }
+    
+    // Verify data was saved
+    const saved = await db.get('SELECT * FROM user_verifications WHERE user_id = ?', [userId]);
+    console.log(`📋 [ID VERIFICATION] Saved data:`, {
+      userId: saved.user_id,
+      docType: saved.id_document_type,
+      docUrl: saved.id_document_url,
+      selfieUrl: saved.id_selfie_url,
+      verified: saved.id_verified
+    });
     
     console.log(`✅ [ID VERIFICATION] Documents uploaded by user ${userId}`);
     req.session.message = { 
@@ -1210,12 +1222,22 @@ app.get('/admin/verifications', isSuperAdmin, async (req, res) => {
     const pending = await db.all(`
       SELECT u.*, v.phone_number, v.phone_verified, 
              v.id_document_type, v.id_document_url, v.id_selfie_url, 
-             v.created_at
+             v.created_at, v.id_verified
       FROM users u
       INNER JOIN user_verifications v ON u.id = v.user_id
-      WHERE u.role = 'user' AND v.id_document_url IS NOT NULL AND v.id_verified = 0
+      WHERE u.role = 'user' AND v.id_document_url IS NOT NULL AND (v.id_verified = 0 OR v.id_verified IS NULL)
       ORDER BY v.created_at ASC
     `);
+    
+    console.log(`📋 [VERIFICATIONS] Found ${pending.length} pending verifications`);
+    if (pending.length > 0) {
+      console.log(`📋 [VERIFICATIONS] First pending:`, {
+        userId: pending[0].id,
+        name: pending[0].name,
+        docType: pending[0].id_document_type,
+        verified: pending[0].id_verified
+      });
+    }
     
     // Calculate stats
     const stats = {
