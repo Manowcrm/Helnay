@@ -403,3 +403,40 @@ function updateListingsCount() {
   }
 }
 </script>
+
+<!-- Schema.org Structured Data for SEO -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Helnay",
+  "url": "https://helnay.com",
+  "description": "Premium vacation rental platform offering beach houses, city apartments, mountain retreats, and entire homes worldwide",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://helnay.com/?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Helnay",
+  "url": "https://helnay.com",
+  "logo": "https://helnay.com/uploads/helnay-logo.png",
+  "description": "Premium vacation rental platform",
+  "sameAs": [
+    "https://www.facebook.com/helnay",
+    "https://twitter.com/helnay",
+    "https://www.instagram.com/helnay"
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "contactType": "Customer Service",
+    "url": "https://helnay.com/contact"
+  }
+}
+</script>

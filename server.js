@@ -578,7 +578,18 @@ app.get('/', async (req, res) => {
       'Expires': '0'
     });
     
-    res.render('index', { listings, query: req.query, filtersByCategory, browseCategories, favoriteIds, user: req.session.userId ? { id: req.session.userId } : null });
+    res.render('index', { 
+      listings, 
+      query: req.query, 
+      filtersByCategory, 
+      browseCategories, 
+      favoriteIds, 
+      user: req.session.userId ? { id: req.session.userId } : null,
+      title: 'Find Your Perfect Vacation Rental',
+      description: 'Discover amazing vacation rental homes worldwide. Beach houses, city apartments, mountain retreats, and entire homes. Book your perfect stay with Helnay.',
+      canonicalUrl: '/',
+      ogImage: '/uploads/helnay-og-image.jpg'
+    });
   } catch (err) {
     console.error(err);
     res.status(500).send('Server error');
@@ -2565,6 +2576,20 @@ app.get('/health', async (req, res) => {
       status: 'unhealthy',
       error: 'Database connection failed'
     });
+  }
+});
+
+// ====== DYNAMIC SITEMAP ======
+const { generateSitemap } = require('./sitemap-generator');
+
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    const sitemap = await generateSitemap();
+    res.header('Content-Type', 'application/xml');
+    res.send(sitemap);
+  } catch (err) {
+    logger.error('Sitemap generation error:', err);
+    res.status(500).send('Error generating sitemap');
   }
 });
 
