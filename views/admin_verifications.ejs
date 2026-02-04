@@ -176,7 +176,7 @@
             <tr>
               <td><strong><%= u.name %></strong></td>
               <td><%= u.email %></td>
-              <td><%= u.user_phone || u.v_phone || '-' %></td>
+              <td><%= u.phone_number || '-' %></td>
               <td>
                 <% if (u.is_verified) { %>
                   <span class="badge bg-success"><i class="bi bi-check-circle"></i></span>
