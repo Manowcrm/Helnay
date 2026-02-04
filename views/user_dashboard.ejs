@@ -1,0 +1,205 @@
+<%- include('layout') %>
+
+<div class="container mt-4">
+  <h1 class="mb-4"><i class="bi bi-speedometer2"></i> My Dashboard</h1>
+  
+  <!-- Welcome Banner -->
+  <div class="alert alert-info">
+    <h5><i class="bi bi-person-circle"></i> Welcome back, <%= user.name %>!</h5>
+    <p class="mb-0">Manage your bookings and favorite properties from here.</p>
+  </div>
+
+  <!-- Quick Stats -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card text-white bg-primary">
+        <div class="card-body">
+          <h6 class="card-title"><i class="bi bi-calendar-check"></i> Active Bookings</h6>
+          <h2><%= stats.activeBookings %></h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-white bg-success">
+        <div class="card-body">
+          <h6 class="card-title"><i class="bi bi-check-circle"></i> Completed</h6>
+          <h2><%= stats.completedBookings %></h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-white bg-warning">
+        <div class="card-body">
+          <h6 class="card-title"><i class="bi bi-clock-history"></i> Pending</h6>
+          <h2><%= stats.pendingBookings %></h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-white bg-info">
+        <div class="card-body">
+          <h6 class="card-title"><i class="bi bi-heart-fill"></i> Favorites</h6>
+          <h2><%= stats.favoritesCount %></h2>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Verification Status -->
+  <% if (verificationStatus && verificationStatus.trustScore < 100) { %>
+  <div class="alert alert-warning">
+    <h5><i class="bi bi-shield-exclamation"></i> Increase Your Trust Score</h5>
+    <p>Complete your profile verification to unlock more features and gain host trust.</p>
+    <div class="progress mb-3" style="height: 25px;">
+      <div class="progress-bar" role="progressbar" style="width: <%= verificationStatus.trustScore %>%;" 
+           aria-valuenow="<%= verificationStatus.trustScore %>" aria-valuemin="0" aria-valuemax="100">
+        <%= verificationStatus.trustScore %>%
+      </div>
+    </div>
+    <a href="/verify" class="btn btn-warning"><i class="bi bi-shield-check"></i> Complete Verification</a>
+  </div>
+  <% } %>
+
+  <!-- My Bookings -->
+  <div class="card mb-4">
+    <div class="card-header bg-dark text-white">
+      <h5 class="mb-0"><i class="bi bi-calendar2-week"></i> My Bookings</h5>
+    </div>
+    <div class="card-body">
+      <% if (bookings && bookings.length > 0) { %>
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Property</th>
+                <th>Location</th>
+                <th>Check-in</th>
+                <th>Check-out</th>
+                <th>Status</th>
+                <th>Total</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% bookings.forEach(function(booking){ %>
+              <tr>
+                <td>
+                  <a href="/listing/<%= booking.listing_id %>" class="text-decoration-none">
+                    <strong><%= booking.listing_title %></strong>
+                  </a>
+                </td>
+                <td><%= booking.listing_location %></td>
+                <td><%= new Date(booking.checkin).toLocaleDateString() %></td>
+                <td><%= new Date(booking.checkout).toLocaleDateString() %></td>
+                <td>
+                  <% if (booking.status === 'approved') { %>
+                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> Approved</span>
+                  <% } else if (booking.status === 'pending') { %>
+                    <span class="badge bg-warning"><i class="bi bi-clock-history"></i> Pending</span>
+                  <% } else if (booking.status === 'denied') { %>
+                    <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Denied</span>
+                  <% } else if (booking.status === 'cancelled') { %>
+                    <span class="badge bg-secondary"><i class="bi bi-slash-circle"></i> Cancelled</span>
+                  <% } %>
+                </td>
+                <td><strong>$<%= booking.total_amount || (booking.listing_price * Math.ceil((new Date(booking.checkout) - new Date(booking.checkin)) / (1000 * 60 * 60 * 24))) %></strong></td>
+                <td>
+                  <a href="/listing/<%= booking.listing_id %>" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-eye"></i> View
+                  </a>
+                  <% if (booking.status === 'approved') { %>
+                    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#cancelModal<%= booking.id %>">
+                      <i class="bi bi-x-circle"></i> Cancel
+                    </button>
+                  <% } %>
+                </td>
+              </tr>
+              
+              <!-- Cancel Modal -->
+              <div class="modal fade" id="cancelModal<%= booking.id %>" tabindex="-1">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title">Cancel Booking</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                      <p>Are you sure you want to cancel your booking at <strong><%= booking.listing_title %></strong>?</p>
+                      <p class="text-muted">Check-in: <%= new Date(booking.checkin).toLocaleDateString() %></p>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep Booking</button>
+                      <form method="POST" action="/dashboard/cancel-booking/<%= booking.id %>" style="display:inline;">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button type="submit" class="btn btn-danger">Yes, Cancel Booking</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <div class="text-center py-5">
+          <i class="bi bi-calendar-x" style="font-size: 3rem; color: #ccc;"></i>
+          <p class="text-muted mt-3">You don't have any bookings yet.</p>
+          <a href="/" class="btn btn-primary"><i class="bi bi-search"></i> Browse Properties</a>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- My Favorites -->
+  <div class="card">
+    <div class="card-header bg-dark text-white">
+      <h5 class="mb-0"><i class="bi bi-heart-fill"></i> My Favorites</h5>
+    </div>
+    <div class="card-body">
+      <% if (favorites && favorites.length > 0) { %>
+        <div class="row">
+          <% favorites.forEach(function(listing){ %>
+          <div class="col-md-4 mb-3">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title"><%= listing.title %></h5>
+                <p class="text-muted"><i class="bi bi-geo-alt"></i> <%= listing.location %></p>
+                <p class="card-text"><%= listing.description ? listing.description.substring(0, 100) + '...' : '' %></p>
+                <p class="h5 text-primary">$<%= listing.price %><small class="text-muted">/night</small></p>
+                <div class="d-flex gap-2">
+                  <a href="/listing/<%= listing.id %>" class="btn btn-primary flex-grow-1">
+                    <i class="bi bi-eye"></i> View
+                  </a>
+                  <form method="POST" action="/favorites/remove/<%= listing.id %>" class="flex-grow-1">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button type="submit" class="btn btn-outline-danger w-100">
+                      <i class="bi bi-heart-fill"></i> Remove
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <div class="text-center py-5">
+          <i class="bi bi-heart" style="font-size: 3rem; color: #ccc;"></i>
+          <p class="text-muted mt-3">You haven't added any favorites yet.</p>
+          <a href="/" class="btn btn-primary"><i class="bi bi-search"></i> Browse Properties</a>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<style>
+.card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+</style>

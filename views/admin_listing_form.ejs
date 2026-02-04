@@ -12,15 +12,43 @@
       
       <div class="col-md-6">
         <div class="mb-3">
-          <label for="location" class="form-label">Location *</label>
-          <input type="text" class="form-control" id="location" name="location" value="<%= listing.location || '' %>" required>
+          <label for="location_id" class="form-label">Location *</label>
+          <select class="form-select" id="location_id" name="location_id" required>
+            <option value="">Select a location</option>
+            <% if (typeof locations !== 'undefined' && locations.length > 0) { %>
+              <% locations.forEach(function(loc) { %>
+                <option value="<%= loc.id %>" <%= (listing.location_id == loc.id) ? 'selected' : '' %>>
+                  <%= loc.name %>
+                </option>
+              <% }); %>
+            <% } %>
+          </select>
+          <small class="form-text text-muted">Can't find your location? <a href="/admin/locations">Manage locations</a></small>
         </div>
       </div>
     </div>
     
-    <div class="mb-3">
-      <label for="price" class="form-label">Price per Night ($) *</label>
-      <input type="number" step="0.01" class="form-control" id="price" name="price" value="<%= listing.price || '' %>" required>
+    <div class="row">
+      <div class="col-md-4">
+        <div class="mb-3">
+          <label for="bedrooms" class="form-label">Bedrooms</label>
+          <input type="number" class="form-control" id="bedrooms" name="bedrooms" min="1" value="<%= listing.bedrooms || 1 %>">
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="mb-3">
+          <label for="max_guests" class="form-label">Max Guests</label>
+          <input type="number" class="form-control" id="max_guests" name="max_guests" min="1" value="<%= listing.max_guests || 2 %>">
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="mb-3">
+          <label for="price" class="form-label">Price per Night ($) *</label>
+          <input type="number" step="0.01" class="form-control" id="price" name="price" value="<%= listing.price || '' %>" required>
+        </div>
+      </div>
     </div>
     
     <div class="mb-3">

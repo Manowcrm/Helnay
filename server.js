@@ -312,8 +312,136 @@ app.post('/login', loginLimiter, verifyCsrfToken, loginValidation, handleValidat
 
 // Logout
 app.get('/logout', (req, res) => {
+  const expired = req.query.expired;
   req.session.destroy();
+  if (expired) {
+    return res.render('login', { 
+      message: null, 
+      error: 'Your session has expired. Please log in again.',
+      csrfToken: res.locals.csrfToken 
+    });
+  }
   res.redirect('/');
+});
+
+// ====== USER DASHBOARD & FAVORITES ======
+
+// User Dashboard
+app.get('/dashboard', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    
+    // Get user bookings with listing details
+    const bookings = await db.all(`
+      SELECT b.*, l.title as listing_title, l.location as listing_location, l.price as listing_price
+      FROM bookings b
+      JOIN listings l ON b.listing_id = l.id
+      WHERE b.user_id = ?
+      ORDER BY b.created_at DESC
+    `, [userId]);
+    
+    // Get favorites
+    const favorites = await db.all(`
+      SELECT l.*
+      FROM listings l
+      JOIN favorites f ON l.id = f.listing_id
+      WHERE f.user_id = ?
+      ORDER BY f.created_at DESC
+    `, [userId]);
+    
+    // Calculate stats
+    const stats = {
+      activeBookings: bookings.filter(b => b.status === 'approved' && new Date(b.checkout) >= new Date()).length,
+      completedBookings: bookings.filter(b => b.status === 'approved' && new Date(b.checkout) < new Date()).length,
+      pendingBookings: bookings.filter(b => b.status === 'pending').length,
+      favoritesCount: favorites.length
+    };
+    
+    // Get verification status
+    const verificationStatus = await getUserVerificationStatus(userId);
+    
+    res.render('user_dashboard', {
+      bookings,
+      favorites,
+      stats,
+      verificationStatus,
+      csrfToken: res.locals.csrfToken
+    });
+  } catch (err) {
+    console.error('[DASHBOARD] Error:', err);
+    res.status(500).send('Error loading dashboard');
+  }
+});
+
+// Cancel booking from dashboard
+app.post('/dashboard/cancel-booking/:id', isAuthenticated, async (req, res) => {
+  try {
+    const bookingId = req.params.id;
+    const userId = req.session.userId;
+    
+    // Verify this booking belongs to the user
+    const booking = await db.get('SELECT * FROM bookings WHERE id = ? AND user_id = ?', [bookingId, userId]);
+    if (!booking) {
+      return res.status(404).send('Booking not found');
+    }
+    
+    // Update booking status
+    await db.run('UPDATE bookings SET status = ? WHERE id = ?', ['cancelled', bookingId]);
+    
+    console.log(`✅ [BOOKING] Cancelled booking ${bookingId} by user ${userId}`);
+    res.redirect('/dashboard');
+  } catch (err) {
+    console.error('[BOOKING] Cancel error:', err);
+    res.status(500).send('Error cancelling booking');
+  }
+});
+
+// Toggle favorite (add/remove)
+app.post('/favorites/toggle/:listingId', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const listingId = req.params.listingId;
+    
+    // Check if already favorited
+    const existing = await db.get(
+      'SELECT * FROM favorites WHERE user_id = ? AND listing_id = ?',
+      [userId, listingId]
+    );
+    
+    if (existing) {
+      // Remove favorite
+      await db.run('DELETE FROM favorites WHERE user_id = ? AND listing_id = ?', [userId, listingId]);
+      console.log(`❤️ [FAVORITES] Removed listing ${listingId} from favorites for user ${userId}`);
+    } else {
+      // Add favorite
+      await db.run(
+        'INSERT INTO favorites (user_id, listing_id, created_at) VALUES (?, ?, ?)',
+        [userId, listingId, new Date().toISOString()]
+      );
+      console.log(`❤️ [FAVORITES] Added listing ${listingId} to favorites for user ${userId}`);
+    }
+    
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[FAVORITES] Error:', err);
+    res.status(500).json({ error: 'Failed to update favorites' });
+  }
+});
+
+// Remove favorite
+app.post('/favorites/remove/:listingId', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const listingId = req.params.listingId;
+    
+    await db.run('DELETE FROM favorites WHERE user_id = ? AND listing_id = ?', [userId, listingId]);
+    console.log(`❤️ [FAVORITES] Removed listing ${listingId} from favorites for user ${userId}`);
+    
+    res.redirect('/dashboard');
+  } catch (err) {
+    console.error('[FAVORITES] Error:', err);
+    res.status(500).send('Error removing favorite');
+  }
 });
 
 // ====== PUBLIC ROUTES ======
@@ -321,13 +449,17 @@ app.get('/logout', (req, res) => {
 // Home - show listings
 app.get('/', async (req, res) => {
   try {
-    // basic search / filter support via query params: location, min_price, max_price, q, type
-    const { location, min_price, max_price, q, type } = req.query;
+    // Advanced search / filter support via query params
+    const { location, min_price, max_price, q, type, category, bedrooms, guests, sort } = req.query;
+    console.log('🔍 [SEARCH] Query params:', { location, min_price, max_price, q, type, category, bedrooms, guests, sort });
+    
     const where = [];
     const params = [];
+    
     if (location) {
-      where.push('location LIKE ?');
+      where.push('LOWER(loc.name) LIKE LOWER(?)');
       params.push(`%${location}%`);
+      console.log('🔍 [SEARCH] Location filter:', location);
     }
     if (min_price) {
       where.push('price >= ?');
@@ -338,20 +470,50 @@ app.get('/', async (req, res) => {
       params.push(max_price);
     }
     if (q) {
-      where.push('(title LIKE ? OR description LIKE ?)');
+      where.push('(LOWER(title) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?))');
       params.push(`%${q}%`, `%${q}%`);
     }
     if (type) {
-      where.push('(title LIKE ? OR description LIKE ?)');
+      where.push('(LOWER(title) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?))');
       params.push(`%${type}%`, `%${type}%`);
     }
+    if (category) {
+      where.push('(LOWER(title) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?))');
+      params.push(`%${category}%`, `%${category}%`);
+    }
+    if (bedrooms) {
+      where.push('bedrooms >= ?');
+      params.push(parseInt(bedrooms));
+    }
+    if (guests) {
+      where.push('max_guests >= ?');
+      params.push(parseInt(guests));
+    }
+    
     const whereSql = where.length ? 'WHERE ' + where.join(' AND ') : '';
+    
+    // Determine sort order
+    let orderBy = 'ORDER BY created_at DESC';
+    if (sort === 'price_low') {
+      orderBy = 'ORDER BY price ASC';
+    } else if (sort === 'price_high') {
+      orderBy = 'ORDER BY price DESC';
+    } else if (sort === 'bedrooms') {
+      orderBy = 'ORDER BY bedrooms DESC';
+    } else if (sort === 'guests') {
+      orderBy = 'ORDER BY max_guests DESC';
+    }
 
     // select first image for each listing (if any)
-    const sql = `SELECT l.*, (
+    const sql = `SELECT l.*, loc.name as location_name, (
       SELECT url FROM listing_images i WHERE i.listing_id = l.id LIMIT 1
-    ) as image_url FROM listings l ${whereSql} ORDER BY created_at DESC`;
+    ) as image_url 
+    FROM listings l 
+    LEFT JOIN locations loc ON l.location_id = loc.id
+    ${whereSql} ${orderBy}`;
     const listings = await db.all(sql, params);
+    console.log(`🔍 [SEARCH] Found ${listings.length} listings. SQL: ${sql}`);
+    console.log(`🔍 [SEARCH] Params:`, params);
     
     // Get active filter services grouped by category
     const filterServices = await db.all('SELECT * FROM filter_services WHERE is_active = 1 ORDER BY category, display_order, name');
@@ -376,6 +538,13 @@ app.get('/', async (req, res) => {
       listing.serviceKeys = services.map(s => s.filter_key).join(',');
     }
     
+    // Get user favorites if logged in
+    let favoriteIds = [];
+    if (req.session.userId) {
+      const favorites = await db.all('SELECT listing_id FROM favorites WHERE user_id = ?', [req.session.userId]);
+      favoriteIds = favorites.map(f => f.listing_id);
+    }
+    
     // Get active browse categories for homepage
     const browseCategories = await db.all('SELECT * FROM browse_categories WHERE is_active = 1 ORDER BY display_order ASC');
     
@@ -386,7 +555,7 @@ app.get('/', async (req, res) => {
       'Expires': '0'
     });
     
-    res.render('index', { listings, query: req.query, filtersByCategory, browseCategories });
+    res.render('index', { listings, query: req.query, filtersByCategory, browseCategories, favoriteIds, user: req.session.userId ? { id: req.session.userId } : null });
   } catch (err) {
     console.error(err);
     res.status(500).send('Server error');
@@ -1641,7 +1810,9 @@ app.get('/admin/listings/new', isAdmin, async (req, res) => {
       return acc;
     }, {});
     
-    res.render('admin_listing_form', { listing: {}, images: [], filtersByCategory, selectedServices: [] });
+    const locations = await db.all('SELECT * FROM locations WHERE is_active = 1 ORDER BY display_order, name');
+    
+    res.render('admin_listing_form', { listing: {}, images: [], filtersByCategory, selectedServices: [], locations });
   } catch (err) {
     console.error(err);
     res.status(500).send('Server error');
@@ -1651,11 +1822,11 @@ app.get('/admin/listings/new', isAdmin, async (req, res) => {
 // Admin: create listing
 app.post('/admin/listings/create', isAdmin, async (req, res) => {
   try {
-    const { title, location, price, description, services } = req.body;
-    console.log('Creating new listing:', { title, location, price, description });
+    const { title, location_id, price, description, bedrooms, max_guests, services } = req.body;
+    console.log('Creating new listing:', { title, location_id, price, description, bedrooms, max_guests });
     const result = await db.run(
-      'INSERT INTO listings (title, location, price, description, created_at) VALUES (?, ?, ?, ?, ?)',
-      [title, location, price, description, new Date().toISOString()]
+      'INSERT INTO listings (title, location_id, price, description, bedrooms, max_guests, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [title, location_id, price, description, bedrooms || 1, max_guests || 2, new Date().toISOString()]
     );
     const listingId = result.lastID;
     console.log('Listing created successfully with ID:', listingId);
@@ -1700,7 +1871,10 @@ app.get('/admin/listings/:id/edit', isAdmin, async (req, res) => {
     const selectedServicesRows = await db.all('SELECT service_id FROM listing_services WHERE listing_id = ?', [req.params.id]);
     const selectedServices = selectedServicesRows.map(row => row.service_id);
     
-    res.render('admin_listing_form', { listing, images, filtersByCategory, selectedServices });
+    // Load locations
+    const locations = await db.all('SELECT * FROM locations WHERE is_active = 1 ORDER BY display_order, name');
+    
+    res.render('admin_listing_form', { listing, images, filtersByCategory, selectedServices, locations });
   } catch (err) {
     console.error(err);
     res.status(500).send('Server error');
@@ -1738,7 +1912,7 @@ app.post('/admin/listings/:listingId/images/:imageId/delete', isAdmin, async (re
 // Admin: update listing
 app.post('/admin/listings/:id/update', isAdmin, async (req, res) => {
   try {
-    const { title, location, price, description, services } = req.body;
+    const { title, location_id, price, description, bedrooms, max_guests, services } = req.body;
     const listingId = req.params.id;
     
     // Log before update
@@ -1757,8 +1931,8 @@ app.post('/admin/listings/:id/update', isAdmin, async (req, res) => {
     
     // Perform update
     const result = await db.run(
-      'UPDATE listings SET title = ?, location = ?, price = ?, description = ? WHERE id = ?',
-      [title, location, priceNumber, description, listingId]
+      'UPDATE listings SET title = ?, location_id = ?, price = ?, description = ?, bedrooms = ?, max_guests = ? WHERE id = ?',
+      [title, location_id, priceNumber, description, bedrooms || 1, max_guests || 2, listingId]
     );
     
     console.log('📝 [ADMIN UPDATE] UPDATE result:', { 

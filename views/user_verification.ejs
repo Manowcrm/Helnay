@@ -334,6 +334,11 @@ function startCamera() {
 function captureSelfie() {
   if (!videoElement || !canvasElement) return;
   
+  // Show loading state
+  const captureBtn = document.getElementById('captureSelfieBtn');
+  captureBtn.disabled = true;
+  captureBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Capturing...';
+  
   // Set canvas size to match video
   canvasElement.width = videoElement.videoWidth;
   canvasElement.height = videoElement.videoHeight;
@@ -357,7 +362,7 @@ function captureSelfie() {
   }
   
   // Update UI
-  document.getElementById('captureSelfieBtn').style.display = 'none';
+  captureBtn.style.display = 'none';
   document.getElementById('retakeSelfieBtn').style.display = 'inline-block';
   
   // Store image data in hidden input

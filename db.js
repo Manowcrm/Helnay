@@ -60,13 +60,27 @@ function all(sql, params = []) {
 
 async function init() {
   // create tables if not exist
+  
+  // Locations table - predefined locations for listings
+  await run(`CREATE TABLE IF NOT EXISTS locations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    display_order INTEGER DEFAULT 0,
+    is_active INTEGER DEFAULT 1,
+    created_at TEXT
+  )`);
+  
   await run(`CREATE TABLE IF NOT EXISTS listings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT,
     description TEXT,
     price REAL,
     location TEXT,
-    created_at TEXT
+    location_id INTEGER,
+    bedrooms INTEGER DEFAULT 1,
+    max_guests INTEGER DEFAULT 2,
+    created_at TEXT,
+    FOREIGN KEY (location_id) REFERENCES locations(id)
   )`);
 
   await run(`CREATE TABLE IF NOT EXISTS bookings (
@@ -105,6 +119,29 @@ async function init() {
     }
   } catch (e) {
     console.error('Migration error:', e.message);
+  }
+
+  // Add columns to listings table if they don't exist
+  try {
+    const listingsTableInfo = await all(`PRAGMA table_info(listings)`);
+    const listingsColumnNames = listingsTableInfo.map(col => col.name);
+    
+    if (!listingsColumnNames.includes('location_id')) {
+      await run(`ALTER TABLE listings ADD COLUMN location_id INTEGER`);
+      console.log('✓ Added location_id column to listings table');
+    }
+    
+    if (!listingsColumnNames.includes('bedrooms')) {
+      await run(`ALTER TABLE listings ADD COLUMN bedrooms INTEGER DEFAULT 1`);
+      console.log('✓ Added bedrooms column to listings table');
+    }
+    
+    if (!listingsColumnNames.includes('max_guests')) {
+      await run(`ALTER TABLE listings ADD COLUMN max_guests INTEGER DEFAULT 2`);
+      console.log('✓ Added max_guests column to listings table');
+    }
+  } catch (e) {
+    console.error('Listings table migration error:', e.message);
   }
 
   // Add last_login column to users table if it doesn't exist
@@ -316,6 +353,17 @@ async function init() {
     FOREIGN KEY (user_id) REFERENCES users(id)
   )`);
 
+  // User favorites
+  await run(`CREATE TABLE IF NOT EXISTS favorites (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    listing_id INTEGER NOT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (listing_id) REFERENCES listings(id),
+    UNIQUE(user_id, listing_id)
+  )`);
+
   // Seed default filter services if none exist
   const filterRows = await all('SELECT COUNT(1) as cnt FROM filter_services');
   const filterCnt = filterRows && filterRows[0] ? filterRows[0].cnt : 0;
@@ -425,6 +473,37 @@ async function init() {
     console.log('✅ [DB INIT] Seeded 11 listings with images');
   } else {
     console.log(`✅ [DB INIT] Database already has ${cnt} listings - skipping seed`);
+  }
+  
+  // Seed default locations if none exist
+  const locationCount = await get('SELECT COUNT(*) as count FROM locations');
+  if (locationCount.count === 0) {
+    console.log('🌍 [DB INIT] Seeding default locations...');
+    const defaultLocations = [
+      { name: 'Manhattan', order: 1 },
+      { name: 'Brooklyn', order: 2 },
+      { name: 'Queens', order: 3 },
+      { name: 'Miami Beach', order: 4 },
+      { name: 'Los Angeles', order: 5 },
+      { name: 'San Francisco', order: 6 },
+      { name: 'Chicago', order: 7 },
+      { name: 'Las Vegas', order: 8 },
+      { name: 'Orlando', order: 9 },
+      { name: 'Boston', order: 10 },
+      { name: 'Seattle', order: 11 },
+      { name: 'Austin', order: 12 },
+      { name: 'Denver', order: 13 },
+      { name: 'Phoenix', order: 14 },
+      { name: 'San Diego', order: 15 }
+    ];
+    
+    for (const loc of defaultLocations) {
+      await run(
+        'INSERT INTO locations (name, display_order, is_active, created_at) VALUES (?, ?, ?, ?)',
+        [loc.name, loc.order, 1, new Date().toISOString()]
+      );
+    }
+    console.log(`✅ [DB INIT] Seeded ${defaultLocations.length} default locations`);
   }
   
   // Create or update default super admin user

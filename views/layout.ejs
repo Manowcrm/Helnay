@@ -68,6 +68,44 @@
       <%- body %>
     </div>
 
+    <!-- Global Loading Overlay -->
+    <div id="globalLoadingOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; justify-content:center; align-items:center;">
+      <div class="text-center">
+        <div class="spinner-border text-light" role="status" style="width: 4rem; height: 4rem;">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="text-white mt-3" id="loadingMessage">Please wait...</p>
+      </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:9998;">
+      <% if (typeof message !== 'undefined' && message) { %>
+        <div class="toast show" role="alert">
+          <div class="toast-header bg-success text-white">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <strong class="me-auto">Success</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+          </div>
+          <div class="toast-body">
+            <%- message %>
+          </div>
+        </div>
+      <% } %>
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="toast show" role="alert">
+          <div class="toast-header bg-danger text-white">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong class="me-auto">Error</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+          </div>
+          <div class="toast-body">
+            <%= error %>
+          </div>
+        </div>
+      <% } %>
+    </div>
+
     <footer class="footer mt-5 py-3 bg-light">
       <div class="container text-center">
         <small>&copy; <%= new Date().getFullYear() %> Helnay</small>
@@ -75,6 +113,95 @@
     </footer>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Global JavaScript Utilities -->
+    <script>
+    // Global loading overlay control
+    const loadingOverlay = {
+      show: function(message = 'Please wait...') {
+        const overlay = document.getElementById('globalLoadingOverlay');
+        const msgEl = document.getElementById('loadingMessage');
+        if (overlay) {
+          msgEl.textContent = message;
+          overlay.style.display = 'flex';
+        }
+      },
+      hide: function() {
+        const overlay = document.getElementById('globalLoadingOverlay');
+        if (overlay) overlay.style.display = 'none';
+      }
+    };
+    
+    // Toast notification system
+    function showToast(message, type = 'success') {
+      const container = document.querySelector('.toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.setAttribute('role', 'alert');
+      toast.innerHTML = `
+        <div class="toast-header bg-${type === 'success' ? 'success' : 'danger'} text-white">
+          <i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill'} me-2"></i>
+          <strong class="me-auto">${type === 'success' ? 'Success' : 'Error'}</strong>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">${message}</div>
+      `;
+      container.appendChild(toast);
+      const bsToast = new bootstrap.Toast(toast, { delay: 5000 });
+      bsToast.show();
+      setTimeout(() => toast.remove(), 6000);
+    }
+    
+    // Auto-hide toasts after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.toast.show').forEach(toastEl => {
+        const toast = new bootstrap.Toast(toastEl, { delay: 5000 });
+        setTimeout(() => toast.hide(), 5000);
+      });
+      
+      // Add loading state to all forms with file uploads
+      document.querySelectorAll('form[enctype="multipart/form-data"]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+          loadingOverlay.show('Uploading files...');
+        });
+      });
+      
+      // Favorite button handling (AJAX)
+      document.querySelectorAll('.favorite-form').forEach(form => {
+        form.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          const btn = form.querySelector('.favorite-btn');
+          const icon = btn.querySelector('i');
+          const listingId = btn.dataset.listingId;
+          
+          try {
+            const response = await fetch(form.action, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: new URLSearchParams(new FormData(form))
+            });
+            
+            if (response.ok) {
+              // Toggle heart icon
+              if (icon.classList.contains('bi-heart-fill')) {
+                icon.classList.remove('bi-heart-fill', 'text-danger');
+                icon.classList.add('bi-heart');
+                showToast('Removed from favorites', 'success');
+              } else {
+                icon.classList.remove('bi-heart');
+                icon.classList.add('bi-heart-fill', 'text-danger');
+                showToast('Added to favorites!', 'success');
+              }
+            }
+          } catch (err) {
+            showToast('Failed to update favorites', 'error');
+          }
+        });
+      });
+    });
+    </script>
     
     <!-- Session timeout warning -->
     <% if (user && sessionTimeout) { %>
