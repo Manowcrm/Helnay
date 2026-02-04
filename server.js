@@ -1220,7 +1220,8 @@ app.get('/admin/verifications', isSuperAdmin, async (req, res) => {
     
     // Get pending ID verifications
     const pending = await db.all(`
-      SELECT u.*, v.phone_number, v.phone_verified, 
+      SELECT u.id as user_id, u.name, u.email, u.phone_number as u_phone, 
+             v.phone_number, v.phone_verified, 
              v.id_document_type, v.id_document_url, v.id_selfie_url, 
              v.created_at, v.id_verified
       FROM users u
@@ -1232,7 +1233,7 @@ app.get('/admin/verifications', isSuperAdmin, async (req, res) => {
     console.log(`📋 [VERIFICATIONS] Found ${pending.length} pending verifications`);
     if (pending.length > 0) {
       console.log(`📋 [VERIFICATIONS] First pending:`, {
-        userId: pending[0].id,
+        userId: pending[0].user_id,
         name: pending[0].name,
         docType: pending[0].id_document_type,
         verified: pending[0].id_verified
