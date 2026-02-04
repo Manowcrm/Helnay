@@ -1207,6 +1207,8 @@ app.get('/admin/activity', isSuperAdmin, async (req, res) => {
 
 app.get('/admin/verifications', isSuperAdmin, async (req, res) => {
   try {
+    console.log('🔍 [VERIFICATIONS] Loading verifications page...');
+    
     // Get all users with their verification status
     const users = await db.all(`
       SELECT u.id, u.name, u.email, u.role, u.is_verified, u.phone_verified, u.id_verified, 
@@ -1219,6 +1221,8 @@ app.get('/admin/verifications', isSuperAdmin, async (req, res) => {
       WHERE u.role = 'user'
       ORDER BY u.created_at DESC
     `);
+    
+    console.log(`📋 [VERIFICATIONS] Loaded ${users.length} users`);
     
     // Get pending ID verifications
     const pending = await db.all(`
@@ -1250,9 +1254,11 @@ app.get('/admin/verifications', isSuperAdmin, async (req, res) => {
       pending_review: pending.length
     };
     
-    res.render('admin_verifications', { users, pending, stats });
+    console.log('✅ [VERIFICATIONS] Rendering page with stats:', stats);
+    res.render('admin_verifications', { users, pending, stats, csrfToken: res.locals.csrfToken });
   } catch (err) {
     console.error('❌ [VERIFICATIONS] Error:', err.message);
+    console.error('❌ [VERIFICATIONS] Stack:', err.stack);
     res.status(500).send('Error loading verifications');
   }
 });
