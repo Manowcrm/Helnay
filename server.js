@@ -1209,7 +1209,9 @@ app.get('/admin/verifications', isSuperAdmin, async (req, res) => {
   try {
     // Get all users with their verification status
     const users = await db.all(`
-      SELECT u.*, v.phone_number, v.phone_verified as v_phone_verified, 
+      SELECT u.id, u.name, u.email, u.role, u.is_verified, u.phone_verified, u.id_verified, 
+             u.created_at, u.phone_number as user_phone,
+             v.phone_number as v_phone, v.phone_verified as v_phone_verified, 
              v.id_document_type, v.id_document_url, v.id_selfie_url, 
              v.id_verified as v_id_verified, v.created_at as v_created_at
       FROM users u
@@ -1220,7 +1222,7 @@ app.get('/admin/verifications', isSuperAdmin, async (req, res) => {
     
     // Get pending ID verifications
     const pending = await db.all(`
-      SELECT u.id as user_id, u.name, u.email, u.phone_number as u_phone, 
+      SELECT u.id as user_id, u.name, u.email,
              v.phone_number, v.phone_verified, 
              v.id_document_type, v.id_document_url, v.id_selfie_url, 
              v.created_at, v.id_verified

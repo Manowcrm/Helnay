@@ -176,7 +176,7 @@
             <tr>
               <td><strong><%= u.name %></strong></td>
               <td><%= u.email %></td>
-              <td><%= u.phone_number || '-' %></td>
+              <td><%= u.user_phone || u.v_phone || '-' %></td>
               <td>
                 <% if (u.is_verified) { %>
                   <span class="badge bg-success"><i class="bi bi-check-circle"></i></span>
@@ -194,7 +194,7 @@
               <td>
                 <% if (u.id_verified) { %>
                   <span class="badge bg-success"><i class="bi bi-shield-check"></i> Verified</span>
-                <% } else if (u.id_document_url) { %>
+                <% } else if (u.id_document_url || u.v_id_verified !== null) { %>
                   <span class="badge bg-warning"><i class="bi bi-hourglass-split"></i> Pending</span>
                 <% } else { %>
                   <span class="badge bg-secondary"><i class="bi bi-dash-circle"></i> Not submitted</span>
