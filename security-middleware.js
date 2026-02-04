@@ -55,6 +55,41 @@ const apiLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Rate limiting for ID verification uploads
+const verificationUploadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5, // Limit to 5 verification uploads per hour
+  message: 'Too many verification attempts, please try again after an hour',
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    console.error(`❌ [RATE LIMIT] Verification upload blocked for IP: ${req.ip}`);
+    req.session.message = { 
+      type: 'danger', 
+      text: 'Too many verification attempts. Please try again after an hour.' 
+    };
+    res.redirect('/verify');
+  }
+});
+
+// Rate limiting for admin verification actions
+const adminVerificationLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 30, // 30 actions per minute (reasonable for bulk processing)
+  message: 'Too many verification actions, please slow down',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiting for phone verification
+const phoneVerificationLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // 10 OTP requests per hour
+  message: 'Too many verification code requests, please try again after an hour',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Validation rules
 const registerValidation = [
   body('name')
@@ -267,6 +302,9 @@ module.exports = {
   passwordResetLimiter,
   contactLimiter,
   apiLimiter,
+  verificationUploadLimiter,
+  adminVerificationLimiter,
+  phoneVerificationLimiter,
   registerValidation,
   loginValidation,
   listingValidation,

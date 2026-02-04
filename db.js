@@ -284,6 +284,38 @@ async function init() {
     FOREIGN KEY (user_id) REFERENCES users(id)
   )`);
 
+  // Verification attempts tracking (fraud detection)
+  await run(`CREATE TABLE IF NOT EXISTS verification_attempts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ip_address TEXT NOT NULL,
+    user_id INTEGER,
+    attempt_time TEXT NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  )`);
+
+  // Admin 2FA tokens
+  await run(`CREATE TABLE IF NOT EXISTS admin_2fa_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    secret TEXT NOT NULL,
+    backup_codes TEXT,
+    enabled INTEGER DEFAULT 0,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  )`);
+
+  // Session activity tracking
+  await run(`CREATE TABLE IF NOT EXISTS session_activity (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    ip_address TEXT,
+    user_agent TEXT,
+    last_activity TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  )`);
+
   // Seed default filter services if none exist
   const filterRows = await all('SELECT COUNT(1) as cnt FROM filter_services');
   const filterCnt = filterRows && filterRows[0] ? filterRows[0].cnt : 0;

@@ -1,39 +1,62 @@
 <div class="container mt-4">
   <h1 class="mb-4"><i class="bi bi-shield-check"></i> User Verifications</h1>
   
-  <!-- Statistics Cards -->
+  <!-- Filter Info -->
+  <% if (filter) { %>
+  <div class="alert alert-info alert-dismissible fade show" role="alert">
+    <i class="bi bi-funnel"></i> <strong>Filtered:</strong> Showing <%= 
+      filter === 'email_verified' ? 'Email Verified Users' :
+      filter === 'phone_verified' ? 'Phone Verified Users' :
+      filter === 'id_verified' ? 'ID Verified Users' :
+      filter === 'pending' ? 'Pending ID Verifications' :
+      filter === 'not_submitted' ? 'Not Submitted ID' : 'All Users'
+    %>
+    <a href="/admin/verifications" class="btn btn-sm btn-outline-primary ms-2">Clear Filter</a>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  <% } %>
+
+  <!-- Statistics Cards (Clickable) -->
   <div class="row mb-4">
     <div class="col-md-3">
-      <div class="card bg-primary text-white">
-        <div class="card-body">
-          <h6 class="card-title"><i class="bi bi-envelope-check"></i> Email Verified</h6>
-          <h2><%= stats.email_verified %></h2>
+      <a href="/admin/verifications?filter=email_verified" class="text-decoration-none">
+        <div class="card bg-primary text-white <%= filter === 'email_verified' ? 'border border-dark border-3' : '' %>" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+          <div class="card-body">
+            <h6 class="card-title"><i class="bi bi-envelope-check"></i> Email Verified</h6>
+            <h2><%= stats.email_verified %></h2>
+          </div>
         </div>
-      </div>
+      </a>
     </div>
     <div class="col-md-3">
-      <div class="card bg-success text-white">
-        <div class="card-body">
-          <h6 class="card-title"><i class="bi bi-phone-fill"></i> Phone Verified</h6>
-          <h2><%= stats.phone_verified %></h2>
+      <a href="/admin/verifications?filter=phone_verified" class="text-decoration-none">
+        <div class="card bg-success text-white <%= filter === 'phone_verified' ? 'border border-dark border-3' : '' %>" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+          <div class="card-body">
+            <h6 class="card-title"><i class="bi bi-phone-fill"></i> Phone Verified</h6>
+            <h2><%= stats.phone_verified %></h2>
+          </div>
         </div>
-      </div>
+      </a>
     </div>
     <div class="col-md-3">
-      <div class="card bg-info text-white">
-        <div class="card-body">
-          <h6 class="card-title"><i class="bi bi-card-heading"></i> ID Verified</h6>
-          <h2><%= stats.id_verified %></h2>
+      <a href="/admin/verifications?filter=id_verified" class="text-decoration-none">
+        <div class="card bg-info text-white <%= filter === 'id_verified' ? 'border border-dark border-3' : '' %>" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+          <div class="card-body">
+            <h6 class="card-title"><i class="bi bi-card-heading"></i> ID Verified</h6>
+            <h2><%= stats.id_verified %></h2>
+          </div>
         </div>
-      </div>
+      </a>
     </div>
     <div class="col-md-3">
-      <div class="card bg-warning text-white">
-        <div class="card-body">
-          <h6 class="card-title"><i class="bi bi-hourglass-split"></i> Pending Review</h6>
-          <h2><%= stats.pending_review %></h2>
+      <a href="/admin/verifications?filter=pending" class="text-decoration-none">
+        <div class="card bg-warning text-white <%= filter === 'pending' ? 'border border-dark border-3' : '' %>" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+          <div class="card-body">
+            <h6 class="card-title"><i class="bi bi-hourglass-split"></i> Pending Review</h6>
+            <h2><%= stats.pending_review %></h2>
+          </div>
         </div>
-      </div>
+      </a>
     </div>
   </div>
 
@@ -154,7 +177,11 @@
   <!-- All Users Verification Status -->
   <div class="card">
     <div class="card-header">
-      <h5 class="mb-0"><i class="bi bi-people"></i> All Users Verification Status</h5>
+      <h5 class="mb-0">
+        <i class="bi bi-people"></i> 
+        <%= filter ? 'Filtered Users' : 'All Users Verification Status' %>
+        <span class="badge bg-secondary ms-2"><%= displayedUsers %> <%= filter ? 'matching' : 'total' %></span>
+      </h5>
     </div>
     <div class="card-body">
       <div class="table-responsive">

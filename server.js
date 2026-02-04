@@ -22,6 +22,9 @@ const {
   contactLimiter,
   apiLimiter,
   passwordResetLimiter,
+  verificationUploadLimiter,
+  adminVerificationLimiter,
+  phoneVerificationLimiter,
   registerValidation,
   loginValidation,
   listingValidation,
@@ -30,13 +33,45 @@ const {
   handleValidationErrors
 } = require('./security-middleware');
 const { csrfProtection, verifyCsrfToken, handleCsrfError } = require('./csrf-middleware');
+const { trackVerificationAttempt, fraudDetectionMiddleware, getIPStatistics } = require('./fraud-detection');
 
 const app = express();
 
-// Security middleware
+// Security middleware - Enhanced CSP and security headers
 app.use(helmet({
-  contentSecurityPolicy: false, // Disable for now to allow inline scripts
-  crossOriginEmbedderPolicy: false
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'", // Needed for Bootstrap and inline scripts
+        "https://cdn.jsdelivr.net",
+        "https://js.stripe.com"
+      ],
+      styleSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://cdn.jsdelivr.net",
+        "https://fonts.googleapis.com"
+      ],
+      fontSrc: [
+        "'self'",
+        "https://cdn.jsdelivr.net",
+        "https://fonts.gstatic.com"
+      ],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      connectSrc: ["'self'", "https://api.stripe.com"],
+      frameSrc: ["'self'", "https://js.stripe.com"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null
+    }
+  },
+  crossOriginEmbedderPolicy: false,
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  }
 }));
 
 // Trust proxy - required for secure cookies to work behind Render's proxy
@@ -75,12 +110,14 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: { 
-    secure: process.env.NODE_ENV === 'production', // true on HTTPS (Render), false locally
-    httpOnly: true,
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days - users stay logged in for a month
-    sameSite: 'lax'
+    secure: process.env.NODE_ENV === 'production', // HTTPS-only in production
+    httpOnly: true, // Prevent JavaScript access
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    sameSite: 'lax', // CSRF protection
+    domain: process.env.NODE_ENV === 'production' ? 'helnay.com' : undefined
   },
-  rolling: true // Extend session on each request - resets the 30 day timer
+  rolling: true, // Extend session on activity
+  name: 'helnay_session' // Custom name instead of default
 }));
 
 // CSRF Protection - generate token for all requests
@@ -94,6 +131,17 @@ app.use((req, res, next) => {
     email: req.session.userEmail,
     role: req.session.role
   } : null;
+  
+  // Add session timeout info for client-side warning
+  if (req.session.userId) {
+    const sessionMaxAge = 30 * 24 * 60 * 60 * 1000; // 30 days in ms
+    res.locals.sessionTimeout = sessionMaxAge;
+    res.locals.sessionWarningTime = 5 * 60 * 1000; // Warn 5 minutes before expiry
+    
+    // Track last activity
+    req.session.lastActivity = Date.now();
+  }
+  
   next();
 });
 
@@ -659,10 +707,19 @@ app.get('/verify', isAuthenticated, async (req, res) => {
 });
 
 // Upload ID verification documents
-app.post('/verify/upload-id', isAuthenticated, uploadConfig.idVerification, async (req, res) => {
+app.post('/verify/upload-id', isAuthenticated, verificationUploadLimiter, fraudDetectionMiddleware, uploadConfig.idVerification, async (req, res) => {
   try {
     const { document_type, selfie } = req.body;
     const userId = req.session.userId;
+    const userIP = req.ip || req.connection.remoteAddress;
+    
+    // Track verification attempt for fraud detection
+    trackVerificationAttempt(userIP, userId);
+    
+    // Check if this IP is suspicious
+    if (req.suspiciousIP) {
+      console.warn(`⚠️ [VERIFICATION] Suspicious IP detected: ${userIP} (${req.ipAttemptCount} attempts)`);
+    }
     
     // Validate ID document upload
     if (!req.file) {
@@ -1209,8 +1266,11 @@ app.get('/admin/verifications', isSuperAdmin, async (req, res) => {
   try {
     console.log('🔍 [VERIFICATIONS] Loading verifications page...');
     
+    const filter = req.query.filter || null;
+    console.log('🔍 [VERIFICATIONS] Filter:', filter);
+    
     // Get all users with their verification status
-    const users = await db.all(`
+    const allUsers = await db.all(`
       SELECT u.id, u.name, u.email, u.role, u.is_verified, u.phone_verified, u.id_verified, 
              u.created_at,
              v.phone_number, v.phone_verified as v_phone_verified, 
@@ -1222,7 +1282,32 @@ app.get('/admin/verifications', isSuperAdmin, async (req, res) => {
       ORDER BY u.created_at DESC
     `);
     
-    console.log(`📋 [VERIFICATIONS] Loaded ${users.length} users`);
+    console.log(`📋 [VERIFICATIONS] Loaded ${allUsers.length} users`);
+    
+    // Apply filter if specified
+    let users = allUsers;
+    if (filter) {
+      switch(filter) {
+        case 'email_verified':
+          users = allUsers.filter(u => u.is_verified === 1);
+          break;
+        case 'phone_verified':
+          users = allUsers.filter(u => u.phone_verified === 1);
+          break;
+        case 'id_verified':
+          users = allUsers.filter(u => u.id_verified === 1);
+          break;
+        case 'pending':
+          users = allUsers.filter(u => u.id_document_url && !u.id_verified);
+          break;
+        case 'not_submitted':
+          users = allUsers.filter(u => !u.id_document_url);
+          break;
+        default:
+          users = allUsers;
+      }
+      console.log(`📋 [VERIFICATIONS] Filtered to ${users.length} users (${filter})`);
+    }
     
     // Get pending ID verifications
     const pending = await db.all(`
@@ -1246,16 +1331,23 @@ app.get('/admin/verifications', isSuperAdmin, async (req, res) => {
       });
     }
     
-    // Calculate stats
+    // Calculate stats from all users (not filtered)
     const stats = {
-      email_verified: users.filter(u => u.is_verified === 1).length,
-      phone_verified: users.filter(u => u.phone_verified === 1).length,
-      id_verified: users.filter(u => u.id_verified === 1).length,
+      email_verified: allUsers.filter(u => u.is_verified === 1).length,
+      phone_verified: allUsers.filter(u => u.phone_verified === 1).length,
+      id_verified: allUsers.filter(u => u.id_verified === 1).length,
       pending_review: pending.length
     };
     
     console.log('✅ [VERIFICATIONS] Rendering page with stats:', stats);
-    res.render('admin_verifications', { users, pending, stats, csrfToken: res.locals.csrfToken });
+    res.render('admin_verifications', { 
+      users, 
+      pending, 
+      stats, 
+      filter,
+      displayedUsers: users.length,
+      csrfToken: res.locals.csrfToken 
+    });
   } catch (err) {
     console.error('❌ [VERIFICATIONS] Error:', err.message);
     console.error('❌ [VERIFICATIONS] Stack:', err.stack);
@@ -1264,7 +1356,7 @@ app.get('/admin/verifications', isSuperAdmin, async (req, res) => {
 });
 
 // Approve ID verification
-app.post('/admin/verify-id/:userId/approve', isSuperAdmin, async (req, res) => {
+app.post('/admin/verify-id/:userId/approve', isSuperAdmin, adminVerificationLimiter, async (req, res) => {
   try {
     const userId = req.params.userId;
     
@@ -1301,7 +1393,7 @@ app.post('/admin/verify-id/:userId/approve', isSuperAdmin, async (req, res) => {
 });
 
 // Reject ID verification
-app.post('/admin/verify-id/:userId/reject', isSuperAdmin, async (req, res) => {
+app.post('/admin/verify-id/:userId/reject', isSuperAdmin, adminVerificationLimiter, async (req, res) => {
   try {
     const userId = req.params.userId;
     const { reason, notes } = req.body;
