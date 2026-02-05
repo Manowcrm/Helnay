@@ -85,9 +85,9 @@
         <i class="bi bi-sort-down"></i> Sort by
       </button>
       <ul class="dropdown-menu">
-        <li><a class="dropdown-item" href="?<%= new URLSearchParams({...query, sort: 'newest'}).toString() %>">Newest First</a></li>
-        <li><a class="dropdown-item" href="?<%= new URLSearchParams({...query, sort: 'price_low'}).toString() %>">Price: Low to High</a></li>
-        <li><a class="dropdown-item" href="?<%= new URLSearchParams({...query, sort: 'price_high'}).toString() %>">Price: High to Low</a></li>
+        <li><a class="dropdown-item" href="/apartments?sort=newest<%= query.location ? '&location=' + query.location : '' %><%= query.min_price ? '&min_price=' + query.min_price : '' %><%= query.max_price ? '&max_price=' + query.max_price : '' %><%= query.bedrooms ? '&bedrooms=' + query.bedrooms : '' %><%= query.guests ? '&guests=' + query.guests : '' %>">Newest First</a></li>
+        <li><a class="dropdown-item" href="/apartments?sort=price_low<%= query.location ? '&location=' + query.location : '' %><%= query.min_price ? '&min_price=' + query.min_price : '' %><%= query.max_price ? '&max_price=' + query.max_price : '' %><%= query.bedrooms ? '&bedrooms=' + query.bedrooms : '' %><%= query.guests ? '&guests=' + query.guests : '' %>">Price: Low to High</a></li>
+        <li><a class="dropdown-item" href="/apartments?sort=price_high<%= query.location ? '&location=' + query.location : '' %><%= query.min_price ? '&min_price=' + query.min_price : '' %><%= query.max_price ? '&max_price=' + query.max_price : '' %><%= query.bedrooms ? '&bedrooms=' + query.bedrooms : '' %><%= query.guests ? '&guests=' + query.guests : '' %>">Price: High to Low</a></li>
       </ul>
     </div>
   </div>
