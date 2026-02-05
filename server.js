@@ -1114,14 +1114,17 @@ app.post('/bookings', verifyCsrfToken, bookingValidation, handleValidationErrors
     
     console.log(`💰 [BOOKING] Calculation: ${nights} nights × $${listing.price} = $${totalAmount}`);
     
+    // Get user_id if logged in
+    const userId = req.session && req.session.userId ? req.session.userId : null;
+    
     // Create booking with payment_status = 'unpaid' and current price snapshot
     const result = await db.run(
-      'INSERT INTO bookings (listing_id,name,email,checkin,checkout,payment_status,total_amount,created_at) VALUES (?,?,?,?,?,?,?,?)',
-      [listing_id, name, email, checkin, checkout, 'unpaid', totalAmount, new Date().toISOString()]
+      'INSERT INTO bookings (listing_id,name,email,checkin,checkout,payment_status,total_amount,user_id,created_at) VALUES (?,?,?,?,?,?,?,?,?)',
+      [listing_id, name, email, checkin, checkout, 'unpaid', totalAmount, userId, new Date().toISOString()]
     );
     
     const bookingId = result.lastInsertRowid;
-    console.log(`✅ [BOOKING] Created booking ID: ${bookingId}`);
+    console.log(`✅ [BOOKING] Created booking ID: ${bookingId} for user: ${userId || 'guest'}`);
     console.log(`✅ [BOOKING] Stored snapshot: $${listing.price}/night, Total: $${totalAmount}`);
     
     // Redirect to payment page
