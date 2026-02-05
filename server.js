@@ -686,6 +686,148 @@ app.get('/', async (req, res) => {
   }
 });
 
+// Hotels page - shows all hotel listings
+app.get('/hotels', async (req, res) => {
+  try {
+    const { location, min_price, max_price, q, bedrooms, guests, sort } = req.query;
+    
+    const where = ["(LOWER(type) = 'hotel' OR LOWER(title) LIKE '%hotel%' OR LOWER(description) LIKE '%hotel%')"];
+    const params = [];
+    
+    if (location) {
+      where.push('LOWER(loc.name) LIKE LOWER(?)');
+      params.push(`%${location}%`);
+    }
+    if (min_price) {
+      where.push('price >= ?');
+      params.push(min_price);
+    }
+    if (max_price) {
+      where.push('price <= ?');
+      params.push(max_price);
+    }
+    if (q) {
+      where.push('(LOWER(title) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?))');
+      params.push(`%${q}%`, `%${q}%`);
+    }
+    if (bedrooms) {
+      where.push('bedrooms >= ?');
+      params.push(parseInt(bedrooms));
+    }
+    if (guests) {
+      where.push('max_guests >= ?');
+      params.push(parseInt(guests));
+    }
+    
+    const whereSql = 'WHERE ' + where.join(' AND ');
+    
+    let orderBy = 'ORDER BY created_at DESC';
+    if (sort === 'price_low') orderBy = 'ORDER BY price ASC';
+    else if (sort === 'price_high') orderBy = 'ORDER BY price DESC';
+    
+    const sql = `SELECT l.*, loc.name as location_name, (
+      SELECT url FROM listing_images i WHERE i.listing_id = l.id LIMIT 1
+    ) as image_url 
+    FROM listings l 
+    LEFT JOIN locations loc ON l.location_id = loc.id
+    ${whereSql} ${orderBy}`;
+    
+    const listings = await db.all(sql, params);
+    
+    let favoriteIds = [];
+    if (req.session.userId) {
+      const favorites = await db.all('SELECT listing_id FROM favorites WHERE user_id = ?', [req.session.userId]);
+      favoriteIds = favorites.map(f => f.listing_id);
+    }
+    
+    res.render('hotels', { 
+      listings,
+      query: req.query,
+      favoriteIds,
+      title: 'Hotels - Helnay',
+      description: 'Browse and book premium hotels worldwide with Helnay.',
+      canonicalUrl: '/hotels',
+      csrfToken: res.locals.csrfToken,
+      message: null,
+      error: null
+    });
+  } catch (err) {
+    logger.error('[HOTELS] Error:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Apartments page - shows all apartment listings
+app.get('/apartments', async (req, res) => {
+  try {
+    const { location, min_price, max_price, q, bedrooms, guests, sort } = req.query;
+    
+    const where = ["(LOWER(type) = 'apartment' OR LOWER(title) LIKE '%apartment%' OR LOWER(description) LIKE '%apartment%')"];
+    const params = [];
+    
+    if (location) {
+      where.push('LOWER(loc.name) LIKE LOWER(?)');
+      params.push(`%${location}%`);
+    }
+    if (min_price) {
+      where.push('price >= ?');
+      params.push(min_price);
+    }
+    if (max_price) {
+      where.push('price <= ?');
+      params.push(max_price);
+    }
+    if (q) {
+      where.push('(LOWER(title) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?))');
+      params.push(`%${q}%`, `%${q}%`);
+    }
+    if (bedrooms) {
+      where.push('bedrooms >= ?');
+      params.push(parseInt(bedrooms));
+    }
+    if (guests) {
+      where.push('max_guests >= ?');
+      params.push(parseInt(guests));
+    }
+    
+    const whereSql = 'WHERE ' + where.join(' AND ');
+    
+    let orderBy = 'ORDER BY created_at DESC';
+    if (sort === 'price_low') orderBy = 'ORDER BY price ASC';
+    else if (sort === 'price_high') orderBy = 'ORDER BY price DESC';
+    
+    const sql = `SELECT l.*, loc.name as location_name, (
+      SELECT url FROM listing_images i WHERE i.listing_id = l.id LIMIT 1
+    ) as image_url 
+    FROM listings l 
+    LEFT JOIN locations loc ON l.location_id = loc.id
+    ${whereSql} ${orderBy}`;
+    
+    const listings = await db.all(sql, params);
+    
+    let favoriteIds = [];
+    if (req.session.userId) {
+      const favorites = await db.all('SELECT listing_id FROM favorites WHERE user_id = ?', [req.session.userId]);
+      favoriteIds = favorites.map(f => f.listing_id);
+    }
+    
+    res.render('apartments', { 
+      listings,
+      query: req.query,
+      favoriteIds,
+      title: 'Apartments - Helnay',
+      description: 'Find and book comfortable apartments worldwide with Helnay.',
+      canonicalUrl: '/apartments',
+      csrfToken: res.locals.csrfToken,
+      message: null,
+      error: null
+    });
+  } catch (err) {
+    logger.error('[APARTMENTS] Error:', err);
+    res.status(500).send('Server error');
+  }
+});
+
 // Category pages
 app.get('/entire-homes', async (req, res) => {
   try {
