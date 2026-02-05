@@ -364,12 +364,16 @@ app.get('/favorites', isAuthenticated, async (req, res) => {
     `, [userId]);
     
     res.render('favorites', {
+      user: req.session.user,
       favorites,
       csrfToken: res.locals.csrfToken
     });
   } catch (err) {
     logger.error('[FAVORITES] Error:', err);
-    res.status(500).send('Error loading favorites');
+    res.status(500).render('error', { 
+      user: req.session.user,
+      error: 'Error loading favorites. Please try again later.' 
+    });
   }
 });
 
@@ -391,6 +395,7 @@ app.get('/my-bookings', isAuthenticated, async (req, res) => {
     
     // Categorize bookings
     const currentBookings = allBookings.filter(b => {
+      const checkin = new Date(b.checkin);
       const checkout = new Date(b.checkout);
       return b.status === 'approved' && checkout >= now;
     });
@@ -400,9 +405,10 @@ app.get('/my-bookings', isAuthenticated, async (req, res) => {
       return b.status === 'approved' && checkout < now;
     });
     
-    const pendingBookings = allBookings.filter(b => b.status === 'pending');
+    const pendingBookings = allBookings.filter(b => b.status === 'pending' || b.status === null);
     
     res.render('my_bookings', {
+      user: req.session.user,
       currentBookings,
       previousBookings,
       pendingBookings,
@@ -410,7 +416,10 @@ app.get('/my-bookings', isAuthenticated, async (req, res) => {
     });
   } catch (err) {
     logger.error('[MY-BOOKINGS] Error:', err);
-    res.status(500).send('Error loading bookings');
+    res.status(500).render('error', { 
+      user: req.session.user,
+      error: 'Error loading bookings. Please try again later.' 
+    });
   }
 });
 
