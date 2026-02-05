@@ -22,6 +22,8 @@ async function generateSitemap() {
   
   // Category pages
   const categories = [
+    { url: '/hotels', priority: 0.95 },
+    { url: '/apartments', priority: 0.95 },
     { url: '/beach-houses', priority: 0.9 },
     { url: '/city-stays', priority: 0.9 },
     { url: '/mountain-retreats', priority: 0.9 },

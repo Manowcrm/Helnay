@@ -1030,6 +1030,35 @@ app.get('/listings/:id', async (req, res) => {
       [id]
     );
     
+    // Generate structured data for SEO
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@type": "LodgingBusiness",
+      "name": listing.title,
+      "description": listing.description,
+      "image": images.map(img => `https://helnay.com${img.url}`),
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": listing.location
+      },
+      "priceRange": `$${listing.price}`,
+      "offers": {
+        "@type": "Offer",
+        "price": listing.price,
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
+      },
+      "amenityFeature": amenities.map(a => ({
+        "@type": "LocationFeatureSpecification",
+        "name": a.name
+      })),
+      "url": `https://helnay.com/listings/${id}`
+    };
+    
+    if (listing.bedrooms) {
+      structuredData.numberOfRooms = listing.bedrooms;
+    }
+    
     // Prevent browser caching
     res.set({
       'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
@@ -1037,7 +1066,7 @@ app.get('/listings/:id', async (req, res) => {
       'Expires': '0'
     });
     
-    res.render('listing', { listing, images, amenities });
+    res.render('listing', { listing, images, amenities, structuredData: JSON.stringify(structuredData) });
   } catch (err) {
     logger.error('Listing page error:', err);
     res.status(500).send('Server error');
