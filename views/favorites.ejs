@@ -1,0 +1,83 @@
+<%- include('layout') %>
+
+<div class="container my-5">
+  <h1 class="mb-4"><i class="bi bi-heart-fill text-danger"></i> My Favourites</h1>
+  
+  <% if (favorites && favorites.length > 0) { %>
+    <p class="text-muted mb-4">You have <%= favorites.length %> favourite <%= favorites.length === 1 ? 'property' : 'properties' %></p>
+    
+    <div class="row">
+      <% favorites.forEach(function(listing){ %>
+      <div class="col-md-4 col-lg-3 mb-4">
+        <div class="card h-100 shadow-sm listing-card">
+          <% if (listing.image_url) { %>
+            <img src="<%= listing.image_url %>" class="card-img-top" alt="<%= listing.title %>" style="height: 200px; object-fit: cover;">
+          <% } else { %>
+            <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
+              <i class="bi bi-house-fill" style="font-size: 3rem;"></i>
+            </div>
+          <% } %>
+          
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title"><%= listing.title %></h5>
+            <p class="text-muted mb-2"><i class="bi bi-geo-alt"></i> <%= listing.location %></p>
+            <p class="card-text small text-muted flex-grow-1">
+              <%= listing.description ? (listing.description.length > 80 ? listing.description.substring(0, 80) + '...' : listing.description) : 'No description available' %>
+            </p>
+            
+            <div class="mt-auto">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <span class="h5 text-primary mb-0">$<%= listing.price %></span>
+                  <small class="text-muted">/night</small>
+                </div>
+                <% if (listing.bedrooms || listing.guests) { %>
+                  <small class="text-muted">
+                    <% if (listing.bedrooms) { %>
+                      <i class="bi bi-door-closed"></i> <%= listing.bedrooms %>
+                    <% } %>
+                    <% if (listing.guests) { %>
+                      <i class="bi bi-people"></i> <%= listing.guests %>
+                    <% } %>
+                  </small>
+                <% } %>
+              </div>
+              
+              <div class="d-flex gap-2">
+                <a href="/listing/<%= listing.id %>" class="btn btn-primary btn-sm flex-grow-1">
+                  <i class="bi bi-eye"></i> View Details
+                </a>
+                <form method="POST" action="/favorites/remove/<%= listing.id %>" style="flex: 0 0 auto;">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button type="submit" class="btn btn-outline-danger btn-sm" title="Remove from favourites">
+                    <i class="bi bi-heart-fill"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <div class="text-center py-5">
+      <i class="bi bi-heart" style="font-size: 5rem; color: #dee2e6;"></i>
+      <h3 class="mt-4 text-muted">No Favourites Yet</h3>
+      <p class="text-muted mb-4">Start adding properties to your favourites to see them here!</p>
+      <a href="/" class="btn btn-primary btn-lg">
+        <i class="bi bi-search"></i> Browse Properties
+      </a>
+    </div>
+  <% } %>
+</div>
+
+<style>
+.listing-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.listing-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
+}
+</style>

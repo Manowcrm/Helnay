@@ -349,7 +349,72 @@ app.get('/logout', (req, res) => {
 
 // ====== USER DASHBOARD & FAVORITES ======
 
-// User Dashboard
+// User Favorites Page
+app.get('/favorites', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    
+    // Get favorites
+    const favorites = await db.all(`
+      SELECT l.*
+      FROM listings l
+      JOIN favorites f ON l.id = f.listing_id
+      WHERE f.user_id = ?
+      ORDER BY f.created_at DESC
+    `, [userId]);
+    
+    res.render('favorites', {
+      favorites,
+      csrfToken: res.locals.csrfToken
+    });
+  } catch (err) {
+    logger.error('[FAVORITES] Error:', err);
+    res.status(500).send('Error loading favorites');
+  }
+});
+
+// User My Bookings Page (categorized)
+app.get('/my-bookings', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const now = new Date();
+    
+    // Get all user bookings with listing details
+    const allBookings = await db.all(`
+      SELECT b.*, l.title as listing_title, l.location as listing_location, 
+             l.price as listing_price, l.image_url as listing_image
+      FROM bookings b
+      JOIN listings l ON b.listing_id = l.id
+      WHERE b.user_id = ?
+      ORDER BY b.checkin DESC
+    `, [userId]);
+    
+    // Categorize bookings
+    const currentBookings = allBookings.filter(b => {
+      const checkout = new Date(b.checkout);
+      return b.status === 'approved' && checkout >= now;
+    });
+    
+    const previousBookings = allBookings.filter(b => {
+      const checkout = new Date(b.checkout);
+      return b.status === 'approved' && checkout < now;
+    });
+    
+    const pendingBookings = allBookings.filter(b => b.status === 'pending');
+    
+    res.render('my_bookings', {
+      currentBookings,
+      previousBookings,
+      pendingBookings,
+      csrfToken: res.locals.csrfToken
+    });
+  } catch (err) {
+    logger.error('[MY-BOOKINGS] Error:', err);
+    res.status(500).send('Error loading bookings');
+  }
+});
+
+// User Dashboard (for admin users)
 app.get('/dashboard', isAuthenticated, async (req, res) => {
   try {
     const userId = req.session.userId;
@@ -391,7 +456,7 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
       csrfToken: res.locals.csrfToken
     });
   } catch (err) {
-    console.error('[DASHBOARD] Error:', err);
+    logger.error('[DASHBOARD] Error:', err);
     res.status(500).send('Error loading dashboard');
   }
 });
