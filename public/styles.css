@@ -971,6 +971,9 @@ a:hover .listing-card .card-title {
     margin-top: 0;
     padding: 0;
     box-shadow: none;
+    position: static !important;
+    transform: none !important;
+    width: 100%;
   }
   
   .navbar-nav .dropdown-toggle::after {
