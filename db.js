@@ -117,6 +117,12 @@ async function init() {
       await run(`ALTER TABLE bookings ADD COLUMN total_amount REAL`);
       console.log('✓ Added total_amount column to bookings table');
     }
+    
+    if (!columnNames.includes('user_id')) {
+      await run(`ALTER TABLE bookings ADD COLUMN user_id INTEGER`);
+      await run(`CREATE INDEX IF NOT EXISTS idx_bookings_user_id ON bookings(user_id)`);
+      console.log('✓ Added user_id column to bookings table');
+    }
   } catch (e) {
     console.error('Migration error:', e.message);
   }
