@@ -366,14 +366,13 @@ app.get('/favorites', isAuthenticated, async (req, res) => {
     res.render('favorites', {
       user: req.session.user,
       favorites,
-      csrfToken: res.locals.csrfToken
+      csrfToken: res.locals.csrfToken,
+      message: null,
+      error: null
     });
   } catch (err) {
     logger.error('[FAVORITES] Error:', err);
-    res.status(500).render('error', { 
-      user: req.session.user,
-      error: 'Error loading favorites. Please try again later.' 
-    });
+    res.status(500).send('Error loading favorites. Please try again later.');
   }
 });
 
@@ -412,14 +411,13 @@ app.get('/my-bookings', isAuthenticated, async (req, res) => {
       currentBookings,
       previousBookings,
       pendingBookings,
-      csrfToken: res.locals.csrfToken
+      csrfToken: res.locals.csrfToken,
+      message: null,
+      error: null
     });
   } catch (err) {
     logger.error('[MY-BOOKINGS] Error:', err);
-    res.status(500).render('error', { 
-      user: req.session.user,
-      error: 'Error loading bookings. Please try again later.' 
-    });
+    res.status(500).send('Error loading bookings. Please try again later.');
   }
 });
 
