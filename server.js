@@ -382,15 +382,33 @@ app.get('/my-bookings', isAuthenticated, async (req, res) => {
     const userId = req.session.userId;
     const now = new Date();
     
-    // Get all user bookings with listing details
-    const allBookings = await db.all(`
-      SELECT b.*, l.title as listing_title, l.location as listing_location, 
-             l.price as listing_price, l.image_url as listing_image
-      FROM bookings b
-      JOIN listings l ON b.listing_id = l.id
-      WHERE b.user_id = ?
-      ORDER BY b.checkin DESC
-    `, [userId]);
+    let allBookings = [];
+    
+    // Try to get bookings by user_id first
+    try {
+      allBookings = await db.all(`
+        SELECT b.*, l.title as listing_title, l.location as listing_location, 
+               l.price as listing_price, l.image_url as listing_image
+        FROM bookings b
+        JOIN listings l ON b.listing_id = l.id
+        WHERE b.user_id = ?
+        ORDER BY b.checkin DESC
+      `, [userId]);
+    } catch (dbErr) {
+      // If user_id column doesn't exist yet, try matching by email
+      logger.warn('[MY-BOOKINGS] user_id column might not exist yet, trying email fallback');
+      const userEmail = req.session.user ? req.session.user.email : null;
+      if (userEmail) {
+        allBookings = await db.all(`
+          SELECT b.*, l.title as listing_title, l.location as listing_location, 
+                 l.price as listing_price, l.image_url as listing_image
+          FROM bookings b
+          JOIN listings l ON b.listing_id = l.id
+          WHERE b.email = ?
+          ORDER BY b.checkin DESC
+        `, [userEmail]);
+      }
+    }
     
     // Categorize bookings
     const currentBookings = allBookings.filter(b => {
@@ -417,7 +435,7 @@ app.get('/my-bookings', isAuthenticated, async (req, res) => {
     });
   } catch (err) {
     logger.error('[MY-BOOKINGS] Error:', err);
-    res.status(500).send('Error loading bookings. Please try again later.');
+    res.status(500).send('Error loading bookings. The database is being updated. Please try again in a few moments.');
   }
 });
 
