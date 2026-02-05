@@ -1,54 +1,60 @@
-<div class="hero-banner">
-  <div class="hero-overlay">
-    <div class="container">
-      <div class="hero-content text-center text-white">
-        <h1 class="display-4 fw-bold mb-3">Find Your Perfect Stay</h1>
-        <p class="lead mb-4">Discover amazing homes and experiences around the world</p>
-        <form method="GET" action="/" class="search-box-large mx-auto">
-          <div class="row g-2">
-            <div class="col-md-4">
-              <input name="q" class="form-control form-control-lg" placeholder="Search destination or property" value="<%= (typeof query !== 'undefined' && query.q) ? query.q : '' %>">
+<div class="hero-banner" style="position: relative; min-height: 500px; background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1920&q=80&auto=format&fit=crop') center/cover; display: flex; align-items: center;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <div class="text-center text-white mb-4">
+          <h1 class="display-3 fw-bold mb-3" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.3);">Find Your Perfect Stay</h1>
+          <p class="lead fs-4" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.3);">Discover amazing vacation homes around the world</p>
+        </div>
+        <div class="search-box-modern p-4 bg-white rounded-4 shadow-lg">
+          <form method="GET" action="/">
+            <div class="row g-3">
+              <div class="col-12 col-md-5">
+                <div class="input-group input-group-lg">
+                  <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
+                  <input name="q" class="form-control border-0 bg-light" placeholder="Search destination or property" value="<%= (typeof query !== 'undefined' && query.q) ? query.q : '' %>">
+                </div>
+              </div>
+              <div class="col-12 col-md-4">
+                <div class="input-group input-group-lg">
+                  <span class="input-group-text bg-light border-0"><i class="bi bi-geo-alt"></i></span>
+                  <input name="location" class="form-control border-0 bg-light" placeholder="Location" value="<%= (typeof query !== 'undefined' && query.location) ? query.location : '' %>">
+                </div>
+              </div>
+              <div class="col-12 col-md-3">
+                <button type="submit" class="btn btn-warning btn-lg w-100 fw-semibold">
+                  <i class="bi bi-search"></i> Search
+                </button>
+              </div>
             </div>
-            <div class="col-md-3">
-              <input name="location" class="form-control form-control-lg" placeholder="Location" value="<%= (typeof query !== 'undefined' && query.location) ? query.location : '' %>">
+            <div class="row g-2 mt-2">
+              <div class="col-6 col-md-3">
+                <input name="min_price" class="form-control" placeholder="Min Price" type="number" min="0" value="<%= (typeof query !== 'undefined' && query.min_price) ? query.min_price : '' %>">
+              </div>
+              <div class="col-6 col-md-3">
+                <input name="max_price" class="form-control" placeholder="Max Price" type="number" min="0" value="<%= (typeof query !== 'undefined' && query.max_price) ? query.max_price : '' %>">
+              </div>
+              <div class="col-12 col-md-6">
+                <button type="button" class="btn btn-outline-secondary w-100" data-bs-toggle="collapse" data-bs-target="#advancedFilters">
+                  <i class="bi bi-funnel"></i> More Filters
+                </button>
+              </div>
             </div>
-            <div class="col-md-2">
-              <input name="min_price" class="form-control form-control-lg" placeholder="Min $" type="number" min="0" value="<%= (typeof query !== 'undefined' && query.min_price) ? query.min_price : '' %>">
             </div>
-            <div class="col-md-1">
-              <input name="max_price" class="form-control form-control-lg" placeholder="Max $" type="number" min="0" value="<%= (typeof query !== 'undefined' && query.max_price) ? query.max_price : '' %>">
-            </div>
-            <div class="col-md-2 d-grid">
-              <button type="submit" class="btn btn-warning btn-lg"><i class="bi bi-search"></i> Search</button>
-            </div>
-          </div>
-          <div class="row g-2 mt-2">
-            <div class="col-md-12">
-              <button type="button" class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" data-bs-target="#advancedFilters">
-                <i class="bi bi-funnel"></i> Advanced Filters
-              </button>
-              <% if (query && (query.q || query.location || query.min_price || query.max_price || query.category)) { %>
-                <a href="/" class="btn btn-sm btn-outline-light ms-2">
-                  <i class="bi bi-x-circle"></i> Clear All
-                </a>
-              <% } %>
-            </div>
-          </div>
-          <div class="collapse mt-3" id="advancedFilters">
-            <div class="card card-body bg-light">
+            <div class="collapse mt-3" id="advancedFilters">
               <div class="row g-3">
-                <div class="col-md-3">
-                  <label class="form-label text-dark"><i class="bi bi-list-ul"></i> Category</label>
+                <div class="col-6 col-md-3">
+                  <label class="form-label small text-muted fw-semibold"><i class="bi bi-list-ul"></i> Category</label>
                   <select name="category" class="form-select">
-                    <option value="">All Categories</option>
+                    <option value="">All</option>
                     <option value="beach-houses" <%= (query && query.category === 'beach-houses') ? 'selected' : '' %>>Beach Houses</option>
                     <option value="city-stays" <%= (query && query.category === 'city-stays') ? 'selected' : '' %>>City Stays</option>
                     <option value="mountain-retreats" <%= (query && query.category === 'mountain-retreats') ? 'selected' : '' %>>Mountain Retreats</option>
                     <option value="entire-homes" <%= (query && query.category === 'entire-homes') ? 'selected' : '' %>>Entire Homes</option>
                   </select>
                 </div>
-                <div class="col-md-3">
-                  <label class="form-label text-dark"><i class="bi bi-door-open"></i> Bedrooms</label>
+                <div class="col-6 col-md-3">
+                  <label class="form-label small text-muted fw-semibold"><i class="bi bi-door-open"></i> Bedrooms</label>
                   <select name="bedrooms" class="form-select">
                     <option value="">Any</option>
                     <option value="1" <%= (query && query.bedrooms === '1') ? 'selected' : '' %>>1+</option>
@@ -57,8 +63,8 @@
                     <option value="4" <%= (query && query.bedrooms === '4') ? 'selected' : '' %>>4+</option>
                   </select>
                 </div>
-                <div class="col-md-3">
-                  <label class="form-label text-dark"><i class="bi bi-people"></i> Guests</label>
+                <div class="col-6 col-md-3">
+                  <label class="form-label small text-muted fw-semibold"><i class="bi bi-people"></i> Guests</label>
                   <select name="guests" class="form-select">
                     <option value="">Any</option>
                     <option value="2" <%= (query && query.guests === '2') ? 'selected' : '' %>>2+</option>
@@ -67,17 +73,30 @@
                     <option value="8" <%= (query && query.guests === '8') ? 'selected' : '' %>>8+</option>
                   </select>
                 </div>
-                <div class="col-md-3">
-                  <label class="form-label text-dark"><i class="bi bi-sort-down"></i> Sort By</label>
+                <div class="col-6 col-md-3">
+                  <label class="form-label small text-muted fw-semibold"><i class="bi bi-sort-down"></i> Sort By</label>
                   <select name="sort" class="form-select">
                     <option value="">Recommended</option>
                     <option value="price_low" <%= (query && query.sort === 'price_low') ? 'selected' : '' %>>Price: Low to High</option>
                     <option value="price_high" <%= (query && query.sort === 'price_high') ? 'selected' : '' %>>Price: High to Low</option>
-                    <option value="newest" <%= (query && query.sort === 'newest') ? 'selected' : '' %>>Newest First</option>
+                    <option value="newest" <%= (query && query.sort === 'newest') ? 'selected' : '' %>>Newest</option>
                   </select>
                 </div>
               </div>
             </div>
+            <% if (query && (query.q || query.location || query.min_price || query.max_price || query.category)) { %>
+              <div class="mt-2">
+                <a href="/" class="btn btn-sm btn-outline-danger">
+                  <i class="bi bi-x-circle"></i> Clear Filters
+                </a>
+              </div>
+            <% } %>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
           </div>
         </form>
       </div>

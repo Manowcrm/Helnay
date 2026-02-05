@@ -49,27 +49,30 @@
     <% } %>
   </head>
   <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
       <div class="container">
-        <a class="navbar-brand" href="/">Helnay</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <a class="navbar-brand fw-bold" href="/" style="font-size: 1.5rem; letter-spacing: 0.5px;">
+          <i class="bi bi-house-heart-fill text-warning"></i> Helnay
+        </a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item"><a class="nav-link" href="/" onclick="closeNav()">Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="/about" onclick="closeNav()">About</a></li>
-            <li class="nav-item"><a class="nav-link" href="/contact" onclick="closeNav()">Contact</a></li>
-            <li class="nav-item"><a class="nav-link" href="/bookings" onclick="closeNav()">Book</a></li>
-            <li class="nav-item"><a class="nav-link text-warning fw-bold" href="/become-a-host" onclick="closeNav()"><i class="bi bi-house-add"></i> List Property</a></li>
+          <ul class="navbar-nav ms-auto align-items-lg-center">
+            <li class="nav-item"><a class="nav-link px-3" href="/">Home</a></li>
+            <li class="nav-item"><a class="nav-link px-3" href="/about">About</a></li>
+            <li class="nav-item"><a class="nav-link px-3" href="/contact">Contact</a></li>
+            <li class="nav-item"><a class="nav-link px-3" href="/bookings">My Bookings</a></li>
+            <li class="nav-item d-lg-none"><hr class="text-white-50 my-2"></li>
+            <li class="nav-item"><a class="nav-link text-warning fw-semibold px-3" href="/become-a-host"><i class="bi bi-house-add"></i> List Property</a></li>
             
             <% if (user) { %>
               <% if (user.role === 'admin' || user.role === 'super_admin') { %>
                 <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <a class="nav-link dropdown-toggle px-3" href="#" role="button" data-bs-toggle="dropdown">
                     <i class="bi bi-speedometer2"></i> Admin
                   </a>
-                  <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                  <ul class="dropdown-menu dropdown-menu-dark">
                     <li><a class="dropdown-item" href="/admin"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
                     <li><a class="dropdown-item" href="/admin/bookings"><i class="bi bi-calendar-check"></i> Bookings</a></li>
                     <li><a class="dropdown-item" href="/admin/listings"><i class="bi bi-house"></i> Listings</a></li>
@@ -77,15 +80,15 @@
                     <li><a class="dropdown-item" href="/admin/contacts"><i class="bi bi-envelope"></i> Messages</a></li>
                     <li><a class="dropdown-item" href="/admin/verifications"><i class="bi bi-shield-check"></i> Verifications</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="/admin/activity"><i class="bi bi-activity"></i> Activity Log</a></li>
+                    <li><a class="dropdown-item" href="/admin/activity"><i class="bi bi-activity"></i> Activity</a></li>
                   </ul>
                 </li>
               <% } %>
               <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <a class="nav-link dropdown-toggle px-3" href="#" role="button" data-bs-toggle="dropdown">
                   <i class="bi bi-person-circle"></i> <%= user.name %>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-lg-end">
                   <li><a class="dropdown-item" href="/verify"><i class="bi bi-shield-check"></i> Verification</a></li>
                   <li><a class="dropdown-item" href="/bookings"><i class="bi bi-calendar-check"></i> My Bookings</a></li>
                   <li><hr class="dropdown-divider"></li>
@@ -93,8 +96,8 @@
                 </ul>
               </li>
             <% } else { %>
-              <li class="nav-item"><a class="nav-link" href="/login" onclick="closeNav()"><i class="bi bi-box-arrow-in-right"></i> Login</a></li>
-              <li class="nav-item"><a class="nav-link" href="/register" onclick="closeNav()"><i class="bi bi-person-plus"></i> Register</a></li>
+              <li class="nav-item"><a class="nav-link px-3" href="/login"><i class="bi bi-box-arrow-in-right"></i> Login</a></li>
+              <li class="nav-item"><a class="btn btn-warning btn-sm ms-lg-2 mt-2 mt-lg-0" href="/register">Sign Up</a></li>
             <% } %>
           </ul>
         </div>
@@ -180,24 +183,17 @@
     
     <!-- Global JavaScript Utilities -->
     <script>
-    // Close mobile nav when clicking a link
-    function closeNav() {
-      const navCollapse = document.getElementById('navbarNav');
-      if (navCollapse && navCollapse.classList.contains('show')) {
-        const bsCollapse = new bootstrap.Collapse(navCollapse, {
-          toggle: false
-        });
-        bsCollapse.hide();
-      }
-    }
-    
-    // Auto-close mobile nav after clicking dropdown items (not toggles)
+    // Auto-close mobile navbar after clicking any link
     document.addEventListener('DOMContentLoaded', function() {
-      const dropdownItems = document.querySelectorAll('.dropdown-item');
-      dropdownItems.forEach(item => {
-        item.addEventListener('click', function() {
-          // Small delay to allow dropdown animation
-          setTimeout(closeNav, 100);
+      const navLinks = document.querySelectorAll('.navbar-nav .nav-link, .navbar-nav .dropdown-item');
+      const navbarCollapse = document.querySelector('.navbar-collapse');
+      const navbarToggler = document.querySelector('.navbar-toggler');
+      
+      navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+          if (window.innerWidth < 992 && navbarCollapse.classList.contains('show')) {
+            navbarToggler.click();
+          }
         });
       });
     });
