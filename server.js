@@ -1029,6 +1029,10 @@ app.post('/contact', contactLimiter, verifyCsrfToken, contactValidation, handleV
   }
 });
 
+app.get('/listing/:id', (req, res) => {
+  return res.redirect(301, `/listings/${req.params.id}`);
+});
+
 app.get('/listings/:id', async (req, res) => {
   try {
     const id = req.params.id;

@@ -168,7 +168,7 @@
                 <p class="card-text"><%= listing.description ? listing.description.substring(0, 100) + '...' : '' %></p>
                 <p class="h5 text-primary">$<%= listing.price %><small class="text-muted">/night</small></p>
                 <div class="d-flex gap-2">
-                  <a href="/listing/<%= listing.id %>" class="btn btn-primary flex-grow-1">
+                  <a href="/listings/<%= listing.id %>" class="btn btn-primary flex-grow-1">
                     <i class="bi bi-eye"></i> View
                   </a>
                   <form method="POST" action="/favorites/remove/<%= listing.id %>" class="flex-grow-1">
