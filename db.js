@@ -131,6 +131,11 @@ async function init() {
   try {
     const listingsTableInfo = await all(`PRAGMA table_info(listings)`);
     const listingsColumnNames = listingsTableInfo.map(col => col.name);
+
+    if (!listingsColumnNames.includes('type')) {
+      await run(`ALTER TABLE listings ADD COLUMN type TEXT`);
+      console.log('✓ Added type column to listings table');
+    }
     
     if (!listingsColumnNames.includes('location_id')) {
       await run(`ALTER TABLE listings ADD COLUMN location_id INTEGER`);

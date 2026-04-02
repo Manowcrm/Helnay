@@ -8,13 +8,15 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 3000
       - key: DATABASE_PATH
         value: /opt/render/project/.data
       - key: SESSION_SECRET
         generateValue: true
       - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
         sync: false
       - key: SENDGRID_API_KEY
         sync: false
@@ -28,6 +30,10 @@ services:
         sync: false
       - key: ADMIN_EMAIL
         sync: false
+      - key: BASE_URL
+        value: https://helnay.com
+      - key: COOKIE_DOMAIN
+        value: .helnay.com
     disk:
       name: helnay-data
       mountPath: /opt/render/project/.data

@@ -103,11 +103,28 @@ app.use(expressLayouts);
 app.set('layout', 'layout');
 // Static files with caching in production
 app.use(express.static(path.join(__dirname, 'public'), {
-  maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0,
+  // Keep static assets uncached at origin so Cloudflare always serves fresh deploy output.
+  maxAge: 0,
   etag: true
 }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.json()); // For Stripe webhook and API calls
+
+// Ensure dynamic HTML always bypasses intermediary caches (Cloudflare, proxies, browsers).
+app.use((req, res, next) => {
+  const isPageRequest = (req.method === 'GET' || req.method === 'HEAD') && req.accepts('html');
+
+  if (isPageRequest) {
+    res.set({
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'Surrogate-Control': 'no-store'
+    });
+  }
+
+  next();
+});
 
 // Session configuration with persistent store
 const fs = require('fs');
