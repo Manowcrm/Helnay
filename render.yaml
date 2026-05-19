@@ -38,3 +38,4 @@ services:
       name: helnay-data
       mountPath: /opt/render/project/.data
       sizeGB: 1
+ 
