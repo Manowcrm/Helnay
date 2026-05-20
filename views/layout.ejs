@@ -57,11 +57,9 @@
     <% } %>
   </head>
   <body>
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 0;">
+    <nav class="navbar navbar-expand-lg">
       <div class="container">
-        <a class="navbar-brand fw-bold" href="/" style="font-size: 1.5rem; letter-spacing: 0.5px;">
-          <i class="bi bi-house-heart-fill text-warning"></i> Helnay
-        </a>
+        <a class="navbar-brand fw-bold" href="/">Helnay</a>
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -75,6 +73,12 @@
             <li class="nav-item d-lg-none"><hr class="text-white-50 my-2"></li>
             <li class="nav-item"><a class="nav-link text-warning fw-semibold px-3" href="/become-a-host"><i class="bi bi-house-add"></i> List Property</a></li>
             
+            <li class="nav-item me-2">
+              <div class="currency-toggle" id="currencyToggle">
+                <button class="currency-btn active" id="btn-kes" onclick="setCurrency('KES')">KES</button>
+                <button class="currency-btn" id="btn-usd" onclick="setCurrency('USD')">USD</button>
+              </div>
+            </li>
             <% if (user) { %>
               <% if (user.role === 'admin' || user.role === 'super_admin') { %>
                 <li class="nav-item dropdown">
@@ -293,7 +297,51 @@
     });
     </script>
     
-    <!-- Session timeout warning -->
+    <!-- Currency Toggle -->
+    <script>
+    const KES_RATE = 130; // 1 USD = 130 KES approx
+    let currentCurrency = localStorage.getItem('helnayCurrency') || 'KES';
+
+    function setCurrency(cur) {
+      currentCurrency = cur;
+      localStorage.setItem('helnayCurrency', cur);
+      document.getElementById('btn-kes').classList.toggle('active', cur === 'KES');
+      document.getElementById('btn-usd').classList.toggle('active', cur === 'USD');
+      updateAllPrices();
+    }
+
+    function updateAllPrices() {
+      document.querySelectorAll('[data-usd-price]').forEach(el => {
+        const usd = parseFloat(el.dataset.usdPrice);
+        if (isNaN(usd)) return;
+        if (currentCurrency === 'KES') {
+          el.textContent = 'KES ' + Math.round(usd * KES_RATE).toLocaleString();
+        } else {
+          el.textContent = '$' + usd.toFixed(0);
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set saved currency on load
+      setCurrency(currentCurrency);
+      // Tag all price elements
+      document.querySelectorAll('.text-primary').forEach(el => {
+        const match = el.textContent.match(/\$\s*([\d,]+(\.\d+)?)/);
+        if (match && !el.dataset.usdPrice) {
+          el.dataset.usdPrice = match[1].replace(',','');
+        }
+      });
+      document.querySelectorAll('.price-amount').forEach(el => {
+        const match = el.textContent.match(/\$\s*([\d,]+(\.\d+)?)/);
+        if (match && !el.dataset.usdPrice) {
+          el.dataset.usdPrice = match[1].replace(',','');
+        }
+      });
+      updateAllPrices();
+    });
+    </script>
+    
     <% if (user && sessionTimeout) { %>
     <script>
     (function() {

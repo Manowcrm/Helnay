@@ -1,120 +1,153 @@
-<div class="hero-banner" style="position:relative;min-height:560px;display:flex;align-items:center;padding:5rem 0;">
-  <div class="container" style="animation:none">
+<div class="hero-banner" style="position: relative; min-height: 550px; background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1920&q=80&auto=format&fit=crop') center/cover; display: flex; align-items: center; padding: 4rem 0;">
+  <div class="container">
     <div class="row justify-content-center">
-      <div class="col-lg-10 text-center text-white">
-        <div class="hero-chip">
-          <i class="bi bi-geo-alt-fill"></i> Kenya &amp; Somalia's #1 Rental Platform
+      <div class="col-lg-10">
+        <div class="text-center text-white mb-4">
+          <h1 class="display-3 fw-bold mb-3" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.3); margin-top: 0;">Find Your Perfect Stay</h1>
+          <p class="lead fs-4" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.3);">Discover amazing vacation homes around the world</p>
         </div>
-        <h1 class="display-3 fw-bold mb-3">Find Your Perfect<br><em>Home in East Africa</em></h1>
-        <p class="lead mb-4">Trusted rentals in Nairobi, Mombasa, Kisumu, Mogadishu and beyond.<br>Pay instantly with M-Pesa.</p>
-        <div class="search-box-modern p-2">
+        <div class="search-box-wrap p-4 bg-white rounded-4 shadow-lg">
           <form method="GET" action="/">
-            <div class="row g-2 align-items-center">
+            <div class="row g-3">
               <div class="col-12 col-md-5">
                 <div class="input-group input-group-lg">
-                  <span class="input-group-text"><i class="bi bi-search"></i></span>
-                  <input name="q" class="form-control" placeholder="Nairobi, Mombasa, Westlands…" value="<%= (typeof query !== 'undefined' && query.q) ? query.q : '' %>">
+                  <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
+                  <input name="q" class="form-control border-0 bg-light" placeholder="Search destination or property" value="<%= (typeof query !== 'undefined' && query.q) ? query.q : '' %>">
                 </div>
               </div>
               <div class="col-12 col-md-4">
                 <div class="input-group input-group-lg">
-                  <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
-                  <input name="location" class="form-control" placeholder="City or neighbourhood" value="<%= (typeof query !== 'undefined' && query.location) ? query.location : '' %>">
+                  <span class="input-group-text bg-light border-0"><i class="bi bi-geo-alt"></i></span>
+                  <input name="location" class="form-control border-0 bg-light" placeholder="Location" value="<%= (typeof query !== 'undefined' && query.location) ? query.location : '' %>">
                 </div>
               </div>
               <div class="col-12 col-md-3">
-                <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold">
+                <button type="submit" class="btn btn-warning btn-lg w-100 fw-semibold">
                   <i class="bi bi-search"></i> Search
                 </button>
               </div>
             </div>
-            <div class="row g-2 mt-2 collapse" id="advancedFilters">
+            <div class="row g-2 mt-2">
               <div class="col-6 col-md-3">
-                <select name="category" class="form-select">
-                  <option value="">All Types</option>
-                  <option value="beach-houses" <%= (query && query.category==='beach-houses')?'selected':'' %>>Beach Houses</option>
-                  <option value="city-stays" <%= (query && query.category==='city-stays')?'selected':'' %>>City Stays</option>
-                  <option value="entire-homes" <%= (query && query.category==='entire-homes')?'selected':'' %>>Entire Homes</option>
-                </select>
+                <input name="min_price" class="form-control" placeholder="Min Price" type="number" min="0" value="<%= (typeof query !== 'undefined' && query.min_price) ? query.min_price : '' %>">
               </div>
               <div class="col-6 col-md-3">
-                <select name="bedrooms" class="form-select">
-                  <option value="">Bedrooms</option>
-                  <option value="1" <%= (query && query.bedrooms==='1')?'selected':'' %>>1+</option>
-                  <option value="2" <%= (query && query.bedrooms==='2')?'selected':'' %>>2+</option>
-                  <option value="3" <%= (query && query.bedrooms==='3')?'selected':'' %>>3+</option>
-                  <option value="4" <%= (query && query.bedrooms==='4')?'selected':'' %>>4+</option>
-                </select>
+                <input name="max_price" class="form-control" placeholder="Max Price" type="number" min="0" value="<%= (typeof query !== 'undefined' && query.max_price) ? query.max_price : '' %>">
               </div>
-              <div class="col-6 col-md-3">
-                <input name="min_price" class="form-control" placeholder="Min KES" type="number" min="0" value="<%= (typeof query!=='undefined' && query.min_price)?query.min_price:'' %>">
-              </div>
-              <div class="col-6 col-md-3">
-                <input name="max_price" class="form-control" placeholder="Max KES" type="number" min="0" value="<%= (typeof query!=='undefined' && query.max_price)?query.max_price:'' %>">
+              <div class="col-12 col-md-6">
+                <button type="button" class="btn btn-outline-secondary w-100" data-bs-toggle="collapse" data-bs-target="#advancedFilters">
+                  <i class="bi bi-funnel"></i> More Filters
+                </button>
               </div>
             </div>
-            <div class="mt-2 d-flex gap-2 justify-content-center flex-wrap">
-              <button type="button" class="btn btn-sm btn-outline-light rounded-pill" data-bs-toggle="collapse" data-bs-target="#advancedFilters">
-                <i class="bi bi-funnel"></i> More Filters
-              </button>
-              <% if (query && (query.q || query.location || query.min_price || query.max_price || query.category)) { %>
-                <a href="/" class="btn btn-sm btn-outline-danger rounded-pill"><i class="bi bi-x-circle"></i> Clear</a>
-              <% } %>
             </div>
+            <div class="collapse mt-3" id="advancedFilters">
+              <div class="row g-3">
+                <div class="col-6 col-md-3">
+                  <label class="form-label small text-muted fw-semibold"><i class="bi bi-list-ul"></i> Category</label>
+                  <select name="category" class="form-select">
+                    <option value="">All</option>
+                    <option value="beach-houses" <%= (query && query.category === 'beach-houses') ? 'selected' : '' %>>Beach Houses</option>
+                    <option value="city-stays" <%= (query && query.category === 'city-stays') ? 'selected' : '' %>>City Stays</option>
+                    <option value="mountain-retreats" <%= (query && query.category === 'mountain-retreats') ? 'selected' : '' %>>Mountain Retreats</option>
+                    <option value="entire-homes" <%= (query && query.category === 'entire-homes') ? 'selected' : '' %>>Entire Homes</option>
+                  </select>
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label small text-muted fw-semibold"><i class="bi bi-door-open"></i> Bedrooms</label>
+                  <select name="bedrooms" class="form-select">
+                    <option value="">Any</option>
+                    <option value="1" <%= (query && query.bedrooms === '1') ? 'selected' : '' %>>1+</option>
+                    <option value="2" <%= (query && query.bedrooms === '2') ? 'selected' : '' %>>2+</option>
+                    <option value="3" <%= (query && query.bedrooms === '3') ? 'selected' : '' %>>3+</option>
+                    <option value="4" <%= (query && query.bedrooms === '4') ? 'selected' : '' %>>4+</option>
+                  </select>
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label small text-muted fw-semibold"><i class="bi bi-people"></i> Guests</label>
+                  <select name="guests" class="form-select">
+                    <option value="">Any</option>
+                    <option value="2" <%= (query && query.guests === '2') ? 'selected' : '' %>>2+</option>
+                    <option value="4" <%= (query && query.guests === '4') ? 'selected' : '' %>>4+</option>
+                    <option value="6" <%= (query && query.guests === '6') ? 'selected' : '' %>>6+</option>
+                    <option value="8" <%= (query && query.guests === '8') ? 'selected' : '' %>>8+</option>
+                  </select>
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label small text-muted fw-semibold"><i class="bi bi-sort-down"></i> Sort By</label>
+                  <select name="sort" class="form-select">
+                    <option value="">Recommended</option>
+                    <option value="price_low" <%= (query && query.sort === 'price_low') ? 'selected' : '' %>>Price: Low to High</option>
+                    <option value="price_high" <%= (query && query.sort === 'price_high') ? 'selected' : '' %>>Price: High to Low</option>
+                    <option value="newest" <%= (query && query.sort === 'newest') ? 'selected' : '' %>>Newest</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <% if (query && (query.q || query.location || query.min_price || query.max_price || query.category)) { %>
+              <div class="mt-2">
+                <a href="/" class="btn btn-sm btn-outline-danger">
+                  <i class="bi bi-x-circle"></i> Clear Filters
+                </a>
+              </div>
+            <% } %>
           </form>
-        </div>
-        <div class="trust-pills mt-4">
-          <span class="trust-pill"><i class="bi bi-shield-check-fill"></i> Verified Landlords</span>
-          <span class="trust-pill"><i class="bi bi-phone-fill"></i> M-Pesa Payments</span>
-          <span class="trust-pill"><i class="bi bi-star-fill"></i> 4.8★ Avg Rating</span>
-          <span class="trust-pill"><i class="bi bi-headset"></i> 24/7 Support</span>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<div class="container mt-4">
+<!-- Main Content Container -->
+<div class="container">
 
-  <!-- City Scroll -->
-  <div class="city-scroll-wrap mb-2">
-    <span class="city-label">Browse by city:</span>
-    <a href="/?location=Nairobi" class="city-tag <%= (typeof query!=='undefined' && query.location==='Nairobi')?'active':'' %>">
-      <i class="bi bi-buildings"></i> Nairobi
-    </a>
-    <a href="/?location=Mombasa" class="city-tag <%= (typeof query!=='undefined' && query.location==='Mombasa')?'active':'' %>">
-      <i class="bi bi-water"></i> Mombasa
-    </a>
-    <a href="/?location=Kisumu" class="city-tag <%= (typeof query!=='undefined' && query.location==='Kisumu')?'active':'' %>">
-      <i class="bi bi-droplet"></i> Kisumu
-    </a>
-    <a href="/?location=Nakuru" class="city-tag <%= (typeof query!=='undefined' && query.location==='Nakuru')?'active':'' %>">
-      <i class="bi bi-tree"></i> Nakuru
-    </a>
-    <a href="/?location=Mogadishu" class="city-tag <%= (typeof query!=='undefined' && query.location==='Mogadishu')?'active':'' %>">
-      <i class="bi bi-map"></i> Mogadishu
-    </a>
-    <a href="/?location=Hargeisa" class="city-tag <%= (typeof query!=='undefined' && query.location==='Hargeisa')?'active':'' %>">
-      <i class="bi bi-map-fill"></i> Hargeisa
-    </a>
-    <a href="/" class="city-tag <%= (!query || !query.location)?'active':'' %>">
-      <i class="bi bi-globe"></i> All Cities
-    </a>
+<!-- Host Call-to-Action Banner -->
+<div class="my-5">
+  <div class="card border-0 shadow-lg" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="card-body p-5 text-white text-center">
+      <h2 class="display-5 fw-bold mb-3">Own a property? Start earning today!</h2>
+      <p class="lead mb-4">Join thousands of hosts who trust Helnay to help them earn extra income from their properties</p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="/become-a-host" class="btn btn-light btn-lg px-5 py-3 shadow">
+          <i class="bi bi-house-add"></i> List Your Property
+        </a>
+        <a href="/become-a-host#calculator" class="btn btn-outline-light btn-lg px-5 py-3">
+          <i class="bi bi-calculator"></i> Calculate Earnings
+        </a>
+      </div>
+      <div class="mt-4">
+        <small>
+          <i class="bi bi-check-circle-fill"></i> No listing fees • 
+          <i class="bi bi-check-circle-fill"></i> Lower commission • 
+          <i class="bi bi-check-circle-fill"></i> 24/7 support
+        </small>
+      </div>
+    </div>
   </div>
+</div>
 
-  <div class="row mt-4">
-    <!-- Sidebar -->
+<div class="container mt-4">
+  <div class="row">
+    <!-- Sidebar Filters -->
     <div class="col-lg-3 mb-4">
       <div class="sidebar-filters">
+        <!-- Booking Options -->
         <div class="filter-section">
           <h6 class="filter-title">Booking Options</h6>
-          <label class="filter-checkbox"><input type="checkbox" class="filter-input" data-filter="instant" style="accent-color:var(--g1)"> Instant Booking</label>
+          <div class="filter-options">
+            <label class="filter-checkbox">
+              <input type="checkbox" class="filter-input" data-filter="instant">
+              <span>Instant Booking</span>
+            </label>
+          </div>
         </div>
-        <% Object.keys(filtersByCategory).forEach(function(category){ %>
+
+        <!-- Dynamic Filter Sections from Database -->
+        <% Object.keys(filtersByCategory).forEach(function(category) { %>
         <div class="filter-section">
           <h6 class="filter-title"><%= category %></h6>
-          <div>
-            <% filtersByCategory[category].forEach(function(filter){ %>
+          <div class="filter-options">
+            <% filtersByCategory[category].forEach(function(filter) { %>
             <button class="filter-button" data-filter="<%= filter.filter_key %>">
               <i class="bi bi-<%= filter.icon %>"></i> <%= filter.name %>
             </button>
@@ -122,183 +155,163 @@
           </div>
         </div>
         <% }); %>
+        
+        <% if (Object.keys(filtersByCategory).length === 0) { %>
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle"></i> No filters available. Admin can add filters from the admin panel.
+        </div>
+        <% } %>
+
+        <!-- Quick Categories -->
         <div class="filter-section">
           <h6 class="filter-title">Browse by Category</h6>
           <div class="category-links">
             <% if (browseCategories && browseCategories.length > 0) { %>
-              <% browseCategories.forEach(function(category){ %>
+              <% browseCategories.forEach(function(category) { %>
                 <a href="/?<%= category.filter_params %>" class="category-link" title="<%= category.description %>">
                   <i class="bi bi-tag"></i> <%= category.title %>
                 </a>
               <% }); %>
             <% } else { %>
-              <p class="small" style="color:var(--hint)">No categories yet</p>
+              <p class="text-muted small">No categories available</p>
             <% } %>
           </div>
         </div>
+
+        <!-- Price Range -->
         <div class="filter-section">
-          <h6 class="filter-title">Price Range (KES)</h6>
+          <h6 class="filter-title">Price Range</h6>
           <div class="price-inputs">
-            <input type="number" class="form-control form-control-sm mb-2" placeholder="Min KES" id="priceMin">
-            <input type="number" class="form-control form-control-sm" placeholder="Max KES" id="priceMax">
-            <button class="btn btn-sm btn-primary w-100 mt-2 rounded-pill" onclick="applyPriceFilter()">Apply</button>
+            <input type="number" class="form-control form-control-sm mb-2" placeholder="Min $" id="priceMin">
+            <input type="number" class="form-control form-control-sm" placeholder="Max $" id="priceMax">
+            <button class="btn btn-sm btn-primary w-100 mt-2" onclick="applyPriceFilter()">Apply</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Listings -->
+    <!-- Main Content -->
     <div class="col-lg-9">
-      <div class="sec-header mb-3">
-        <div>
-          <div class="sec-title">Available Properties <span class="badge bg-secondary listings-count ms-1"><%= listings.length %></span></div>
-          <div class="sec-sub">Verified properties across East Africa · M-Pesa accepted</div>
-        </div>
-      </div>
-      <div class="row g-3" id="listingsContainer">
-        <% if (!listings || listings.length === 0) { %>
-          <div class="col-12">
-            <div class="text-center py-5" style="color:var(--hint)">
-              <i class="bi bi-house-slash" style="font-size:3rem;display:block;margin-bottom:12px"></i>
-              <p class="mb-0">No properties found. Try a different search.</p>
-            </div>
+
+      <h2 class="mb-4">Available Properties <span class="badge bg-secondary listings-count"><%= listings.length %></span></h2>
+      <div class="listings-wrapper">
+        <div class="row listings-grid" id="listingsContainer">
+  <% if (!listings || listings.length === 0) { %>
+    <div class="col-12"><p>No listings found.</p></div>
+  <% } %>
+  <% listings.forEach(function(l){ %>
+    <div class="col-md-4 listing-item" data-amenities="<%= (l.serviceKeys || l.description).toLowerCase() %>">
+      <div class="card listing-card h-100">
+        <% if (l.image_url) { %>
+          <div class="listing-img-wrapper position-relative">
+            <a href="/listings/<%= l.id %>" class="text-decoration-none">
+              <img src="<%= l.image_url %>" class="card-img-top" alt="<%= l.title %>">
+              <span class="badge badge-location"><i class="bi bi-geo-alt"></i> <%= l.location_name || l.location || 'Location not set' %></span>
+            </a>
+            <% if (user) { %>
+              <form method="POST" action="/favorites/toggle/<%= l.id %>" class="favorite-form" style="position:absolute; top:10px; right:10px;">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button type="submit" class="btn btn-sm btn-light rounded-circle shadow favorite-btn" title="Add to favorites" data-listing-id="<%= l.id %>">
+                  <i class="bi bi-heart<%= (favoriteIds && favoriteIds.includes(l.id)) ? '-fill text-danger' : '' %>"></i>
+                </button>
+              </form>
+            <% } %>
+          </div>
+        <% } else { %>
+          <div class="card-header bg-light">
+            <span class="badge badge-location"><i class="bi bi-geo-alt"></i> <%= l.location_name || l.location || 'Location not set' %></span>
           </div>
         <% } %>
-        <% listings.forEach(function(l){ %>
-          <div class="col-md-6 col-lg-4 listing-item" data-amenities="<%= (l.serviceKeys || l.description).toLowerCase() %>">
-            <div class="card listing-card h-100">
-              <% if (l.image_url) { %>
-                <div class="listing-img-wrapper">
-                  <a href="/listings/<%= l.id %>" class="text-decoration-none">
-                    <img src="<%= l.image_url %>" class="card-img-top" alt="<%= l.title %>">
-                    <span class="badge-location"><i class="bi bi-geo-alt-fill"></i> <%= l.location_name || l.location || 'Location not set' %></span>
-                  </a>
-                  <% if (user) { %>
-                    <form method="POST" action="/favorites/toggle/<%= l.id %>" class="favorite-form" style="position:absolute;top:10px;right:10px">
-                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                      <button type="submit" class="btn btn-sm btn-light rounded-circle shadow favorite-btn" data-listing-id="<%= l.id %>">
-                        <i class="bi bi-heart<%= (favoriteIds && favoriteIds.includes(l.id))?'-fill text-danger':'' %>"></i>
-                      </button>
-                    </form>
-                  <% } %>
-                </div>
-              <% } else { %>
-                <div class="listing-img-wrapper" style="background:#f0f0ea;display:flex;align-items:center;justify-content:center">
-                  <i class="bi bi-house" style="font-size:3rem;color:var(--hint)"></i>
-                  <span class="badge-location"><i class="bi bi-geo-alt-fill"></i> <%= l.location_name || l.location || 'Location not set' %></span>
-                </div>
-              <% } %>
-              <div class="card-body d-flex flex-column">
-                <a href="/listings/<%= l.id %>" class="text-decoration-none">
-                  <h5 class="card-title"><%= l.title %></h5>
-                  <p class="card-text text-muted small mb-2">
-                    <i class="bi bi-geo-alt-fill" style="color:var(--g3)"></i> <%= l.location_name || l.location || 'Location not set' %>
-                  </p>
-                  <p class="card-text text-muted"><%= l.description.length > 90 ? l.description.substring(0,90)+'…' : l.description %></p>
-                </a>
-                <div class="mt-auto">
-                  <hr>
-                  <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                      <strong class="text-primary">$<%= l.price %></strong>
-                      <small class="text-muted">/night</small>
-                    </div>
-                    <a href="/listings/<%= l.id %>" class="btn btn-primary btn-sm">View Details</a>
-                  </div>
-                </div>
+        <div class="card-body d-flex flex-column">
+          <a href="/listings/<%= l.id %>" class="text-decoration-none">
+            <h5 class="card-title text-dark"><%= l.title %></h5>
+            <p class="card-text text-muted small mb-2">
+              <i class="bi bi-geo-alt-fill text-primary"></i> <%= l.location_name || l.location || 'Location not set' %>
+            </p>
+            <p class="card-text text-muted small mb-2">
+              <i class="bi bi-house"></i> Available for rent
+            </p>
+            <p class="card-text text-muted"><%= l.description.length > 100 ? l.description.substring(0,100) + '...' : l.description %></p>
+          </a>
+          <div class="mt-auto">
+            <hr>
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <strong class="text-primary fs-5">$<%= l.price %></strong>
+                <small class="text-muted">/night</small>
               </div>
-            </div>
-          </div>
-        <% }) %>
-      </div>
-    </div>
-  </div>
-
-  <!-- Host CTA -->
-  <div class="my-5">
-    <div class="card border-0 host-cta-banner">
-      <div class="card-body p-0 text-white">
-        <div class="row align-items-center g-4">
-          <div class="col-lg-8">
-            <div style="background:rgba(244,162,97,0.2);border:1px solid rgba(244,162,97,0.4);border-radius:100px;display:inline-flex;align-items:center;padding:4px 14px;font-size:11.5px;font-weight:700;color:#fcd4a0;margin-bottom:12px">For Landlords</div>
-            <h2 class="display-5 fw-bold mb-2">Own a property? Start earning today.</h2>
-            <p class="mb-3" style="color:rgba(255,255,255,0.7);font-size:15px">Join hundreds of East African landlords earning steady income — with M-Pesa payouts and just 3% commission.</p>
-            <div class="d-flex gap-4 mb-4 flex-wrap">
-              <div><div class="host-stat-val">KES 45K+</div><div class="host-stat-lbl">avg. monthly earnings</div></div>
-              <div><div class="host-stat-val">3%</div><div class="host-stat-lbl">commission only</div></div>
-              <div><div class="host-stat-val">&lt;24h</div><div class="host-stat-lbl">to go live</div></div>
-            </div>
-            <div class="d-flex gap-3 flex-wrap">
-              <a href="/become-a-host" class="btn btn-light btn-lg px-4">
-                <i class="bi bi-house-add"></i> List Your Property
-              </a>
-              <a href="/become-a-host#calculator" class="btn btn-outline-light btn-lg px-4">
-                <i class="bi bi-calculator"></i> Calculate Earnings
-              </a>
+              <a href="/listings/<%= l.id %>" class="btn btn-primary">View Details</a>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- More Properties -->
-  <div class="mb-5">
-    <div class="sec-header">
-      <div>
-        <div class="sec-title">More Properties</div>
-        <div class="sec-sub">Explore more options across East Africa and beyond</div>
+  <% }) %>
+        </div>
       </div>
+
+      <!-- Featured Rentals Section -->
+  <div class="row mt-5 pt-4 border-top">
+    <div class="col-12 mb-4">
+      <h3>More Properties Available for Rent</h3>
+      <p class="text-muted">Explore additional rental options in different locations</p>
     </div>
-    <div class="row g-3">
-      <%
-      const featuredRentals = [
-        { title:'Luxury Penthouse', location:'Nairobi CBD', price:45000, type:'apartment', image:'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80' },
-        { title:'Beach Villa – Diani', location:'Mombasa', price:32000, type:'villa', image:'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80' },
-        { title:'Modern 2BR Flat', location:'Kilimani, Nairobi', price:8500, type:'apartment', image:'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80' },
-        { title:'Lakeside Home', location:'Kisumu', price:7000, type:'home', image:'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=800&q=80' },
-        { title:'Studio – Westlands', location:'Nairobi', price:5500, type:'studio', image:'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80' },
-        { title:'Executive Suite', location:'Mogadishu', price:18000, type:'serviced', image:'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&q=80' },
-        { title:'Garden Apartment', location:'Lavington, Nairobi', price:12000, type:'apartment', image:'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80' },
-        { title:'Ocean View Suite', location:'Bamburi, Mombasa', price:14000, type:'apartment', image:'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80' },
-        { title:'Serviced Apt – Hargeisa', location:'Hargeisa', price:9000, type:'serviced', image:'https://images.unsplash.com/photo-1596721853750-2f8e8c39e826?w=800&q=80' },
-        { title:'Penthouse – Upper Hill', location:'Nairobi', price:22000, type:'apartment', image:'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80' }
-      ];
-      %>
-      <% featuredRentals.forEach(function(rental){ %>
-        <div class="col-md-6 col-lg-3 col-xl-2-4 mb-1">
-          <div class="card featured-rental-card h-100">
-            <div class="featured-img-wrapper">
-              <img src="<%= rental.image %>" alt="<%= rental.title %>">
-              <span class="badge-featured">✦ Featured</span>
-            </div>
-            <div class="card-body">
-              <h6 class="card-title"><%= rental.title %></h6>
-              <p class="card-text small mb-2" style="color:var(--hint)">
-                <i class="bi bi-geo-alt-fill" style="color:var(--g3)"></i> <%= rental.location %>
-              </p>
-              <div class="d-flex justify-content-between align-items-center">
-                <span><strong class="text-primary">KES <%= rental.price.toLocaleString() %></strong><small style="color:var(--hint)">/night</small></span>
-                <a href="/?location=<%= rental.location.split(',')[0] %>&type=<%= rental.type %>" class="btn btn-sm btn-outline-primary">View</a>
-              </div>
+    <% 
+    const featuredRentals = [
+      { title: 'Luxury Penthouse', location: 'Manhattan', price: 450, type: 'apartment', image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80' },
+      { title: 'Lakeside Villa', location: 'Lake District', price: 320, type: 'villa', image: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80' },
+      { title: 'Desert Oasis Home', location: 'Arizona', price: 195, type: 'home', image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80' },
+      { title: 'Tropical Beach Villa', location: 'Miami Beach', price: 380, type: 'villa', image: 'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=800&q=80' },
+      { title: 'Downtown Studio', location: 'Chicago', price: 75, type: 'studio', image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80' },
+      { title: 'Mountain View Chalet', location: 'Swiss Alps', price: 280, type: 'chalet', image: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&q=80' },
+      { title: 'Historic Townhouse', location: 'Boston', price: 225, type: 'townhouse', image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80' },
+      { title: 'Waterfront Condo', location: 'Seattle', price: 165, type: 'condo', image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80' },
+      { title: 'Country Farmhouse', location: 'Vermont', price: 140, type: 'farmhouse', image: 'https://images.unsplash.com/photo-1596721853750-2f8e8c39e826?w=800&q=80' },
+      { title: 'Urban Loft Space', location: 'Brooklyn', price: 190, type: 'loft', image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80' }
+    ];
+    %>
+    <% featuredRentals.forEach(function(rental, idx){ %>
+      <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
+        <div class="card featured-rental-card h-100">
+          <div class="featured-img-wrapper">
+            <img src="<%= rental.image %>" class="card-img-top" alt="<%= rental.title %>">
+            <span class="badge badge-featured">Featured</span>
+          </div>
+          <div class="card-body">
+            <h6 class="card-title"><%= rental.title %></h6>
+            <p class="card-text text-muted small mb-2">
+              <i class="bi bi-geo-alt-fill"></i> <%= rental.location %>
+            </p>
+            <div class="d-flex justify-content-between align-items-center">
+              <span><strong class="text-primary">$<%= rental.price %></strong><small class="text-muted">/night</small></span>
+              <a href="/?location=<%= rental.location %>&type=<%= rental.type %>" class="btn btn-sm btn-outline-primary">View</a>
             </div>
           </div>
         </div>
-      <% }) %>
+      </div>
+    <% }) %>
+      </div>
     </div>
   </div>
-
 </div>
 
 <script>
+// Filter functionality
 const filterButtons = document.querySelectorAll('.filter-button');
 const listingsContainer = document.getElementById('listingsContainer');
 const allListings = Array.from(listingsContainer.children);
 let activeFilters = [];
 
+// Store original display state
+allListings.forEach(listing => {
+  listing.dataset.originalDisplay = listing.style.display || 'block';
+});
+
 filterButtons.forEach(button => {
   button.addEventListener('click', function() {
     const filter = this.dataset.filter;
+    
+    // Toggle active state
     if (this.classList.contains('active')) {
       this.classList.remove('active');
       activeFilters = activeFilters.filter(f => f !== filter);
@@ -306,32 +319,142 @@ filterButtons.forEach(button => {
       this.classList.add('active');
       activeFilters.push(filter);
     }
+    
     applyFilters();
   });
 });
 
 function applyFilters() {
+  
+  // Get price filters
   const minPrice = parseFloat(document.getElementById('priceMin')?.value) || 0;
   const maxPrice = parseFloat(document.getElementById('priceMax')?.value) || Infinity;
+  
   allListings.forEach(listing => {
+    // Get FULL description from data attribute (not truncated)
     const amenities = listing.dataset.amenities || '';
     const title = listing.querySelector('.card-title')?.textContent.toLowerCase() || '';
     const fullText = (title + ' ' + amenities).toLowerCase();
+    
+    // Check price
     const priceText = listing.querySelector('.text-primary')?.textContent || '';
     const price = parseFloat(priceText.replace(/[^0-9.]/g, ''));
     const priceMatch = price >= minPrice && price <= maxPrice;
-    if (activeFilters.length === 0) { listing.style.display = priceMatch ? '' : 'none'; return; }
+    
+    // If no filters selected, show all (that match price)
+    if (activeFilters.length === 0) {
+      listing.style.display = priceMatch ? '' : 'none';
+      return;
+    }
+    
+    // Check if listing matches ALL selected filters (AND logic)
     const matches = activeFilters.every(filter => {
-      const map = { pool:'pool', wifi:'wifi|wi-fi', parking:'parking|garage', ac:'air condition', garden:'garden|yard', tv:' tv', kitchen:'kitchen', washer:'washing|laundry', microwave:'microwave', dishwasher:'dishwasher', hottub:'hot tub|jacuzzi', sauna:'sauna', fireplace:'fireplace', 'pet-friendly':'pet-friend', grill:'bbq|grill', generator:'generator', security:'security', borehole:'borehole', furnished:'furnished' };
-      const pattern = map[filter];
-      return pattern ? pattern.split('|').some(p => fullText.includes(p)) : true;
+      switch(filter) {
+        case 'pool': 
+          return fullText.includes('pool');
+        case 'wifi': 
+          return fullText.includes('wifi') || fullText.includes('wi-fi');
+        case 'balcony': 
+          return fullText.includes('balcony') || fullText.includes('patio') || fullText.includes('terrace') || fullText.includes('deck');
+        case 'ac': 
+          return fullText.includes('air conditioning') || fullText.includes('air condition');
+        case 'garden': 
+          return fullText.includes('garden') || fullText.includes('yard');
+        case 'tv': 
+          return fullText.includes(' tv,') || fullText.includes(' tv ') || fullText.includes('television') || fullText.includes('smart tv');
+        case 'parking': 
+          return fullText.includes('parking') || fullText.includes('garage');
+        case 'kitchen': 
+          return fullText.includes('kitchen');
+        case 'washer': 
+          return fullText.includes('washing machine') || fullText.includes('washing') || fullText.includes('laundry');
+        case 'microwave': 
+          return fullText.includes('microwave');
+        case 'dishwasher': 
+          return fullText.includes('dishwasher');
+        case 'hottub': 
+          return fullText.includes('hot tub') || fullText.includes('jacuzzi');
+        case 'sauna': 
+          return fullText.includes('sauna');
+        case 'fireplace': 
+          return fullText.includes('fireplace');
+        case 'cot': 
+          return fullText.includes('cot') || fullText.includes('crib');
+        case 'pet-friendly': 
+          return fullText.includes('pet-friend');
+        case 'no-smoking': 
+          return fullText.includes('no smoking') || fullText.includes('smoke-free');
+        case 'no-pets': 
+          return fullText.includes('no pet');
+        case 'wheelchair': 
+          return fullText.includes('wheelchair accessible') || fullText.includes('wheelchair access');
+        case 'fishing': 
+          return fullText.includes('fishing');
+        case 'grill': 
+          return fullText.includes('bbq grill') || fullText.includes('grill') || fullText.includes('bbq');
+        case 'instant': 
+          return true;
+        default: 
+          return true;
+      }
     });
+    
+    // Show only if matches ALL filters AND price range
     listing.style.display = (matches && priceMatch) ? '' : 'none';
   });
-  const visibleCount = allListings.filter(l => l.style.display !== 'none').length;
-  const badge = document.querySelector('.listings-count');
-  if (badge) badge.textContent = visibleCount;
+  
+  updateListingsCount();
 }
 
-function applyPriceFilter() { applyFilters(); }
+function applyPriceFilter() {
+  // Just trigger the main filter function which now handles price
+  applyFilters();
+}
+
+function updateListingsCount() {
+  const visibleCount = allListings.filter(l => l.style.display !== 'none').length;
+  const countBadge = document.querySelector('.listings-count');
+  if (countBadge) {
+    countBadge.textContent = visibleCount;
+  }
+}
 </script>
+
+<!-- Schema.org Structured Data for SEO -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Helnay",
+  "url": "https://helnay.com",
+  "description": "Premium vacation rental platform offering beach houses, city apartments, mountain retreats, and entire homes worldwide",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://helnay.com/?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Helnay",
+  "url": "https://helnay.com",
+  "logo": "https://helnay.com/uploads/helnay-logo.png",
+  "description": "Premium vacation rental platform",
+  "sameAs": [
+    "https://www.facebook.com/helnay",
+    "https://twitter.com/helnay",
+    "https://www.instagram.com/helnay"
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "contactType": "Customer Service",
+    "url": "https://helnay.com/contact"
+  }
+}
+</script>
+</div>
+<!-- End Main Content Container -->

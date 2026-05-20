@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: helnay
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_PATH
+        value: /opt/render/project/.data
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: BASE_URL
+        value: https://helnay.com
+      - key: COOKIE_DOMAIN
+        value: .helnay.com
+    disk:
+      name: helnay-data
+      mountPath: /opt/render/project/.data
+      sizeGB: 1
+ 
