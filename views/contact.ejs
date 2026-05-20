@@ -1,95 +1,82 @@
+<div style="background:linear-gradient(135deg,#0d2e1e,#1a4731,#2d6a4f);padding:56px 0;text-align:center;color:#fff">
+  <div class="container">
+    <div class="hero-chip mx-auto mb-3"><i class="bi bi-envelope-fill"></i> Get in Touch</div>
+    <h1 style="font-family:'Fraunces',serif;font-size:2.2rem;font-weight:600;letter-spacing:-0.5px;margin-bottom:8px">Contact Helnay</h1>
+    <p style="color:rgba(255,255,255,0.7);font-size:15px">We're here to help. Reach out via any channel below.</p>
+  </div>
+</div>
+
 <div class="container my-5">
-  <div class="row justify-content-center">
-    <div class="col-lg-8">
-      <!-- Header Section -->
-      <div class="text-center mb-5">
-        <h1 class="display-4 mb-3"><i class="bi bi-envelope-heart text-primary"></i> Get in Touch</h1>
-        <p class="lead text-muted">Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+  <!-- Contact Cards -->
+  <div class="row g-3 mb-5">
+    <div class="col-6 col-md-3">
+      <div class="text-center p-4 rounded-4 h-100" style="background:#fff;border:1px solid var(--border)">
+        <i class="bi bi-envelope-fill mb-3" style="font-size:1.8rem;color:var(--g2);display:block"></i>
+        <div class="fw-bold small mb-1">Email</div>
+        <a href="mailto:info@helnay.com" class="text-muted small" style="text-decoration:none">info@helnay.com</a>
       </div>
-
-      <% if (message) { %>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-          <i class="bi bi-check-circle-fill me-2"></i><%= message %>
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-      <% } %>
-
-      <!-- Contact Info Cards -->
-      <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-          <div class="card text-center h-100 border-0 shadow-sm">
-            <div class="card-body">
-              <i class="bi bi-envelope fs-1 text-primary mb-3"></i>
-              <h6 class="card-title">Email Us</h6>
-              <p class="card-text small text-muted">
-                <a href="mailto:info@helnay.com" class="text-decoration-none text-muted">info@helnay.com</a>
-              </p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3 mb-3">
-          <div class="card text-center h-100 border-0 shadow-sm">
-            <div class="card-body">
-              <i class="bi bi-telephone fs-1 text-success mb-3"></i>
-              <h6 class="card-title">Call Us</h6>
-              <p class="card-text small text-muted">
-                <a href="tel:+447384221488" class="text-decoration-none text-muted">+44 7384 221488</a>
-              </p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3 mb-3">
-          <div class="card text-center h-100 border-0 shadow-sm">
-            <div class="card-body">
-              <i class="bi bi-whatsapp fs-1 text-success mb-3"></i>
-              <h6 class="card-title">WhatsApp</h6>
-              <p class="card-text small text-muted">
-                <a href="https://wa.me/447944321650" target="_blank" class="text-decoration-none text-muted">+44 7944 321650</a>
-              </p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3 mb-3">
-          <div class="card text-center h-100 border-0 shadow-sm">
-            <div class="card-body">
-              <i class="bi bi-clock fs-1 text-info mb-3"></i>
-              <h6 class="card-title">Hours</h6>
-              <p class="card-text small text-muted">Mon-Fri: 9AM-6PM</p>
-            </div>
-          </div>
-        </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="text-center p-4 rounded-4 h-100" style="background:#fff;border:1px solid var(--border)">
+        <i class="bi bi-telephone-fill mb-3" style="font-size:1.8rem;color:var(--g2);display:block"></i>
+        <div class="fw-bold small mb-1">Phone</div>
+        <a href="tel:+447384221488" class="text-muted small" style="text-decoration:none">+44 7384 221488</a>
       </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="text-center p-4 rounded-4 h-100" style="background:#fff;border:1px solid var(--border)">
+        <i class="bi bi-whatsapp mb-3" style="font-size:1.8rem;color:#25d366;display:block"></i>
+        <div class="fw-bold small mb-1">WhatsApp</div>
+        <a href="https://wa.me/447944321650" target="_blank" class="text-muted small" style="text-decoration:none">+44 7944 321650</a>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="text-center p-4 rounded-4 h-100" style="background:#fff;border:1px solid var(--border)">
+        <i class="bi bi-clock-fill mb-3" style="font-size:1.8rem;color:var(--g2);display:block"></i>
+        <div class="fw-bold small mb-1">Hours</div>
+        <span class="text-muted small">Mon–Fri: 9AM–6PM EAT</span>
+      </div>
+    </div>
+  </div>
 
-      <!-- Contact Form -->
-      <div class="card shadow-lg border-0">
-        <div class="card-body p-4">
-          <h3 class="card-title mb-4"><i class="bi bi-chat-left-text me-2"></i>Send us a Message</h3>
-          <form method="POST" class="row g-3">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+  <div class="row g-5 justify-content-center">
+    <div class="col-lg-7">
+      <div class="p-4 p-md-5 rounded-4" style="background:#fff;border:1px solid var(--border)">
+        <h3 style="font-family:'Fraunces',serif;font-weight:600;margin-bottom:4px">Send a Message</h3>
+        <p class="text-muted small mb-4">We respond within 2 hours during business hours.</p>
+        <% if (typeof message !== 'undefined' && message) { %>
+          <div class="alert alert-success" style="border-radius:10px"><i class="bi bi-check-circle-fill me-2"></i><%= message %></div>
+        <% } %>
+        <form method="POST" action="/contact">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="row g-3 mb-3">
             <div class="col-md-6">
-              <label class="form-label fw-semibold"><i class="bi bi-person me-2"></i>Your Name</label>
-              <input class="form-control form-control-lg" name="name" placeholder="Manow Crm" required />
+              <label class="form-label fw-bold small" style="color:var(--hint);text-transform:uppercase;letter-spacing:.4px">Your Name</label>
+              <input type="text" name="name" class="form-control" placeholder="Ahmed Mohamed" required style="border-radius:10px;padding:10px 13px">
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold"><i class="bi bi-envelope me-2"></i>Your Email</label>
-              <input class="form-control form-control-lg" name="email" type="email" placeholder="manow@email.com" required />
+              <label class="form-label fw-bold small" style="color:var(--hint);text-transform:uppercase;letter-spacing:.4px">Email</label>
+              <input type="email" name="email" class="form-control" placeholder="you@example.com" required style="border-radius:10px;padding:10px 13px">
             </div>
-            <div class="col-12">
-              <label class="form-label fw-semibold"><i class="bi bi-chat-square-text me-2"></i>Message</label>
-              <textarea class="form-control form-control-lg" name="message" rows="6" placeholder="Tell us how we can help you..." required></textarea>
-            </div>
-            <div class="col-12">
-              <button class="btn btn-primary btn-lg w-100" type="submit">
-                <i class="bi bi-send me-2"></i>Send Message
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Additional Info -->
-      <div class="text-center mt-4">
-        <p class="text-muted"><i class="bi bi-shield-check me-2"></i>We respect your privacy and will never share your information.</p>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold small" style="color:var(--hint);text-transform:uppercase;letter-spacing:.4px">Subject</label>
+            <select name="subject" class="form-select" style="border-radius:10px;padding:10px 13px">
+              <option>General Enquiry</option>
+              <option>Booking Support</option>
+              <option>List My Property</option>
+              <option>Payment Issue</option>
+              <option>Report a Problem</option>
+            </select>
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-bold small" style="color:var(--hint);text-transform:uppercase;letter-spacing:.4px">Message</label>
+            <textarea name="message" class="form-control" rows="5" placeholder="Tell us how we can help…" required style="border-radius:10px;padding:10px 13px;resize:vertical"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 fw-bold py-3" style="border-radius:12px;font-size:15px;background:linear-gradient(135deg,#1a4731,#2d6a4f);border:none">
+            <i class="bi bi-send-fill me-2"></i> Send Message
+          </button>
+        </form>
       </div>
     </div>
   </div>

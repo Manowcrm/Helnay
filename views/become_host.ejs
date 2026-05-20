@@ -1,91 +1,67 @@
-<!-- Hero Section -->
-<div class="bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 80px 0;">
-  <div class="container text-center">
-    <h1 class="display-3 fw-bold mb-4">Earn Money from Your Property</h1>
-    <p class="lead mb-4">Join Helnay and start earning from your vacation home, apartment, or spare room</p>
-    <a href="#calculator" class="btn btn-light btn-lg px-5 py-3 shadow">Calculate Your Earnings</a>
+<!-- HERO -->
+<div class="host-page-hero text-white text-center">
+  <div class="container py-5">
+    <div class="hero-chip mx-auto mb-3" style="background:rgba(244,162,97,0.2);border-color:rgba(244,162,97,0.4);color:#fcd4a0"><i class="bi bi-house-add-fill"></i> For Landlords</div>
+    <h1 class="fw-bold mb-3">Earn Money from Your Property</h1>
+    <p class="lead mb-4" style="color:rgba(255,255,255,0.72);max-width:480px;margin:0 auto 28px">Join Helnay and start earning from your apartment, house, or villa. M-Pesa payouts, just 3% commission.</p>
+    <a href="#calculator" class="btn btn-light btn-lg px-5" style="border-radius:100px;font-weight:700;color:var(--g1)"><i class="bi bi-calculator"></i> Calculate Earnings</a>
   </div>
 </div>
 
-<!-- Why Host Section -->
-<div class="container my-5 py-5">
-  <h2 class="text-center mb-5">Why List on Helnay?</h2>
+<!-- WHY HOST -->
+<div class="container my-5">
+  <div class="text-center mb-4">
+    <h2 style="font-family:'Fraunces',serif;font-size:1.8rem;font-weight:600;letter-spacing:-0.4px">Why List on Helnay?</h2>
+    <p class="text-muted">Everything designed for East African landlords</p>
+  </div>
   <div class="row g-4">
-    <div class="col-md-4">
-      <div class="card h-100 border-0 shadow-sm text-center p-4">
-        <div class="mb-3">
-          <i class="bi bi-percent text-primary" style="font-size: 3rem;"></i>
-        </div>
-        <h4>Lower Fees</h4>
-        <p class="text-muted">Keep more of your earnings with our competitive commission rates - significantly lower than other platforms</p>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card h-100 border-0 shadow-sm text-center p-4">
-        <div class="mb-3">
-          <i class="bi bi-shield-check text-success" style="font-size: 3rem;"></i>
-        </div>
-        <h4>Secure Payments</h4>
-        <p class="text-muted">Get paid safely and on time with our secure payment processing through Stripe</p>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card h-100 border-0 shadow-sm text-center p-4">
-        <div class="mb-3">
-          <i class="bi bi-headset text-info" style="font-size: 3rem;"></i>
-        </div>
-        <h4>24/7 Support</h4>
-        <p class="text-muted">Our dedicated support team is always here to help you succeed</p>
-      </div>
-    </div>
+    <div class="col-md-4"><div class="why-card h-100"><div class="why-icon"><i class="bi bi-percent"></i></div><h5 class="fw-bold mb-2">Only 3% Commission</h5><p class="text-muted small mb-0" style="line-height:1.7">Keep 97% of every booking. Far lower than any other platform in the market.</p></div></div>
+    <div class="col-md-4"><div class="why-card h-100"><div class="why-icon"><i class="bi bi-phone-fill"></i></div><h5 class="fw-bold mb-2">M-Pesa Payouts</h5><p class="text-muted small mb-0" style="line-height:1.7">Receive earnings directly to your M-Pesa within 24 hours of each guest check-in.</p></div></div>
+    <div class="col-md-4"><div class="why-card h-100"><div class="why-icon"><i class="bi bi-shield-check"></i></div><h5 class="fw-bold mb-2">Verified Guests Only</h5><p class="text-muted small mb-0" style="line-height:1.7">Every guest is ID-verified before booking. Your property is always protected.</p></div></div>
+    <div class="col-md-4"><div class="why-card h-100"><div class="why-icon"><i class="bi bi-graph-up-arrow"></i></div><h5 class="fw-bold mb-2">Smart Pricing Tools</h5><p class="text-muted small mb-0" style="line-height:1.7">Our dashboard shows you market rates so you always price competitively.</p></div></div>
+    <div class="col-md-4"><div class="why-card h-100"><div class="why-icon"><i class="bi bi-headset"></i></div><h5 class="fw-bold mb-2">24/7 Host Support</h5><p class="text-muted small mb-0" style="line-height:1.7">Dedicated WhatsApp support line for hosts — in English, Swahili and Somali.</p></div></div>
+    <div class="col-md-4"><div class="why-card h-100"><div class="why-icon"><i class="bi bi-rocket-takeoff"></i></div><h5 class="fw-bold mb-2">Live in Under 24h</h5><p class="text-muted small mb-0" style="line-height:1.7">Submit your listing and go live within 24 hours after our quick verification.</p></div></div>
   </div>
 </div>
 
-<!-- Earnings Calculator -->
-<div class="bg-light py-5" id="calculator">
+<!-- EARNINGS CALCULATOR -->
+<div style="background:#f8f7f4;padding:60px 0" id="calculator">
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-lg-8">
-        <div class="card shadow border-0">
-          <div class="card-body p-5">
-            <h2 class="text-center mb-4">💰 Earnings Calculator</h2>
-            <p class="text-center text-muted mb-4">Estimate your potential monthly income</p>
-            
-            <div class="mb-4">
-              <label class="form-label fw-bold">Nightly Rate ($)</label>
-              <input type="number" class="form-control form-control-lg" id="nightlyRate" value="150" min="1">
-            </div>
-            
-            <div class="mb-4">
-              <label class="form-label fw-bold">Nights Booked per Month</label>
-              <input type="range" class="form-range" id="nightsBooked" min="1" max="30" value="15">
-              <div class="d-flex justify-content-between">
-                <small class="text-muted">1 night</small>
-                <strong id="nightsValue">15 nights</strong>
-                <small class="text-muted">30 nights</small>
+        <div class="earnings-calc">
+          <div class="text-center mb-4">
+            <h2 class="mb-1">Earnings Calculator</h2>
+            <p class="text-muted small">Estimate your potential monthly income from your property</p>
+          </div>
+          <div class="row g-4 align-items-end">
+            <div class="col-md-7">
+              <div class="mb-4">
+                <label class="form-label fw-bold small text-uppercase" style="letter-spacing:.4px;color:var(--hint)">Nightly Rate (KES)</label>
+                <input type="number" class="form-control form-control-lg" id="nightlyRate" value="8000" min="1" style="border-radius:12px">
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold small text-uppercase d-flex justify-content-between" style="letter-spacing:.4px;color:var(--hint)">
+                  <span>Nights Booked / Month</span>
+                  <span style="color:var(--g1)" id="nightsValue">20 nights</span>
+                </label>
+                <input type="range" class="form-range" id="nightsBooked" min="1" max="30" value="20" style="accent-color:var(--g1)">
+                <div class="d-flex justify-content-between"><small class="text-muted">1</small><small class="text-muted">30</small></div>
               </div>
             </div>
-            
-            <div class="alert alert-success">
-              <div class="row align-items-center">
-                <div class="col-md-6">
-                  <h5 class="mb-0">Estimated Monthly Earnings</h5>
-                </div>
-                <div class="col-md-6 text-end">
-                  <h2 class="mb-0 text-success" id="earnings">$2,250</h2>
-                </div>
+            <div class="col-md-5">
+              <div class="calc-result-box">
+                <div class="small fw-bold text-uppercase mb-1" style="letter-spacing:.5px;color:var(--g2)">Est. Monthly Earnings</div>
+                <div class="calc-result-num" id="earnings">KES 155,520</div>
+                <div class="small mt-1" style="color:var(--g2)">After 3% Helnay fee</div>
               </div>
             </div>
-            
-            <div class="alert alert-info">
-              <small>
-                <i class="bi bi-info-circle"></i> This is an estimate. Actual earnings depend on location, property type, seasonality, and occupancy rates.
-              </small>
-            </div>
-            
-            <div class="text-center mt-4">
-              <a href="#get-started" class="btn btn-primary btn-lg px-5 py-3">Start Listing Now</a>
-            </div>
+          </div>
+          <div class="alert alert-info mt-3 small" style="border-radius:12px">
+            <i class="bi bi-info-circle me-1"></i> Estimate only. Actual earnings depend on location, season, and occupancy.
+          </div>
+          <div class="text-center mt-3">
+            <a href="#get-started" class="btn btn-primary btn-lg px-5" style="border-radius:100px">Start Listing Now →</a>
           </div>
         </div>
       </div>
@@ -93,184 +69,85 @@
   </div>
 </div>
 
-<!-- How It Works -->
-<div class="container my-5 py-5">
-  <h2 class="text-center mb-5">How It Works</h2>
-  <div class="row g-4">
-    <div class="col-md-3 text-center">
-      <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">1</div>
-      <h5>Create Your Listing</h5>
-      <p class="text-muted">Sign up and add your property details, photos, and pricing</p>
+<!-- HOW IT WORKS -->
+<div class="container my-5 py-3">
+  <div class="text-center mb-5">
+    <h2 style="font-family:'Fraunces',serif;font-size:1.8rem;font-weight:600;letter-spacing:-0.4px">How It Works</h2>
+  </div>
+  <div class="row g-4 text-center">
+    <% const steps = [
+      {num:'1',icon:'camera-fill',title:'List Your Property',desc:'Add photos, description, amenities and set your nightly rate in KES.'},
+      {num:'2',icon:'shield-check',title:'Get Verified',desc:'Our team reviews your listing and verifies your identity within 24 hours.'},
+      {num:'3',icon:'calendar-check',title:'Receive Bookings',desc:'Guests find and book your property. You get instant M-Pesa notification.'},
+      {num:'4',icon:'phone-fill',title:'Get Paid',desc:'Payment hits your M-Pesa within 24 hours of guest check-in. Every time.'}
+    ]; %>
+    <% steps.forEach(function(s){ %>
+    <div class="col-md-3">
+      <div class="p-4 rounded-4 h-100" style="background:#fff;border:1px solid var(--border)">
+        <div class="mx-auto mb-3 d-flex align-items-center justify-content-center" style="width:52px;height:52px;background:linear-gradient(135deg,#1a4731,#2d6a4f);border-radius:50%;color:#fff;font-size:1.1rem;font-weight:800"><%= s.num %></div>
+        <i class="bi bi-<%= s.icon %> mb-2" style="font-size:1.6rem;color:var(--g2);display:block"></i>
+        <h6 class="fw-bold mb-2"><%= s.title %></h6>
+        <p class="text-muted small mb-0" style="line-height:1.7"><%= s.desc %></p>
+      </div>
     </div>
-    <div class="col-md-3 text-center">
-      <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">2</div>
-      <h5>Get Discovered</h5>
-      <p class="text-muted">Your property appears to thousands of travelers searching for stays</p>
-    </div>
-    <div class="col-md-3 text-center">
-      <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">3</div>
-      <h5>Accept Bookings</h5>
-      <p class="text-muted">Receive booking requests and communicate with guests</p>
-    </div>
-    <div class="col-md-3 text-center">
-      <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">4</div>
-      <h5>Get Paid</h5>
-      <p class="text-muted">Receive secure payments directly to your bank account</p>
-    </div>
+    <% }); %>
   </div>
 </div>
 
-<!-- Success Stories -->
-<div class="bg-light py-5">
+<!-- LIST FORM -->
+<div style="background:#f8f7f4;padding:60px 0" id="get-started">
   <div class="container">
-    <h2 class="text-center mb-5">What Our Hosts Say</h2>
-    <div class="row g-4">
-      <div class="col-md-4">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body p-4">
-            <div class="mb-3">
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-            </div>
-            <p class="mb-3">"Helnay made it so easy to list my beach house. The support team helped me every step of the way, and I got my first booking within a week!"</p>
-            <small class="text-muted">- Sarah M., Beach House Owner</small>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body p-4">
-            <div class="mb-3">
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-            </div>
-            <p class="mb-3">"The lower commission rates mean I keep more of my earnings. Plus, the payment system is reliable and fast. Highly recommend!"</p>
-            <small class="text-muted">- Michael T., Apartment Owner</small>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body p-4">
-            <div class="mb-3">
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-            </div>
-            <p class="mb-3">"I've listed on other platforms, but Helnay's customer service is unmatched. They truly care about helping hosts succeed."</p>
-            <small class="text-muted">- Jennifer L., Vacation Home Owner</small>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Get Started -->
-<div class="container my-5 py-5" id="get-started">
-  <div class="row justify-content-center">
-    <div class="col-lg-8 text-center">
-      <h2 class="mb-4">Ready to Start Earning?</h2>
-      <p class="lead mb-4">Join thousands of hosts who trust Helnay to help them earn extra income</p>
-      
-      <% if (user) { %>
-        <a href="/contact?subject=List My Property" class="btn btn-primary btn-lg px-5 py-3 me-3">Contact Us to List Your Property</a>
-        <a href="/about" class="btn btn-outline-primary btn-lg px-5 py-3">Learn More</a>
-      <% } else { %>
-        <a href="/register" class="btn btn-primary btn-lg px-5 py-3 me-3">Sign Up Now</a>
-        <a href="/contact?subject=Become a Host" class="btn btn-outline-primary btn-lg px-5 py-3">Contact Us</a>
-      <% } %>
-      
-      <div class="mt-5">
-        <small class="text-muted">
-          <i class="bi bi-shield-check"></i> No listing fees • 
-          <i class="bi bi-credit-card"></i> Secure payments • 
-          <i class="bi bi-headset"></i> 24/7 support
-        </small>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- FAQ -->
-<div class="bg-light py-5">
-  <div class="container">
-    <h2 class="text-center mb-5">Frequently Asked Questions</h2>
     <div class="row justify-content-center">
       <div class="col-lg-8">
-        <div class="accordion" id="faqAccordion">
-          <div class="accordion-item">
-            <h2 class="accordion-header">
-              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                How much does it cost to list my property?
-              </button>
-            </h2>
-            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
-              <div class="accordion-body">
-                It's completely free to create a listing on Helnay. We only charge a small commission when you receive a booking, which is significantly lower than other platforms.
+        <div class="become-host-form">
+          <h2 class="mb-1">List Your Property</h2>
+          <p class="text-muted small mb-4">Takes 5 minutes · Go live within 24 hours</p>
+          <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger" style="border-radius:12px"><%= error %></div>
+          <% } %>
+          <% if (typeof message !== 'undefined' && message) { %>
+            <div class="alert alert-success" style="border-radius:12px"><%= message %></div>
+          <% } %>
+          <form method="POST" action="/become-a-host" enctype="multipart/form-data">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="mb-4">
+              <label class="form-label fw-bold small text-uppercase" style="letter-spacing:.4px;color:var(--hint)">Property Type</label>
+              <div class="row g-2">
+                <% const types = [{val:'apartment',icon:'building',label:'Apartment'},{val:'house',icon:'house-fill',label:'House'},{val:'villa',icon:'gem',label:'Villa'},{val:'studio',icon:'door-closed',label:'Studio'}]; %>
+                <% types.forEach(function(t){ %>
+                <div class="col-6 col-md-3">
+                  <label class="type-option w-100" style="cursor:pointer">
+                    <input type="radio" name="property_type" value="<%= t.val %>" style="display:none" onchange="this.closest('.row').querySelectorAll('.type-option').forEach(el=>el.classList.remove('selected'));this.closest('.type-option').classList.add('selected')">
+                    <i class="bi bi-<%= t.icon %>" style="font-size:1.5rem;display:block;margin-bottom:5px"></i>
+                    <span style="font-size:12px;font-weight:700"><%= t.label %></span>
+                  </label>
+                </div>
+                <% }); %>
               </div>
             </div>
-          </div>
-          
-          <div class="accordion-item">
-            <h2 class="accordion-header">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                When do I get paid?
-              </button>
-            </h2>
-            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-              <div class="accordion-body">
-                Payments are processed securely through Stripe. You receive payment after guests check in, typically within 24-48 hours after the reservation starts.
+            <div class="row g-3 mb-3">
+              <div class="col-md-6"><label class="form-label fw-bold small" style="color:var(--hint)">Property Name</label><input type="text" name="title" class="form-control" placeholder="e.g. Cozy Apt in Kilimani" required style="border-radius:10px"></div>
+              <div class="col-md-6"><label class="form-label fw-bold small" style="color:var(--hint)">City</label>
+                <select name="location" class="form-select" style="border-radius:10px">
+                  <option value="Nairobi">Nairobi</option>
+                  <option value="Mombasa">Mombasa</option>
+                  <option value="Kisumu">Kisumu</option>
+                  <option value="Nakuru">Nakuru</option>
+                  <option value="Mogadishu">Mogadishu</option>
+                  <option value="Hargeisa">Hargeisa</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
             </div>
-          </div>
-          
-          <div class="accordion-item">
-            <h2 class="accordion-header">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                Can I set my own prices?
-              </button>
-            </h2>
-            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-              <div class="accordion-body">
-                Absolutely! You have full control over your pricing. Set your nightly rate, and adjust it anytime based on demand, seasonality, or special events.
-              </div>
+            <div class="row g-3 mb-3">
+              <div class="col-md-6"><label class="form-label fw-bold small" style="color:var(--hint)">Neighbourhood</label><input type="text" name="neighbourhood" class="form-control" placeholder="e.g. Westlands, Kilimani" style="border-radius:10px"></div>
+              <div class="col-md-6"><label class="form-label fw-bold small" style="color:var(--hint)">Nightly Rate (KES)</label><input type="number" name="price" class="form-control" placeholder="e.g. 7500" required style="border-radius:10px"></div>
             </div>
-          </div>
-          
-          <div class="accordion-item">
-            <h2 class="accordion-header">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
-                What kind of properties can I list?
-              </button>
-            </h2>
-            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-              <div class="accordion-body">
-                You can list vacation homes, apartments, condos, beach houses, mountain cabins, spare rooms, and more. As long as it's a safe, legal rental property, you can list it on Helnay.
-              </div>
-            </div>
-          </div>
-          
-          <div class="accordion-item">
-            <h2 class="accordion-header">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
-                How do I get started?
-              </button>
-            </h2>
-            <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-              <div class="accordion-body">
-                Simply sign up for a free account, then contact us to create your listing. We'll guide you through adding photos, descriptions, pricing, and amenities. Your listing can be live within 24 hours!
-              </div>
-            </div>
-          </div>
+            <div class="mb-3"><label class="form-label fw-bold small" style="color:var(--hint)">Description</label><textarea name="description" class="form-control" rows="3" placeholder="Describe your property, location highlights, and what makes it special…" style="border-radius:10px"></textarea></div>
+            <div class="mb-3"><label class="form-label fw-bold small" style="color:var(--hint)">M-Pesa Number for Payouts</label><input type="tel" name="mpesa_number" class="form-control" placeholder="+254 700 000 000" style="border-radius:10px"></div>
+            <div class="mb-4"><label class="form-label fw-bold small" style="color:var(--hint)">Property Photos</label><input type="file" name="images" class="form-control" multiple accept="image/*" style="border-radius:10px"></div>
+            <button type="submit" class="btn-submit-host btn btn-primary w-100">Submit for Review →</button>
+          </form>
         </div>
       </div>
     </div>
@@ -278,22 +155,16 @@
 </div>
 
 <script>
-// Earnings Calculator
-const nightlyRate = document.getElementById('nightlyRate');
-const nightsBooked = document.getElementById('nightsBooked');
-const nightsValue = document.getElementById('nightsValue');
-const earnings = document.getElementById('earnings');
-
-function calculateEarnings() {
-  const rate = parseFloat(nightlyRate.value) || 0;
-  const nights = parseInt(nightsBooked.value) || 0;
-  const total = rate * nights;
-  
-  nightsValue.textContent = nights + ' night' + (nights !== 1 ? 's' : '');
-  earnings.textContent = '$' + total.toLocaleString();
+const rateEl = document.getElementById('nightlyRate');
+const nightsEl = document.getElementById('nightsBooked');
+const nightsVal = document.getElementById('nightsValue');
+const earningsEl = document.getElementById('earnings');
+function updateCalc() {
+  const r = parseInt(rateEl.value)||0;
+  const n = parseInt(nightsEl.value)||0;
+  nightsVal.textContent = n + ' nights';
+  earningsEl.textContent = 'KES ' + Math.round(r * n * 0.97).toLocaleString();
 }
-
-nightlyRate.addEventListener('input', calculateEarnings);
-nightsBooked.addEventListener('input', calculateEarnings);
-calculateEarnings();
+rateEl.addEventListener('input', updateCalc);
+nightsEl.addEventListener('input', updateCalc);
 </script>

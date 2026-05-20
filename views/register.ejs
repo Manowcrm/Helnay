@@ -1,55 +1,48 @@
-<div class="container my-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6">
-      <div class="card shadow">
-        <div class="card-body p-5">
-          <h2 class="text-center mb-4"><i class="bi bi-person-plus-fill"></i> Register</h2>
-          
-          <% if (error) { %>
-            <div class="alert alert-danger"><%- error %></div>
+<div class="min-vh-100 d-flex align-items-center" style="background:linear-gradient(135deg,#0d2e1e,#1a4731,#2d6a4f);padding:40px 0">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-5">
+        <div class="text-center mb-4">
+          <a href="/" style="font-family:'Fraunces',serif;font-size:2rem;font-weight:600;color:#fff;text-decoration:none">Helnay</a>
+          <p style="color:rgba(255,255,255,0.6);font-size:14px;margin-top:4px">Create your account</p>
+        </div>
+        <div class="auth-card">
+          <h2 class="mb-4 text-center" style="font-size:1.4rem">Get started</h2>
+          <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger" style="border-radius:10px;font-size:13px"><i class="bi bi-exclamation-triangle-fill me-2"></i><%- error %></div>
           <% } %>
-          <% if (message) { %>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-              <i class="bi bi-check-circle-fill me-2"></i><%- message %>
-              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+          <% if (typeof message !== 'undefined' && message) { %>
+            <div class="alert alert-success" style="border-radius:10px;font-size:13px"><i class="bi bi-check-circle-fill me-2"></i><%- message %></div>
           <% } %>
-          
           <form method="POST" action="/register">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <div class="mb-3">
-              <label for="name" class="form-label">Full Name</label>
-              <input type="text" class="form-control" id="name" name="name" value="<%= typeof formData !== 'undefined' && formData.name ? formData.name : '' %>" required>
+              <label class="form-label fw-bold small" style="color:var(--hint);text-transform:uppercase;letter-spacing:.4px">Full Name</label>
+              <input type="text" class="form-control" name="name" value="<%= typeof formData !== 'undefined' && formData.name ? formData.name : '' %>" placeholder="Ahmed Mohamed" required style="border-radius:10px;padding:11px 13px">
             </div>
-            
             <div class="mb-3">
-              <label for="email" class="form-label">Email</label>
-              <input type="email" class="form-control" id="email" name="email" value="<%= typeof formData !== 'undefined' && formData.email ? formData.email : '' %>" required>
+              <label class="form-label fw-bold small" style="color:var(--hint);text-transform:uppercase;letter-spacing:.4px">Email</label>
+              <input type="email" class="form-control" name="email" value="<%= typeof formData !== 'undefined' && formData.email ? formData.email : '' %>" placeholder="you@example.com" required style="border-radius:10px;padding:11px 13px">
             </div>
-            
             <div class="mb-3">
-              <label for="password" class="form-label">Password</label>
-              <input type="password" class="form-control" id="password" name="password" minlength="8" required>
-              <small class="text-muted d-block mt-1">Password must contain:</small>
-              <ul class="text-muted small ps-3 mb-0">
-                <li>At least 8 characters</li>
-                <li>1 uppercase letter (A-Z)</li>
-                <li>1 number (0-9)</li>
-                <li>1 special character (!@#$%^&*)</li>
-              </ul>
+              <label class="form-label fw-bold small" style="color:var(--hint);text-transform:uppercase;letter-spacing:.4px">Password</label>
+              <input type="password" class="form-control" name="password" minlength="8" placeholder="Min 8 chars, 1 uppercase, 1 number" required style="border-radius:10px;padding:11px 13px">
+              <div class="mt-2 d-flex gap-2 flex-wrap">
+                <span class="badge" style="background:#f0efea;color:var(--muted);font-weight:500;font-size:11px">8+ characters</span>
+                <span class="badge" style="background:#f0efea;color:var(--muted);font-weight:500;font-size:11px">1 uppercase</span>
+                <span class="badge" style="background:#f0efea;color:var(--muted);font-weight:500;font-size:11px">1 number</span>
+                <span class="badge" style="background:#f0efea;color:var(--muted);font-weight:500;font-size:11px">1 special char</span>
+              </div>
             </div>
-            
-            <div class="mb-3">
-              <label for="confirmPassword" class="form-label">Confirm Password</label>
-              <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+            <div class="mb-4">
+              <label class="form-label fw-bold small" style="color:var(--hint);text-transform:uppercase;letter-spacing:.4px">Confirm Password</label>
+              <input type="password" class="form-control" name="confirmPassword" placeholder="Repeat password" required style="border-radius:10px;padding:11px 13px">
             </div>
-            
-            <button type="submit" class="btn btn-primary w-100 mb-3">Register</button>
+            <button type="submit" class="btn btn-primary w-100 fw-bold py-3" style="border-radius:12px;font-size:15px;background:linear-gradient(135deg,#1a4731,#2d6a4f);border:none">Create Account</button>
           </form>
-          
-          <div class="text-center">
-            <p class="mb-0">Already have an account? <a href="/login">Login here</a></p>
-            <p class="mt-2"><a href="/">Back to Home</a></p>
+          <div class="text-center mt-4">
+            <p class="text-muted small mb-1">Already have an account? <a href="/login" style="color:var(--g2);font-weight:600">Sign in</a></p>
+            <a href="/" class="text-muted small">← Back to Home</a>
           </div>
         </div>
       </div>

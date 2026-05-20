@@ -1,55 +1,39 @@
-<div class="container my-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6">
-      <div class="card shadow">
-        <div class="card-body p-5">
-          <h2 class="text-center mb-4"><i class="bi bi-person-circle"></i> Login</h2>
-          
-          <% if (error) { %>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-              <i class="bi bi-exclamation-triangle-fill me-2"></i><%- error %>
-              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+<div class="min-vh-100 d-flex align-items-center" style="background:linear-gradient(135deg,#0d2e1e,#1a4731,#2d6a4f);padding:40px 0">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-5 col-lg-4">
+        <div class="text-center mb-4">
+          <a href="/" style="font-family:'Fraunces',serif;font-size:2rem;font-weight:600;color:#fff;text-decoration:none">Helnay</a>
+          <p style="color:rgba(255,255,255,0.6);font-size:14px;margin-top:4px">Sign in to your account</p>
+        </div>
+        <div class="auth-card">
+          <h2 class="mb-4 text-center" style="font-size:1.4rem">Welcome back</h2>
+          <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger" style="border-radius:10px;font-size:13px"><i class="bi bi-exclamation-triangle-fill me-2"></i><%- error %></div>
           <% } %>
-          <% if (message) { %>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-              <i class="bi bi-check-circle-fill me-2"></i><%- message %>
-              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+          <% if (typeof message !== 'undefined' && message) { %>
+            <div class="alert alert-success" style="border-radius:10px;font-size:13px"><i class="bi bi-check-circle-fill me-2"></i><%- message %></div>
           <% } %>
-          
           <form method="POST" action="/login">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <div class="mb-3">
-              <label for="email" class="form-label">Email</label>
-              <input type="email" class="form-control" id="email" name="email" required>
+              <label class="form-label fw-bold small" style="color:var(--hint);text-transform:uppercase;letter-spacing:.4px">Email</label>
+              <input type="email" class="form-control" name="email" placeholder="you@example.com" required style="border-radius:10px;padding:11px 13px">
             </div>
-            
-            <div class="mb-3">
-              <label for="password" class="form-label">Password</label>
-              <input type="password" class="form-control" id="password" name="password" required>
+            <div class="mb-4">
+              <label class="form-label fw-bold small d-flex justify-content-between" style="color:var(--hint);text-transform:uppercase;letter-spacing:.4px">
+                <span>Password</span>
+              </label>
+              <input type="password" class="form-control" name="password" placeholder="••••••••" required style="border-radius:10px;padding:11px 13px">
             </div>
-            
-            <button type="submit" class="btn btn-primary w-100 mb-3">Login</button>
+            <button type="submit" class="btn btn-primary w-100 fw-bold py-3" style="border-radius:12px;font-size:15px;background:linear-gradient(135deg,#1a4731,#2d6a4f);border:none">Sign In</button>
           </form>
-          
-          <div class="text-center">
-            <p class="mb-0">Don't have an account? <a href="/register">Register here</a></p>
-            <p class="mt-2"><a href="/">Back to Home</a></p>
+          <div class="text-center mt-4">
+            <p class="text-muted small mb-1">Don't have an account? <a href="/register" style="color:var(--g2);font-weight:600">Sign up</a></p>
+            <a href="/" class="text-muted small">← Back to Home</a>
           </div>
         </div>
       </div>
     </div>
   </div>
 </div>
-
-<script>
-// Prevent alert-link from dismissing the alert when clicked
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.alert-link').forEach(link => {
-    link.addEventListener('click', function(e) {
-      e.stopPropagation();
-    });
-  });
-});
-</script>
