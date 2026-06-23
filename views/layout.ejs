@@ -60,6 +60,10 @@
     <nav class="navbar navbar-expand-lg">
       <div class="container">
         <a class="navbar-brand fw-bold" href="/">Helnay</a>
+        <div class="currency-toggle ms-auto me-2 d-lg-none" id="currencyToggleMobile">
+          <button class="currency-btn active" id="btn-kes-m" onclick="setCurrency('KES')">KES</button>
+          <button class="currency-btn" id="btn-usd-m" onclick="setCurrency('USD')">USD</button>
+        </div>
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -73,7 +77,8 @@
             <li class="nav-item d-lg-none"><hr class="text-white-50 my-2"></li>
             <li class="nav-item"><a class="nav-link text-warning fw-semibold px-3" href="/become-a-host"><i class="bi bi-house-add"></i> List Property</a></li>
             
-            <li class="nav-item me-2">
+
+            <li class="nav-item me-2 d-none d-lg-flex align-items-center">
               <div class="currency-toggle" id="currencyToggle">
                 <button class="currency-btn active" id="btn-kes" onclick="setCurrency('KES')">KES</button>
                 <button class="currency-btn" id="btn-usd" onclick="setCurrency('USD')">USD</button>
@@ -311,8 +316,11 @@
     function setCurrency(cur) {
       currentCurrency = cur;
       localStorage.setItem('helnayCurrency', cur);
-      document.getElementById('btn-kes').classList.toggle('active', cur === 'KES');
-      document.getElementById('btn-usd').classList.toggle('active', cur === 'USD');
+      // Sync all currency button instances (desktop + mobile)
+      document.querySelectorAll('.currency-btn').forEach(btn => {
+        const isCur = btn.textContent.trim() === cur;
+        btn.classList.toggle('active', isCur);
+      });
       updateAllPrices();
     }
 
