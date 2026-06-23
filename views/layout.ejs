@@ -61,8 +61,8 @@
       <div class="container">
         <a class="navbar-brand fw-bold" href="/">Helnay</a>
         <div class="currency-toggle ms-auto me-2" id="currencyToggle">
-          <button class="currency-btn active" id="btn-kes" onclick="setCurrency('KES')">KES</button>
-          <button class="currency-btn" id="btn-usd" onclick="setCurrency('USD')">USD</button>
+          <button class="currency-btn active" id="btn-kes">KES</button>
+          <button class="currency-btn" id="btn-usd">USD</button>
         </div>
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span class="navbar-toggler-icon"></span>
@@ -331,6 +331,12 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+      // Wire up currency buttons via addEventListener (CSP-safe, not inline onclick)
+      const kesBtn = document.getElementById('btn-kes');
+      const usdBtn = document.getElementById('btn-usd');
+      if (kesBtn) kesBtn.addEventListener('click', function() { setCurrency('KES'); });
+      if (usdBtn) usdBtn.addEventListener('click', function() { setCurrency('USD'); });
+
       // Set saved currency on load
       setCurrency(currentCurrency);
       // Tag all price elements
