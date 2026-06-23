@@ -12,13 +12,13 @@
               <div class="col-12 col-md-5">
                 <div class="input-group input-group-lg">
                   <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
-                  <input name="q" class="form-control border-0 bg-light" placeholder="Search destination or property" value="<%= (typeof query !== 'undefined' && query.q) ? query.q : '' %>">
+                  <input name="q" class="form-control border-0 bg-light" placeholder="Property name or keyword" value="<%= (typeof query !== 'undefined' && query.q) ? query.q : '' %>">
                 </div>
               </div>
               <div class="col-12 col-md-4">
                 <div class="input-group input-group-lg">
                   <span class="input-group-text bg-light border-0"><i class="bi bi-geo-alt"></i></span>
-                  <input name="location" class="form-control border-0 bg-light" placeholder="Location" value="<%= (typeof query !== 'undefined' && query.location) ? query.location : '' %>">
+                  <input name="location" class="form-control border-0 bg-light" placeholder="City or location" value="<%= (typeof query !== 'undefined' && query.location) ? query.location : '' %>">
                 </div>
               </div>
               <div class="col-12 col-md-3">
@@ -250,49 +250,6 @@
         </div>
       </div>
 
-      <!-- Featured Rentals Section -->
-  <div class="row mt-5 pt-4 border-top">
-    <div class="col-12 mb-4">
-      <h3>More Properties Available for Rent</h3>
-      <p class="text-muted">Explore additional rental options in different locations</p>
-    </div>
-    <% 
-    const featuredRentals = [
-      { title: 'Luxury Penthouse', location: 'Manhattan', price: 450, type: 'apartment', image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80' },
-      { title: 'Lakeside Villa', location: 'Lake District', price: 320, type: 'villa', image: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80' },
-      { title: 'Desert Oasis Home', location: 'Arizona', price: 195, type: 'home', image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80' },
-      { title: 'Tropical Beach Villa', location: 'Miami Beach', price: 380, type: 'villa', image: 'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=800&q=80' },
-      { title: 'Downtown Studio', location: 'Chicago', price: 75, type: 'studio', image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80' },
-      { title: 'Mountain View Chalet', location: 'Swiss Alps', price: 280, type: 'chalet', image: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&q=80' },
-      { title: 'Historic Townhouse', location: 'Boston', price: 225, type: 'townhouse', image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80' },
-      { title: 'Waterfront Condo', location: 'Seattle', price: 165, type: 'condo', image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80' },
-      { title: 'Country Farmhouse', location: 'Vermont', price: 140, type: 'farmhouse', image: 'https://images.unsplash.com/photo-1596721853750-2f8e8c39e826?w=800&q=80' },
-      { title: 'Urban Loft Space', location: 'Brooklyn', price: 190, type: 'loft', image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80' }
-    ];
-    %>
-    <% featuredRentals.forEach(function(rental, idx){ %>
-      <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
-        <div class="card featured-rental-card h-100">
-          <div class="featured-img-wrapper">
-            <img src="<%= rental.image %>" class="card-img-top" alt="<%= rental.title %>">
-            <span class="badge badge-featured">Featured</span>
-          </div>
-          <div class="card-body">
-            <h6 class="card-title"><%= rental.title %></h6>
-            <p class="card-text text-muted small mb-2">
-              <i class="bi bi-geo-alt-fill"></i> <%= rental.location %>
-            </p>
-            <div class="d-flex justify-content-between align-items-center">
-              <span><strong class="text-primary">$<%= rental.price %></strong><small class="text-muted">/night</small></span>
-              <a href="/?location=<%= rental.location %>&type=<%= rental.type %>" class="btn btn-sm btn-outline-primary">View</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    <% }) %>
-      </div>
-    </div>
-  </div>
 </div>
 
 <script>
@@ -302,7 +259,6 @@ const listingsContainer = document.getElementById('listingsContainer');
 const allListings = Array.from(listingsContainer.children);
 let activeFilters = [];
 
-// Store original display state
 allListings.forEach(listing => {
   listing.dataset.originalDisplay = listing.style.display || 'block';
 });
@@ -310,8 +266,6 @@ allListings.forEach(listing => {
 filterButtons.forEach(button => {
   button.addEventListener('click', function() {
     const filter = this.dataset.filter;
-    
-    // Toggle active state
     if (this.classList.contains('active')) {
       this.classList.remove('active');
       activeFilters = activeFilters.filter(f => f !== filter);
@@ -319,87 +273,54 @@ filterButtons.forEach(button => {
       this.classList.add('active');
       activeFilters.push(filter);
     }
-    
     applyFilters();
   });
 });
 
 function applyFilters() {
-  
-  // Get price filters
   const minPrice = parseFloat(document.getElementById('priceMin')?.value) || 0;
   const maxPrice = parseFloat(document.getElementById('priceMax')?.value) || Infinity;
   
   allListings.forEach(listing => {
-    // Get FULL description from data attribute (not truncated)
     const amenities = listing.dataset.amenities || '';
     const title = listing.querySelector('.card-title')?.textContent.toLowerCase() || '';
     const fullText = (title + ' ' + amenities).toLowerCase();
-    
-    // Check price
-    const priceText = listing.querySelector('.text-primary')?.textContent || '';
-    const price = parseFloat(priceText.replace(/[^0-9.]/g, ''));
+    const priceEl = listing.querySelector('[data-usd-price]');
+    const price = priceEl ? parseFloat(priceEl.dataset.usdPrice) : 0;
     const priceMatch = price >= minPrice && price <= maxPrice;
     
-    // If no filters selected, show all (that match price)
     if (activeFilters.length === 0) {
       listing.style.display = priceMatch ? '' : 'none';
       return;
     }
     
-    // Check if listing matches ALL selected filters (AND logic)
     const matches = activeFilters.every(filter => {
       switch(filter) {
-        case 'pool': 
-          return fullText.includes('pool');
-        case 'wifi': 
-          return fullText.includes('wifi') || fullText.includes('wi-fi');
-        case 'balcony': 
-          return fullText.includes('balcony') || fullText.includes('patio') || fullText.includes('terrace') || fullText.includes('deck');
-        case 'ac': 
-          return fullText.includes('air conditioning') || fullText.includes('air condition');
-        case 'garden': 
-          return fullText.includes('garden') || fullText.includes('yard');
-        case 'tv': 
-          return fullText.includes(' tv,') || fullText.includes(' tv ') || fullText.includes('television') || fullText.includes('smart tv');
-        case 'parking': 
-          return fullText.includes('parking') || fullText.includes('garage');
-        case 'kitchen': 
-          return fullText.includes('kitchen');
-        case 'washer': 
-          return fullText.includes('washing machine') || fullText.includes('washing') || fullText.includes('laundry');
-        case 'microwave': 
-          return fullText.includes('microwave');
-        case 'dishwasher': 
-          return fullText.includes('dishwasher');
-        case 'hottub': 
-          return fullText.includes('hot tub') || fullText.includes('jacuzzi');
-        case 'sauna': 
-          return fullText.includes('sauna');
-        case 'fireplace': 
-          return fullText.includes('fireplace');
-        case 'cot': 
-          return fullText.includes('cot') || fullText.includes('crib');
-        case 'pet-friendly': 
-          return fullText.includes('pet-friend');
-        case 'no-smoking': 
-          return fullText.includes('no smoking') || fullText.includes('smoke-free');
-        case 'no-pets': 
-          return fullText.includes('no pet');
-        case 'wheelchair': 
-          return fullText.includes('wheelchair accessible') || fullText.includes('wheelchair access');
-        case 'fishing': 
-          return fullText.includes('fishing');
-        case 'grill': 
-          return fullText.includes('bbq grill') || fullText.includes('grill') || fullText.includes('bbq');
-        case 'instant': 
-          return true;
-        default: 
-          return true;
+        case 'pool': return fullText.includes('pool');
+        case 'wifi': return fullText.includes('wifi') || fullText.includes('wi-fi');
+        case 'balcony': return fullText.includes('balcony') || fullText.includes('patio') || fullText.includes('terrace') || fullText.includes('deck');
+        case 'air-conditioning': return fullText.includes('air conditioning') || fullText.includes('air condition');
+        case 'garden': return fullText.includes('garden') || fullText.includes('yard');
+        case 'tv': return fullText.includes(' tv,') || fullText.includes(' tv ') || fullText.includes('television') || fullText.includes('smart tv');
+        case 'parking': return fullText.includes('parking') || fullText.includes('garage');
+        case 'kitchen': return fullText.includes('kitchen');
+        case 'washing': return fullText.includes('washing machine') || fullText.includes('laundry');
+        case 'microwave': return fullText.includes('microwave');
+        case 'dishwasher': return fullText.includes('dishwasher');
+        case 'hot-tub': return fullText.includes('hot tub') || fullText.includes('jacuzzi');
+        case 'sauna': return fullText.includes('sauna');
+        case 'fireplace': return fullText.includes('fireplace');
+        case 'cot': return fullText.includes('cot') || fullText.includes('crib');
+        case 'pet-friendly': return fullText.includes('pet-friend');
+        case 'no-smoking': return fullText.includes('no smoking') || fullText.includes('smoke-free');
+        case 'no-pets': return fullText.includes('no pet');
+        case 'wheelchair': return fullText.includes('wheelchair');
+        case 'fishing': return fullText.includes('fishing');
+        case 'grill': return fullText.includes('grill') || fullText.includes('bbq');
+        default: return true;
       }
     });
     
-    // Show only if matches ALL filters AND price range
     listing.style.display = (matches && priceMatch) ? '' : 'none';
   });
   
@@ -407,16 +328,13 @@ function applyFilters() {
 }
 
 function applyPriceFilter() {
-  // Just trigger the main filter function which now handles price
   applyFilters();
 }
 
 function updateListingsCount() {
   const visibleCount = allListings.filter(l => l.style.display !== 'none').length;
   const countBadge = document.querySelector('.listings-count');
-  if (countBadge) {
-    countBadge.textContent = visibleCount;
-  }
+  if (countBadge) countBadge.textContent = visibleCount;
 }
 </script>
 
@@ -442,13 +360,7 @@ function updateListingsCount() {
   "@type": "Organization",
   "name": "Helnay",
   "url": "https://helnay.com",
-  "logo": "https://helnay.com/uploads/helnay-logo.png",
   "description": "Premium vacation rental platform",
-  "sameAs": [
-    "https://www.facebook.com/helnay",
-    "https://twitter.com/helnay",
-    "https://www.instagram.com/helnay"
-  ],
   "contactPoint": {
     "@type": "ContactPoint",
     "contactType": "Customer Service",
@@ -456,5 +368,5 @@ function updateListingsCount() {
   }
 }
 </script>
-</div>
+
 <!-- End Main Content Container -->

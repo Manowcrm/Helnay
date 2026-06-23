@@ -599,6 +599,95 @@ async function init() {
     }
   }
   
+
+  // ===== DATA QUALITY MIGRATIONS =====
+  // Fix any test/placeholder listings with invalid titles
+  try {
+    const testTitles = ["salaam", "test", "test listing", "untitled", "new listing"];
+    for (const testTitle of testTitles) {
+      const bad = await get("SELECT id FROM listings WHERE LOWER(title) = LOWER(?)", [testTitle]);
+      if (bad) {
+        await run(
+          `UPDATE listings SET
+            title = 'Secluded Forest Retreat',
+            description = 'Private cabin deep in the woods with WiFi, TV, fireplace, full kitchen, washing machine, terrace, parking, garden. Perfect for peace and quiet. Near fishing and hiking trails. Pet-friendly, smoke-free.',
+            price = 110.0
+          WHERE id = ?`,
+          [bad.id]
+        );
+        // Assign Edinburgh, UK location if available
+        const edinburgh = await get("SELECT id FROM locations WHERE name = 'Edinburgh, UK'");
+        if (edinburgh) {
+          await run('UPDATE listings SET location_id = ? WHERE id = ?', [edinburgh.id, bad.id]);
+        }
+        console.log(`✅ [DB MIGRATION] Fixed test listing (was "${testTitle}", id=${bad.id})`);
+      }
+    }
+  } catch (e) {
+    console.error('Test listing fix migration error:', e.message);
+  }
+
+  // Ensure all UK listings have correct geographically-appropriate prices (USD)
+  // London premium areas: 140–350, Edinburgh/Brighton: 95–280, rural/cabin: 60–140
+  try {
+    const priceFixes = [
+      { locationPattern: '%Kensington%',   min: 200, max: 400 },
+      { locationPattern: '%Chelsea%',      min: 200, max: 400 },
+      { locationPattern: '%Shoreditch%',   min: 120, max: 250 },
+      { locationPattern: '%Brixton%',      min: 80,  max: 150 },
+      { locationPattern: '%Euston%',       min: 90,  max: 180 },
+      { locationPattern: '%Oxford%',       min: 80,  max: 160 },
+      { locationPattern: '%Edinburgh%',    min: 80,  max: 160 },
+      { locationPattern: '%Brighton%',     min: 120, max: 300 },
+      { locationPattern: '%Westminster%',  min: 150, max: 350 },
+    ];
+
+    for (const fix of priceFixes) {
+      const loc = await get("SELECT id FROM locations WHERE name LIKE ?", [fix.locationPattern]);
+      if (!loc) continue;
+      const listings_to_fix = await all(
+        "SELECT id, price FROM listings WHERE location_id = ? AND (price < ? OR price > ?)",
+        [loc.id, fix.min, fix.max]
+      );
+      for (const l of listings_to_fix) {
+        const corrected = Math.round((fix.min + fix.max) / 2);
+        await run("UPDATE listings SET price = ? WHERE id = ?", [corrected, l.id]);
+        console.log(`✅ [DB MIGRATION] Fixed price for listing id=${l.id}: $${l.price} → $${corrected}`);
+      }
+    }
+  } catch (e) {
+    console.error('Price fix migration error:', e.message);
+  }
+
+  // Ensure "Lands" browse category is replaced with "Mountain Retreats"
+  try {
+    const landsCategory = await get("SELECT id FROM browse_categories WHERE LOWER(title) = 'empty land' OR LOWER(title) = 'lands'");
+    if (landsCategory) {
+      await run(
+        "UPDATE browse_categories SET title = 'Mountain Retreats', description = 'Cozy cabins and lodges in scenic highland and mountain locations', filter_params = 'location=Edinburgh' WHERE id = ?",
+        [landsCategory.id]
+      );
+      console.log('✅ [DB MIGRATION] Replaced "Lands" category with "Mountain Retreats"');
+    }
+  } catch (e) {
+    console.error('Browse category fix error:', e.message);
+  }
+
+  // Add "Highlands, Scotland" location if missing
+  try {
+    const highlands = await get("SELECT id FROM locations WHERE name = 'Highlands, Scotland'");
+    if (!highlands) {
+      await run(
+        "INSERT INTO locations (name, display_order, is_active, created_at) VALUES (?, ?, ?, ?)",
+        ['Highlands, Scotland', 35, 1, new Date().toISOString()]
+      );
+      console.log('✅ [DB MIGRATION] Added Highlands, Scotland location');
+    }
+  } catch(e) {
+    console.error('Highlands location error:', e.message);
+  }
+  // ===== END DATA QUALITY MIGRATIONS =====
+
   // Create or update default super admin user
   const existingAdmin = await get('SELECT * FROM users WHERE email = ?', ['sysadmin.portal@helnay.com']);
   

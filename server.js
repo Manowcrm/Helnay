@@ -600,8 +600,8 @@ app.get('/', async (req, res) => {
       params.push(max_price);
     }
     if (q) {
-      where.push('(LOWER(title) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?))');
-      params.push(`%${q}%`, `%${q}%`);
+      where.push('(LOWER(title) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?) OR LOWER(loc.name) LIKE LOWER(?))');
+      params.push(`%${q}%`, `%${q}%`, `%${q}%`);
     }
     if (type) {
       where.push('(LOWER(title) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?))');
@@ -708,7 +708,7 @@ app.get('/hotels', async (req, res) => {
   try {
     const { location, min_price, max_price, q, bedrooms, guests, sort } = req.query;
     
-    const where = ["(LOWER(type) = 'hotel' OR LOWER(title) LIKE '%hotel%' OR LOWER(description) LIKE '%hotel%')"];
+    const where = ["(LOWER(type) IN ('hotel','apartment','studio','loft') OR LOWER(title) LIKE '%hotel%' OR LOWER(title) LIKE '%apartment%' OR LOWER(title) LIKE '%studio%' OR LOWER(title) LIKE '%loft%' OR LOWER(title) LIKE '%flat%' OR LOWER(description) LIKE '%city centre%' OR LOWER(description) LIKE '%city center%' OR LOWER(description) LIKE '%downtown%' OR LOWER(description) LIKE '%hotel%')"];
     const params = [];
     
     if (location) {
@@ -762,8 +762,8 @@ app.get('/hotels', async (req, res) => {
       query: req.query || {},
       favoriteIds,
       user: req.session.user || null,
-      title: 'Hotels - Helnay',
-      description: 'Browse and book premium hotels worldwide with Helnay.',
+      title: 'City Stays - Helnay',
+      description: 'Browse city apartments, studios and urban stays in prime locations with Helnay.',
       canonicalUrl: '/hotels',
       csrfToken: res.locals.csrfToken,
       message: null,
