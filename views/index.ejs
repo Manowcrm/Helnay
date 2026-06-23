@@ -18,7 +18,13 @@
               <div class="col-12 col-md-4">
                 <div class="input-group input-group-lg">
                   <span class="input-group-text bg-light border-0"><i class="bi bi-geo-alt"></i></span>
-                  <input name="location" class="form-control border-0 bg-light" placeholder="City or location" value="<%= (typeof query !== 'undefined' && query.location) ? query.location : '' %>">
+                  <div class="loc-ac-wrap">
+                  <input name="location" class="form-control border-0 bg-light loc-ac-input" 
+                         placeholder="City or location"
+                         value="<%= (typeof query !== 'undefined' && query.location) ? query.location : '' %>"
+                         autocomplete="off">
+                  <ul class="loc-ac-dropdown"></ul>
+                </div>
                 </div>
               </div>
               <div class="col-12 col-md-3">
@@ -367,6 +373,126 @@ function updateListingsCount() {
     "url": "https://helnay.com/contact"
   }
 }
+</script>
+
+
+<style>
+.loc-ac-wrap { position: relative; }
+.loc-ac-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0; right: 0;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  z-index: 1050;
+  max-height: 230px;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+.loc-ac-dropdown li {
+  padding: 9px 14px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #333;
+  transition: background 0.1s;
+}
+.loc-ac-dropdown li:hover,
+.loc-ac-dropdown li.ac-active {
+  background: #f0f4ff;
+  color: #0d6efd;
+}
+.loc-ac-dropdown li .ac-icon { color: #6c757d; font-size: 0.85rem; }
+.loc-ac-dropdown li em { font-style: normal; font-weight: 600; }
+.loc-ac-no-results { padding: 10px 14px; color: #999; font-size: 0.85rem; pointer-events: none; }
+</style>
+
+<script>
+(function() {
+  const LOCATIONS = <%- JSON.stringify(locations.map(l => l.name)) %>;
+
+  function initLocationAC(wrap) {
+    const input = wrap.querySelector('.loc-ac-input');
+    const dropdown = wrap.querySelector('.loc-ac-dropdown');
+    let activeIdx = -1;
+    let open = false;
+
+    function highlight(text, query) {
+      if (!query) return text;
+      const idx = text.toLowerCase().indexOf(query.toLowerCase());
+      if (idx === -1) return text;
+      return text.slice(0, idx) + '<em>' + text.slice(idx, idx + query.length) + '</em>' + text.slice(idx + query.length);
+    }
+
+    function renderList(query) {
+      const matches = query.length === 0
+        ? LOCATIONS
+        : LOCATIONS.filter(l => l.toLowerCase().includes(query.toLowerCase()));
+      dropdown.innerHTML = '';
+      activeIdx = -1;
+      if (matches.length === 0) {
+        dropdown.innerHTML = '<li class="loc-ac-no-results">No matching locations found</li>';
+      } else {
+        matches.slice(0, 20).forEach((loc, i) => {
+          const li = document.createElement('li');
+          li.innerHTML = '<span class="ac-icon"><i class="bi bi-geo-alt-fill"></i></span>' + highlight(loc, query);
+          li.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            input.value = loc;
+            closeDropdown();
+          });
+          dropdown.appendChild(li);
+        });
+      }
+    }
+
+    function openDropdown() {
+      renderList(input.value.trim());
+      dropdown.style.display = 'block';
+      open = true;
+    }
+
+    function closeDropdown() {
+      dropdown.style.display = 'none';
+      open = false;
+      activeIdx = -1;
+    }
+
+    function setActive(idx) {
+      const items = dropdown.querySelectorAll('li:not(.loc-ac-no-results)');
+      items.forEach(li => li.classList.remove('ac-active'));
+      if (idx >= 0 && idx < items.length) {
+        items[idx].classList.add('ac-active');
+        items[idx].scrollIntoView({ block: 'nearest' });
+        activeIdx = idx;
+      } else {
+        activeIdx = -1;
+      }
+    }
+
+    input.addEventListener('focus', () => openDropdown());
+    input.addEventListener('input', () => { renderList(input.value.trim()); if (!open) openDropdown(); });
+    input.addEventListener('blur', () => setTimeout(closeDropdown, 150));
+    input.addEventListener('keydown', (e) => {
+      const items = dropdown.querySelectorAll('li:not(.loc-ac-no-results)');
+      if (e.key === 'ArrowDown') { e.preventDefault(); setActive(Math.min(activeIdx + 1, items.length - 1)); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(Math.max(activeIdx - 1, 0)); }
+      else if (e.key === 'Enter' && activeIdx >= 0) { e.preventDefault(); input.value = items[activeIdx].textContent.trim(); closeDropdown(); }
+      else if (e.key === 'Escape') closeDropdown();
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.loc-ac-wrap').forEach(initLocationAC);
+  });
+})();
 </script>
 
 <!-- End Main Content Container -->

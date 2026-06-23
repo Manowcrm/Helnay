@@ -677,6 +677,9 @@ app.get('/', async (req, res) => {
     
     // Get active browse categories for homepage
     const browseCategories = await db.all('SELECT * FROM browse_categories WHERE is_active = 1 ORDER BY display_order ASC');
+
+    // Get all active locations for autocomplete
+    const locations = await db.all('SELECT name FROM locations WHERE is_active = 1 ORDER BY display_order ASC, name ASC');
     
     // Prevent browser caching to ensure fresh prices
     res.set({
@@ -689,7 +692,8 @@ app.get('/', async (req, res) => {
       listings, 
       query: req.query, 
       filtersByCategory, 
-      browseCategories, 
+      browseCategories,
+      locations,
       favoriteIds, 
       user: req.session.userId ? { id: req.session.userId } : null,
       title: 'Find Your Perfect Vacation Rental',
@@ -756,9 +760,12 @@ app.get('/hotels', async (req, res) => {
       const favorites = await db.all('SELECT listing_id FROM favorites WHERE user_id = ?', [req.session.userId]);
       favoriteIds = favorites.map(f => f.listing_id);
     }
+
+    const locations = await db.all('SELECT name FROM locations WHERE is_active = 1 ORDER BY display_order ASC, name ASC');
     
     res.render('hotels', { 
       listings,
+      locations,
       query: req.query || {},
       favoriteIds,
       user: req.session.user || null,
@@ -828,9 +835,12 @@ app.get('/apartments', async (req, res) => {
       const favorites = await db.all('SELECT listing_id FROM favorites WHERE user_id = ?', [req.session.userId]);
       favoriteIds = favorites.map(f => f.listing_id);
     }
+
+    const locations = await db.all('SELECT name FROM locations WHERE is_active = 1 ORDER BY display_order ASC, name ASC');
     
     res.render('apartments', { 
       listings,
+      locations,
       query: req.query,
       favoriteIds,
       user: req.session.user || null,
